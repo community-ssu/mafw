@@ -1,0 +1,93 @@
+mafw-iradio-source-bookmarks-template (1.3.2009.13-5) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.13-5
+
+ -- Juha Kellokoski <ext-juha.kellokoski@nokia.com>  Wed, 25 Mar 2009 09:16:45 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.13-4) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.13-4
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Set Visa Smolander as the contact person in headers.
+
+ -- Juha Kellokoski <ext-juha.kellokoski@nokia.com>  Wed, 25 Mar 2009 09:16:45 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.13-3) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.13-3
+
+ -- Juha Kellokoski <ext-juha.kellokoski@nokia.com>  Tue, 24 Mar 2009 09:23:03 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.07-2) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.07-2
+
+ -- Juha Kellokoski <ext-juha.kellokoski@nokia.com>  Wed, 11 Feb 2009 14:20:00 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.07-1) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.07-1
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Fri, 06 Feb 2009 08:38:42 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.06-1) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.06-1
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Fri, 30 Jan 2009 14:31:19 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.05-1) unstable; urgency=low
+
+  * MAFW iradio template, pre-release 0.2009.05-1
+  * Fixes: NB#99165
+  * Added mafw-iradio-source-bookmarks-template to 2009.05.0 pre-release tag 
+    for making first release of the template after renaming. No code changes.
+  * Short and long description improved.
+  * Reducing lintian warnings.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 27 Jan 2009 22:22:13 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.04-1) unstable; urgency=low
+
+  * Version update.
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Wed, 14 Jan 2009 16:35:43 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2009.03-1) experimental; urgency=low
+
+  * MAFW, pre-release 0.1.2009.03-1
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Fri, 09 Jan 2009 15:43:28 +0200
+
+mafw-iradio-source-bookmarks-template (1.3.2008.52-1) experimental; urgency=low
+
+  * Renamed midas to mafw
+
+ --  Zeeshan Ali <zeeshan.ali@nokia.com>  Mon, 22 Dec 2008 15:28:58 +0200
+
+midas-iradio-source-bookmarks-template (1.3.2008.52) experimental; urgency=low
+
+  * tagging before renaming midas to mafw.
+
+ --  Zeeshan Ali <zeeshan.ali@nokia.com>  Fri, 19 Dec 2008 15:28:58 +0200
+
+midas-iradio-source-bookmarks-template (1.3.2008.47) experimental; urgency=low
+
+  * Fixes: NB#92200	Instantiated midas template package doesn't install
+
+ --  Zeeshan Ali <zeeshan.ali@nokia.com>  Fri, 14 Nov 2008 12:55:51 +0200
+
+midas-iradio-source-bookmarks-template (1.3.2008.46) experimental; urgency=low
+
+  * Customization package for iradio-source-bookmarks
+
+ --  Zeeshan Ali <zeeshan.ali@nokia.com>  Fri, 07 Nov 2008 11:58:32 +0200
+
+midas-iradio-source-bookmarks-template (1.3) experimental; urgency=low
+
+  * Bump for instantiation testing. Name changed etc.
+
+ --  Zeeshan Ali <zeeshan.ali@nokia.com>  Mon, 14 Jul 2008 13:48:18 +0300
+
+
