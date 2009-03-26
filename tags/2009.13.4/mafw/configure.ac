@@ -71,7 +71,7 @@ else
 fi
 
 dnl Tests.
-ENABLED_BY_DEFAULT([tests], [disable unit tests])
+#ENABLED_BY_DEFAULT([tests], [disable unit tests])
 if test "x$enable_tests" = xyes; then
 	PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
 	if test -z "$CHECK_LIBS"; then

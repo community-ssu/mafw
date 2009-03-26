@@ -1,0 +1,96 @@
+
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    0.2009.13-5
+Date       2009.03.26
+Maintainer veitikka6@gmail.com
+           mika.tapojarvi@sse.fi
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+
+libmafw 0.1.2009.13-5
+mafw-gst-renderer 0.1.2009.13-5
+mafw-iradio-source 0.1.2009.13-5
+mafw-iradio-source-bookmarks-template 1.3.2009.13-5
+mafw-shared 0.1.2009.13-5
+mafw-tracker-source 0.1.2009.13-5
+mafw-upnp-source 0.1.2009.13-5
+
+Change logs: 
+
+libmafw (0.1.2009.13-5) unstable; urgency=low
+  * MAFW, pre-release 0.2009.13-5
+  * Removed timer use from renderer get_position
+  * Changed API to return gint instead if guint in the get_position
+    callback
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add Visa Smolander as contact in debian/copyright files.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-gst-renderer (0.1.2009.13-5) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.13-5
+  * Changed _notify_buffer_status in state-transitioning in renderer
+    to use the do_notify_buffer status as code was the same after removing timer
+  * Removed timer support from renderer utils
+  * Removed timer handling in renderer.
+  * Removed timer use from renderer get_position
+  * Changed API to return gint instead if guint in the get_position
+    callback
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-iradio-source (0.1.2009.13-5) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.13-5
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-iradio-source-bookmarks-template (1.3.2009.13-5) unstable; urgency=low
+  * MAFW iradio template, pre-release 0.2009.13-5
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-shared (0.1.2009.13-5) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.13-5
+  * Removed timer use from renderer get_position
+  * Changed API to return gint instead if guint in the get_position
+    callback
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add Visa Smolander as contact in debian/copyright files.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-tracker-source (0.1.2009.13-5) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.13-5
+  * Libtrackerclient package name changed.
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+mafw-upnp-source (0.1.2009.13-5) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.13-5
+  * Set Visa as integrator.
+  * Upgrade copyright year.
+  * Add headers for Makefile.am and configure.ac files.
+  * Set Visa Smolander as the contact person in headers.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 26 Mar 2009 09:53:00 +0200
+
+
+
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 2
+* Fixes: NB#102972 - Pause AAC clip from UPnP server timer shows as 00:00
+* Fixes: NB#105133 - Mafw-tracker-source does not emit container-changed signal.
