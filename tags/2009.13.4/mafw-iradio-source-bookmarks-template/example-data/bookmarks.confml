@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns="http://www.s60.com/xml/confml/2"
+	xmlns:xi="http://www.w3.org/2001/XInclude"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <feature ref="mafw-iradio-source-bookmarks" name="Media bookmarks">
+    <setting ref="IRadioChannel" name="Internet radio channels" type="sequence">
+      <desc>A bookmark that points to an audio stream.</desc>
+      <setting ref="Name" name="Channel name" type="string" required="true">
+        <desc>The name of the bookmark. This will be displayed to the user.</desc>
+      </setting>
+      <setting ref="URI" name="Channel URI" type="string" required="true">
+        <desc>The exact location of the stream. Fed to GStreamer as is.</desc>
+      </setting>
+    </setting>
+    <setting ref="VideoBookmark" name="Video bookmarks" type="sequence">
+      <desc>A bookmark that points to a video stream.</desc>
+      <setting ref="Name" name="Bookmark name" type="string" required="true">
+        <desc>The name of the bookmark. This will be displayed to the user.</desc>
+      </setting>
+      <setting ref="URI" name="Bookmark URI" type="string" required="true">
+        <desc>The exact location of the stream. fed to GStreamer as is.</desc>
+      </setting>
+      <setting ref="Icon" name="Thumbnail icon" type="file">
+        <desc>A thumbnail image for the video stream. PNG format.</desc>
+        <property name="type" value="image/png" />
+        <property name="width" value="124" />
+        <property name="height" value="124" />
+        <localPath/>
+        <targetPath readOnly="true" />
+      </setting>
+    </setting>
+  </feature>
+	<data>
+		<mafw-iradio-source-bookmarks>
+			<IRadioChannel>
+				<Name>BBC Radio 1</Name>
+				<URI>http://www.bbc.co.uk/radio1/realaudio/media/r1live.ram</URI>
+			</IRadioChannel>
+			<IRadioChannel>
+				<Name>BBC World Service</Name>
+				<URI>http://www.bbc.co.uk/worldservice/meta/tx/nb/live_news_au_nb.ram</URI>
+			</IRadioChannel>
+			<IRadioChannel>
+				<Name>BBC Sport Roundup</Name>
+				<URI>http://www.bbc.co.uk/worldservice/ram/sportsroundup.ram</URI>
+			</IRadioChannel>
+			<IRadioChannel>
+				<Name>BBC World News Summary</Name>
+				<URI>http://www.bbc.co.uk/worldservice/meta/tx/nb/summary5min_au_nb.ram</URI>
+			</IRadioChannel>
+			<VideoBookmark>
+				<Name>VideoStream1</Name>
+				<URI>mms://videobroadcast.com/somevideo</URI>
+				<Icon>
+					<targetPath>BUILD:///data</targetPath>
+					<localPath>sample.png</localPath>
+				</Icon>
+			</VideoBookmark>
+			<VideoBookmark>
+				<Name>VideoStream2</Name>
+				<URI>mms://videobroadcast.com/someothervideo</URI>
+				<Icon>
+					<targetPath>BUILD:///data</targetPath>
+					<localPath>sample.png</localPath>
+				</Icon>
+			</VideoBookmark>
+		</mafw-iradio-source-bookmarks>
+</data>
+</configuration>
