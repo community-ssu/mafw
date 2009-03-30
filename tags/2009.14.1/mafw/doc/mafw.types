@@ -1,7 +1,0 @@
-#include <libmafw/mafw.h>
-
-mafw_extension_get_type
-mafw_source_get_type
-mafw_renderer_get_type
-mafw_registry_get_type
-mafw_playlist_get_type
