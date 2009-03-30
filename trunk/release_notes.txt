@@ -4,31 +4,37 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.14-1
-Date       2009.03.27
+Version    0.2009.14-2
+Date       2009.03.30
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
 
-mafw-gst-renderer 0.1.2009.14-1
-mafw-test-gui 0.1.2009.14-1
+mafw-gst-renderer 0.1.2009.14-2
+mafw-test-gui 0.1.2009.14-2
 
 Change logs: 
 
-mafw-gst-renderer (0.1.2009.14-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.14-1
+mafw-gst-renderer (0.1.2009.14-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.14-2
+  * Must always stop() on EOS when there are 
+    no more items to play. This frees X resources if playing video,
+    otherwise setting a new Xid afterward leads to a BadWindow X 
+    error.
+  * Enabling gstreamer optimization flags
   * Creating pipeline at startup and, soon after the playback has ended, to 
     speed up the starting of the playback
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 27 Mar 2009 09:30:00 +0200
-mafw-test-gui (0.1.2009.14-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.14-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 27 Mar 2009 09:30:00 +0200
+ -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 30 Mar 2009 09:23:13 +0200
+mafw-test-gui (0.1.2009.14-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.14-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 30 Mar 2009 09:23:13 +0200
 
 
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 1
+From changelog: 2
+* Fixes: NB#107595 - Xid not set error comes when video is played to the end and then played again with media player
 * Fixes: NB#94200 - media play back doesnt begin within 1 second
