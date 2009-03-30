@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<file xmlns="http://www.s60.com/xml/genconfml/1" xmlns:xi="http://www.w3.org/2001/XInclude" version="1.0" name="data/bookmarks.xml">
+  <setting ref="mafw-iradio-source-bookmarks"></setting>
+  <xi:include href="mafw-iradio.xslt"/>
+</file>

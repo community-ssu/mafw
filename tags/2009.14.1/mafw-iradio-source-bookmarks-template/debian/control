@@ -1,0 +1,15 @@
+Source: mafw-iradio-source-bookmarks-template
+Section: misc
+Priority: optional
+Maintainer: Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.7.2
+
+Package: mafw-iradio-source-bookmarks-template
+Architecture: all
+Provides: mafw-iradio-source-bookmarks
+Conflicts: mafw-iradio-source-bookmarks
+Replaces: mafw-iradio-source-bookmarks
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: MAFW internet radio bookmarks
+ Variant-specific bookmarks and resources for MAFW internet radio source
