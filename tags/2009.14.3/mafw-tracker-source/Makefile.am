@@ -7,9 +7,9 @@
 
 SUBDIRS				= libmafw-tracker-source
 
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 pkgconfigdir			= $(libdir)/pkgconfig
 pkgconfig_DATA			= mafw-tracker-source.pc
