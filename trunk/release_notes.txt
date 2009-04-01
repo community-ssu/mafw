@@ -4,41 +4,45 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.14-3
-Date       2009.03.31
+Version    0.2009.14-4
+Date       2009.04.01
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
 
-mafw-gst-renderer 0.1.2009.14-3
-mafw-test-gui 0.1.2009.14-3
+mafw-gst-renderer 0.1.2009.14-4
+mafw-tracker-source 0.1.2009.14-4
 
 Change logs: 
 
-mafw-gst-renderer (0.1.2009.14-3) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.14-3
-  * Removed guessing the seekability from renderer in favor of only GStreamer
-    query.
-  * Setting pipeline to NULL without checking for async changes as it
-    cannot happen according to Stefan comments.
-  * Must always stop() on EOS when there are 
-    no more items to play. This frees X resources if playing video,
-    otherwise setting a new Xid afterward leads to a BadWindow X 
-    error.
-  * Enabling gstreamer optimization flags
-  * Creating pipeline at startup and, soon after the playback has ended, to 
-    speed up the starting of the playback
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 31 Mar 2009 09:20:00 +0200
-mafw-test-gui (0.1.2009.14-3) unstable; urgency=low
-  * MAFW, pre-release 0.2009.14-3
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 31 Mar 2009 09:20:00 +0200
+mafw-gst-renderer (0.1.2009.14-4) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.14-4
+  * Update playcount id should be 0 while _notify_play is run in renderer
+    so it doesn have sense checking about that
+  * Removed update_playcount_needed as behavior can be accoplished only with 
+    timeout id in renderer.
+  * Moved the code to remove the update_playcount to the state class to fix
+    state pattern.
+  * _update_playcount_cb made public inside the renderer to be called from other 
+    parts of it.
+  * Moved the code to add the timeout to state-transitioning.
+  * Moved the code from the state notify_eos in the base renderer to the 
+    state-playing.
+  * Added initialization of the update_playcount structures in renderer.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
+mafw-tracker-source (0.1.2009.14-4) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.14-4
+  * Tracker changed the order of the items in 
+    the change_set parameter of the ServiceStatisticsUpdated 
+    signal, now the category is the first item, and the count 
+    is the second.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
 
 
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 2
-* Fixes: NB#107595 - Xid not set error comes when video is played to the end and then played again with media player
-* Fixes: NB#94200 - media play back doesnt begin within 1 second
+From changelog: 1
+* Fixes: NB#105133 - Mafw-tracker-source does not emit container-changed signal.
