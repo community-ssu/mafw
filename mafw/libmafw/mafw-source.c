@@ -450,6 +450,35 @@ void mafw_source_get_metadata(MafwSource *self,
 }
 
 /**
+ * mafw_source_get_metadatas:
+ * @self:          A #MafwSource instance.
+ * @object_ids:     %NULL terminated list of object IDs, whose metadata is being requested.
+ * @metadata_keys: A %NULL-terminated array of requested metadata keys.
+ * @metadatas_cb:   The function to call with results.
+ * @user_data:     Optional user data pointer passed along with @metadata_cb.
+ *
+ * Queries the metadatas for the given @object_id. The caller is informed of
+ * results via the @metadatas_cb callback.
+ *
+ * If @metadata_keys is #MAFW_SOURCE_ALL_KEYS then the source should
+ * try to retrieve all possible (see <link
+ * linkend="mafw-MafwMetadata">MafwMetadata</link>) metadata it can
+ * related to the given object.
+ */
+void mafw_source_get_metadatas(MafwSource *self,
+				  const gchar **object_ids,
+				  const gchar *const *metadata_keys,
+				  MafwSourceMetadataResultsCb metadatas_cb,
+				  gpointer user_data)
+{
+	MAFW_SOURCE_GET_CLASS(self)->get_metadatas(self,
+							 object_ids,
+							 metadata_keys,
+							 metadatas_cb,
+							 user_data);
+}
+
+/**
  * mafw_source_set_metadata:
  * @self:      A #MafwSource instance.
  * @object_id: The object ID, whose metadata is being edited.

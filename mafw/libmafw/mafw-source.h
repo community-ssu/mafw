@@ -216,6 +216,27 @@ typedef void (*MafwSourceMetadataResultCb)(MafwSource *self,
 					   const GError *error);
 
 /**
+ * MafwSourceMetadataResultsCb:
+ * @self:      The emitting #MafwSource.
+ * @metadatas:  Metadatas of the asked object-ids. The key of the
+ * 		hash-table is the object-id, the value is the metadatas
+ *		of the object as #GValue's, identical to
+ *             #MafwSourceBrowseResultCb.
+ * @user_data: Optional user data pointer passed to
+ * 		mafw_source_get_metadatas().
+ * @error:     Non-%NULL if an error occurred.
+ *
+ * Callback prototype for metadata results.
+ * If @error is set, the contents of @metadatas might be set %NULL.
+ *
+ * Exactly one callback is expected for a mafw_source_get_metadatas() call.
+ */
+typedef void (*MafwSourceMetadataResultsCb)(MafwSource *self,
+					   GHashTable *metadatas,
+					   gpointer user_data,
+					   const GError *error);
+
+/**
  * MafwSourceMetadataSetCb:
  * @self:        The emitting #MafwSource.
  * @object_id:   The object ID of the modified object.
@@ -286,6 +307,7 @@ struct _MafwSource {
  * @browse:         Virtual function for mafw_source_browse().
  * @cancel_browse:  Virtual function for mafw_source_cancel_browse().
  * @get_metadata:   Virtual function for mafw_source_get_metadata().
+ * @get_metadatas:  Virtual function for mafw_source_get_metadatas().
  * @set_metadata:   Virtual function for mafw_source_set_metadata().
  * @create_object:  Virtual function for mafw_source_create_object().
  * @destroy_object: Virtual function for mafw_source_destroy_object().
@@ -312,6 +334,12 @@ struct _MafwSourceClass {
 				 const gchar *object_id,
 				 const gchar *const *mdkeys,
 				 MafwSourceMetadataResultCb cb,
+				 gpointer user_data);
+	
+	void (*get_metadatas)(MafwSource *self,
+				 const gchar **object_ids,
+				 const gchar *const *mdkeys,
+				 MafwSourceMetadataResultsCb cb,
 				 gpointer user_data);
 
 	void (*set_metadata)(MafwSource *self,
@@ -350,6 +378,12 @@ extern void mafw_source_get_metadata(MafwSource *self,
 					 const gchar *object_id,
 					 const gchar *const *metadata_keys,
 					 MafwSourceMetadataResultCb metadata_cb,
+					 gpointer user_data);
+
+extern void mafw_source_get_metadatas(MafwSource *self,
+					 const gchar **object_ids,
+					 const gchar *const *metadata_keys,
+					 MafwSourceMetadataResultsCb metadatas_cb,
 					 gpointer user_data);
 
 extern void mafw_source_set_metadata(MafwSource *self,
