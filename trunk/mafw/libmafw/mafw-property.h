@@ -142,10 +142,11 @@ G_BEGIN_DECLS
 /**
  * MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS:
  *
- * Read-only property that will contain a comma-separated list of actions that
- * can be successfully invoked for the current resource at this specific point in
- * time. *BUT* for the moment only contains if the Seek operation is allowed or
- * not for the current resource at this specific point in time.
+ * Read-only property that contains information about the Seek operation
+ * indicating if this operation can be successfully invoked for the current
+ + resource at this specific point in time. This could be extended in the
+ * future to other operations being this property a comma-separated list of
+ * allowed actions for the current resource at this specific point in time.
  * Type: #G_TYPE_STRING
  */
 #define MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS "transport-actions"
