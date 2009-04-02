@@ -46,8 +46,9 @@ static const gchar *Contents[] = {
 	MAFW_URI_SOURCE_UUID "::" "file:///whiskey",
 	MAFW_URI_SOURCE_UUID "::" "file:///tango",
 	MAFW_URI_SOURCE_UUID "::" "file:///foxtrot",
+	NULL
 };
-#define PLS_SIZE G_N_ELEMENTS(Contents)
+#define PLS_SIZE G_N_ELEMENTS(Contents)-1
 #define URI(oid) (&oid[sizeof(MAFW_URI_SOURCE_UUID "::") - 1])
 
 static gchar *dumbpls_get_item(MafwPlaylist *pls, guint index, GError **errp)
@@ -319,6 +320,36 @@ START_TEST(test_multi_2)
 }
 END_TEST
 
+static void _metadatas_cb(MafwSource *self, GHashTable *metadatas,
+				gpointer user_data, const GError *error)
+{
+	guint i = 0;
+
+	fail_if(g_hash_table_size(metadatas) != PLS_SIZE);
+	fail_if(Old_md_called != PLS_SIZE);
+	for (i = 0; Contents[i]; i++)
+	{
+		GHashTable *cur_md = g_hash_table_lookup(metadatas, Contents[i]);
+
+		fail_if(!cur_md);
+		fail_if(g_hash_table_size(cur_md) != 1);
+	}
+	checkmore_stop_loop();
+}
+
+START_TEST(test_get_metadatas)
+{
+	MafwSource *dest_src = mafw_get_uri_source();
+	
+	mafw_source_get_metadatas(dest_src, Contents,
+					 MAFW_SOURCE_LIST(MAFW_METADATA_KEY_URI),
+					 _metadatas_cb,
+					 NULL);
+	checkmore_spin_loop(-1);
+
+}
+END_TEST
+
 /* Fixtures. */
 static void setup(void)
 {
@@ -349,6 +380,7 @@ int main(void)
 	suite_add_tcase(suite, tc);
 	tcase_add_checked_fixture(tc, setup, teardown);
 
+	if (1) tcase_add_test(tc, test_get_metadatas);
 	if (1) tcase_add_test(tc, test_valid);
 	if (1) tcase_add_test(tc, test_invalid);
 	if (1) tcase_add_test(tc, test_invalid_2);
