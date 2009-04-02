@@ -139,6 +139,21 @@ G_BEGIN_DECLS
 				     MAFW_PROPERTY_RENDERER_AUTOPAINT,	\
 				     G_TYPE_BOOLEAN)
 
+/**
+ * MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS:
+ *
+ * Read-only property that will contain a comma-separated list of actions that
+ * can be successfully invoked for the current resource at this specific point in
+ * time. *BUT* for the moment only contains if the Seek operation is allowed or
+ * not for the current resource at this specific point in time.
+ * Type: #G_TYPE_STRING
+ */
+#define MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS "transport-actions"
+#define MAFW_EXTENSION_SUPPORTS_TRANSPORT_ACTIONS(self)			\
+	mafw_extension_add_property(MAFW_EXTENSION(self),		\
+				    MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS,	\
+				    G_TYPE_STRING)
+
 G_END_DECLS
 
 #endif
