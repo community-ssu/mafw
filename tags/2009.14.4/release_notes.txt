@@ -1,0 +1,48 @@
+
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    0.2009.14-4
+Date       2009.04.01
+Maintainer veitikka6@gmail.com
+           mika.tapojarvi@sse.fi
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
+
+mafw-gst-renderer 0.1.2009.14-4
+mafw-tracker-source 0.1.2009.14-4
+
+Change logs: 
+
+mafw-gst-renderer (0.1.2009.14-4) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.14-4
+  * Update playcount id should be 0 while _notify_play is run in renderer
+    so it doesn have sense checking about that
+  * Removed update_playcount_needed as behavior can be accoplished only with 
+    timeout id in renderer.
+  * Moved the code to remove the update_playcount to the state class to fix
+    state pattern.
+  * _update_playcount_cb made public inside the renderer to be called from other 
+    parts of it.
+  * Moved the code to add the timeout to state-transitioning.
+  * Moved the code from the state notify_eos in the base renderer to the 
+    state-playing.
+  * Added initialization of the update_playcount structures in renderer.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
+mafw-tracker-source (0.1.2009.14-4) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.14-4
+  * Tracker changed the order of the items in 
+    the change_set parameter of the ServiceStatisticsUpdated 
+    signal, now the category is the first item, and the count 
+    is the second.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
+
+
+
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 1
+* Fixes: NB#105133 - Mafw-tracker-source does not emit container-changed signal.
