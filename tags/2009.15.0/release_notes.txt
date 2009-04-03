@@ -4,45 +4,56 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.14-4
-Date       2009.04.01
+Version    0.2009.15-1
+Date       2009.04.03
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 4
 
-mafw-gst-renderer 0.1.2009.14-4
-mafw-tracker-source 0.1.2009.14-4
+libmafw 0.1.2009.15-1
+mafw-gst-renderer 0.1.2009.15-1
+mafw-test-gui 0.1.2009.15-1
+mafw-tracker-source 0.1.2009.15-1
 
 Change logs: 
 
-mafw-gst-renderer (0.1.2009.14-4) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.14-4
-  * Update playcount id should be 0 while _notify_play is run in renderer
-    so it doesn have sense checking about that
-  * Removed update_playcount_needed as behavior can be accoplished only with 
-    timeout id in renderer.
-  * Moved the code to remove the update_playcount to the state class to fix
-    state pattern.
-  * _update_playcount_cb made public inside the renderer to be called from other 
-    parts of it.
-  * Moved the code to add the timeout to state-transitioning.
-  * Moved the code from the state notify_eos in the base renderer to the 
-    state-playing.
-  * Added initialization of the update_playcount structures in renderer.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
-mafw-tracker-source (0.1.2009.14-4) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.14-4
-  * Tracker changed the order of the items in 
-    the change_set parameter of the ServiceStatisticsUpdated 
-    signal, now the category is the first item, and the count 
-    is the second.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 01 Apr 2009 09:34:16 +0300
+libmafw (0.1.2009.15-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.15-1
+  * Improving documentation.
+  * Added transport-actions property. For the moment contains information
+    about Seek operation.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Apr 2009 09:17:14 +0300
+mafw-gst-renderer (0.1.2009.15-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.15-1
+  * Added transport-actions property. For the moment contains information
+    about Seek operation.
+  * Unit test disabled by default for system integration purposes.
+  * Some tags are detected when Gstreamer is already
+    in GST_STATE_PLAYING, so in this case, emit them right away, otherwise
+    they are never emitted to the UI.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Apr 2009 09:17:14 +0300
+mafw-test-gui (0.1.2009.15-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.15-1
+  * Disable value-changed handlers for seekbar when
+    setting the duration of the current stream, to prevent value-changed
+    signals being emitted due to the need to adjust the seekbar value to 
+    fit in the new range on EOS, when moving to a new (shorter) stream.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Apr 2009 09:17:14 +0300
+mafw-tracker-source (0.1.2009.15-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.15-1
+  * Resolve artist metadata for album categories using Tracker's 
+    concat API.
+  * Now object identifiers for albums category
+    do not encode the artist information.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Apr 2009 09:17:14 +0300
 
 
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 1
-* Fixes: NB#105133 - Mafw-tracker-source does not emit container-changed signal.
+From changelog: 3
+* Fixes: NB#106136 - Metadata not shown properly for radio stations.
+* Fixes: NB#108781 - Set position: operation not allowed in transitioning state message displayed when playing new clip in playlist
+* Fixes: NB#109391 - Weird behaviour for album art clip in mafw tracker source
