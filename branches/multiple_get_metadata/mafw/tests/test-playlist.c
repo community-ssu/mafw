@@ -139,7 +139,7 @@ START_TEST(test_valid)
 					 MAFW_SOURCE_LIST(MAFW_METADATA_KEY_URI),
 					 itemcb_valid, &Destructed, destruct);
 	checkmore_spin_loop(-1);
-	fail_unless(Itemcb_called == 3);
+	fail_unless(Itemcb_called == 3, "called: %d", Itemcb_called);
 	fail_unless(Old_md_called == 3);
 	fail_unless(Destructed);
 	/* [0..0], valid metadata key. */
@@ -220,7 +220,7 @@ START_TEST(test_no_md)
 	Req = mafw_playlist_get_items_md(Pls, 0, 2, NULL, itemcb_nomd,
 					 &Destructed, destruct);
 	checkmore_spin_loop(-1);
-	fail_unless(Itemcb_called == 3);
+	fail_unless(Itemcb_called == 3, "Called: %d", Itemcb_called);
 	fail_unless(Old_md_called == 0);
 	fail_unless(Destructed);
 }
@@ -346,7 +346,6 @@ START_TEST(test_get_metadatas)
 					 _metadatas_cb,
 					 NULL);
 	checkmore_spin_loop(-1);
-
 }
 END_TEST
 
