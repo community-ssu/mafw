@@ -1,3 +1,10 @@
+libmafw (0.1.2009.16-1) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.16-1
+  * Updated changelogs, configure files and release notes.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 08 Apr 2009 13:05:14 +0300
+
 libmafw (0.1.2009.15-2) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.15-2
