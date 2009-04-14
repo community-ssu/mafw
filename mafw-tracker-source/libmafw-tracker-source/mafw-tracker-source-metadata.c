@@ -609,6 +609,7 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
         gchar *artist = NULL;
         gchar *clip = NULL;
         gchar **clips = NULL;
+        gchar **playlist_metadata_keys = NULL;
         gchar *genre = NULL;
         struct _metadatas_common_closure *mcc = NULL;
         struct _metadatas_closure *mc = NULL;
@@ -685,12 +686,19 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                         playlist_mc = g_new0(
                                                 struct _metadatas_closure, 1);
                                         playlist_mc->common = mcc;
-                                }
-                                if (util_is_duration_requested(
-                                            (const gchar **) mcc->metadata_keys)) {
-                                        mcc->metadata_keys =
-                                                util_add_tracker_data_to_check_pls_duration(
-                                                        mcc->metadata_keys);
+
+                                        /* If duration is required, then we need
+                                         * to add a new key in order to check if
+                                         * duration is right or need to be
+                                         * calculated */
+                                        playlist_metadata_keys =
+                                                g_strdupv(mcc->metadata_keys);
+                                        if (util_is_duration_requested(
+                                                    (const gchar **) mcc->metadata_keys)) {
+                                                playlist_metadata_keys =
+                                                        util_add_tracker_data_to_check_pls_duration(
+                                                        playlist_metadata_keys);
+                                        }
                                 }
                                 playlist_mc->object_ids =
                                         g_list_prepend(playlist_mc->object_ids,
@@ -829,11 +837,12 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                 clips = _list_to_strv(playlist_clips);
                 ti_get_metadata_from_playlist(
                         clips,
-                        mcc->metadata_keys,
+                        playlist_metadata_keys,
                         _get_metadatas_tracker_from_playlist_cb,
                         playlist_mc);
                 g_strfreev(clips);
                 g_list_free(playlist_clips);
+                g_strfreev(playlist_metadata_keys);
         }
 }
 
