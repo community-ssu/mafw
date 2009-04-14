@@ -33,19 +33,33 @@
 #include "util.h"
 #include "definitions.h"
 
-struct _metadata_closure {
+struct _metadata_common_closure {
 	/* Source instance */
 	MafwSource *source;
-	/* The objectid to get metadata from */
-	gchar *object_id;
 	/* Metadata keys requested */
 	gchar **metadata_keys;
-	/* Metadata values obtained */
-	GHashTable *metadata_values;
+	/* Metadatas */
+        GHashTable *metadatas;
 	/* The user callback used to emit the browse results to the user */
-	MafwSourceMetadataResultCb callback;
+	MafwSourceMetadataResultsCb callback;
 	/* User data for the user callback  */
 	gpointer user_data;
+        /* Error obtained */
+        GError *error;
+        /* How many elements remains to insert in metadatas */
+        gint remaining;
+};
+
+struct _metadata_closure {
+        /* Shared struct */
+        struct _metadata_common_closure *common;
+	/* The objectid to get metadata from */
+        union {
+                gchar *object_id;
+                GList *object_ids;
+        };
+	/* Metadata values obtained */
+	GHashTable *metadata_value;
 };
 
 struct _update_metadata_closure {
@@ -69,62 +83,46 @@ typedef gboolean (*_GetMetadataFunc)(struct _metadata_closure *mc,
 
 static void _metadata_closure_free(gpointer data)
 {
-	struct _metadata_closure *mc;
+        struct _metadata_common_closure *mcc;
 
-	mc = (struct _metadata_closure *) data;
-
-	/* Free objectid of explored item */
-	g_free(mc->object_id);
-
-	/* Destroy metadata information */
-	mafw_metadata_release(mc->metadata_values);
+        mcc = (struct _metadata_common_closure *) data;
 
 	/* Free metadata keys */
-	g_strfreev(mc->metadata_keys);
+	g_strfreev(mcc->metadata_keys);
 
-	/* Free metadata closure structure */
-	g_free(mc);
+        /* Free metadatas */
+        g_hash_table_unref(mcc->metadatas);
+
+        /* Free error */
+        if (mcc->error) {
+                g_error_free(mcc->error);
+        }
+
+        /* Free common structure */
+        g_free(mcc);
 }
 
 static gboolean _emit_metadata_results_idle(gpointer data)
 {
-	struct _metadata_closure *mc;
+	struct _metadata_common_closure *mcc;
 
-	mc = (struct _metadata_closure *) data;
+	mcc = (struct _metadata_common_closure *) data;
 
-	mc->callback(mc->source,
-		     mc->object_id,
-		     mc->metadata_values,
-		     mc->user_data,
-		     NULL);
+	mcc->callback(mcc->source,
+                      mcc->metadatas,
+                      mcc->user_data,
+                      mcc->error);
 
 	return FALSE;
 }
 
-static void _emit_metadata_results(struct _metadata_closure *mc)
+static void _emit_metadata_results(struct _metadata_common_closure *mcc)
 {
 	/* Emit results */
 	g_idle_add_full(G_PRIORITY_DEFAULT_IDLE,
 			(GSourceFunc) _emit_metadata_results_idle,
-			mc,
+			mcc,
 			(GDestroyNotify) _metadata_closure_free);
-}
-
-static void _emit_metadata_error(struct _metadata_closure *mc,
-                                 GError *error)
-{
-        GError *mafw_error;
-
-        mafw_error = g_error_new(MAFW_SOURCE_ERROR,
-                                  MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
-                                  "%s not found", mc->object_id);
-        mc->callback(mc->source,
-                     mc->object_id,
-                     NULL,
-                     mc->user_data,
-                     mafw_error);
-        g_error_free(mafw_error);
-	_metadata_closure_free(mc);
 }
 
 static void _get_metadata_tracker_cb(GHashTable *result,
@@ -133,12 +131,68 @@ static void _get_metadata_tracker_cb(GHashTable *result,
 {
         struct _metadata_closure *mc = (struct _metadata_closure *) user_data;
 
-        if (!error) {
-                mc->metadata_values = result;
-                _emit_metadata_results(mc);
-        } else {
-                _emit_metadata_error(mc, error);
+        /* Save error */
+        if (error) {
+                if (!mc->common->error) {
+                        mc->common->error = error;
+                } else {
+                        g_error_free(error);
+                }
         }
+
+        /* Save result */
+        g_hash_table_insert(mc->common->metadatas,
+                            mc->object_id,
+                            g_hash_table_ref(result));
+        mc->common->remaining--;
+
+        /* If there aren't more elements, send results */
+        if (mc->common->remaining == 0) {
+                _emit_metadata_results(mc->common);
+        }
+
+        /* Free closure */
+        g_free(mc);
+}
+
+static void _get_metadatas_tracker_cb(GList *results,
+                                      GError *error,
+                                      gpointer user_data)
+{
+        struct _metadata_closure *mc = (struct _metadata_closure *) user_data;
+        GList *current_obj;
+        GList *current_result;
+
+        /* Save error */
+        if (error) {
+                if (!mc->common->error) {
+                        mc->common->error = error;
+                } else {
+                        g_error_free(error);
+                }
+        }
+
+        /* Save results */
+        current_obj = mc->object_ids;
+        current_result = results;
+
+        while (current_obj && current_result) {
+                g_hash_table_insert(mc->common->metadatas,
+                                    current_obj->data,
+                                    g_hash_table_ref(current_result->data));
+                current_obj = current_obj->next;
+                current_result = current_result->next;
+                mc->common->remaining--;
+        }
+
+        /* If there aren't more elements, send results */
+        if (mc->common->remaining == 0) {
+                _emit_metadata_results(mc->common);
+        }
+
+        /* Free closure */
+        g_list_free(mc->object_ids);
+        g_free(mc);
 }
 
 static gboolean _calculate_duration_is_needed(GHashTable *metadata,
@@ -205,20 +259,21 @@ static void _add_playlist_duration_cb(MafwSource *self,
 			pls_duration = 	g_value_get_int(gval);
 
 			gval = mafw_metadata_first(
-				pls_mc->metadata_values,
+				pls_mc->metadata_value,
 				MAFW_METADATA_KEY_DURATION);
 
 			if (gval) {
 				g_value_set_int(gval, pls_duration);
 			} else {
-				mafw_metadata_add_int(pls_mc->metadata_values,
-						      MAFW_METADATA_KEY_DURATION,
-						      pls_duration);
+				mafw_metadata_add_int(
+                                        pls_mc->metadata_value,
+                                        MAFW_METADATA_KEY_DURATION,
+                                        pls_duration);
 			}
 		}
 	}
 
-	_get_metadata_tracker_cb(pls_mc->metadata_values, (GError *) error,
+	_get_metadata_tracker_cb(pls_mc->metadata_value, (GError *) error,
 				 user_data);
 
 	mafw_metadata_release(metadata);
@@ -235,16 +290,16 @@ static void _get_metadata_tracker_from_playlist_cb(GHashTable *result,
 		/* Check if we need to calculate the duration exhaustively. */
 		if (_calculate_duration_is_needed(
 			    result,
-			    mc->metadata_keys,
+			    mc->common->metadata_keys,
 			    mc->object_id)) {
 
 			/* Store the result in the closure. */
-			mc->metadata_values = result;
+			mc->metadata_value = result;
 
 			/* Calculate the duration and add it to the MAFW
 			   results. */
 			mafw_tracker_source_get_playlist_duration(
-				mc->source,
+				mc->common->source,
 				mc->object_id,
 				_add_playlist_duration_cb,
 				(gpointer) mc);
@@ -254,6 +309,65 @@ static void _get_metadata_tracker_from_playlist_cb(GHashTable *result,
 	}
 
 	_get_metadata_tracker_cb(result, error, user_data);
+}
+
+static void _get_metadatas_tracker_from_playlist_cb(GList *results,
+                                                    GError *error,
+                                                    gpointer user_data)
+{
+        GList *current_obj;
+        GList *current_result;
+        struct _metadata_closure *nmc = NULL;
+        struct _metadata_closure *mc = (struct _metadata_closure *) user_data;
+
+        /* Save error */
+        if (error) {
+                if (!mc->common->error) {
+                        mc->common->error = error;
+                } else {
+                        g_error_free(error);
+                }
+        }
+
+        /* For each result, check if we need to calculate the duration
+         * exhaustively. If not, save the result*/
+        current_obj = mc->object_ids;
+        current_result = results;
+        while (current_obj && current_result) {
+                if (_calculate_duration_is_needed(current_result->data,
+                                                  mc->common->metadata_keys,
+                                                  current_obj->data)) {
+                        /* Create a new closure to store data */
+                        nmc = g_new0(struct _metadata_closure, 1);
+                        nmc->object_id = current_obj->data;
+                        nmc->metadata_value = current_result->data;
+                        nmc->common = mc->common;
+
+                        mafw_tracker_source_get_playlist_duration(
+                                nmc->common->source,
+                                nmc->object_id,
+                                _add_playlist_duration_cb,
+                                nmc);
+                } else {
+                        g_hash_table_insert(
+                                mc->common->metadatas,
+                                current_obj->data,
+                                g_hash_table_ref(current_result->data));
+                        mc->common->remaining--;
+                }
+
+                current_obj = current_obj->next;
+                current_result = current_result->next;
+        }
+
+        /* If there aren't more elements, send results */
+        if (mc->common->remaining == 0) {
+                _emit_metadata_results(mc->common);
+        }
+
+        /* Free closure */
+        g_list_free(mc->object_ids);
+        g_free(mc);
 }
 
 static void _get_metadata_tracker_from_music_cb(GHashTable *result,
@@ -285,22 +399,22 @@ static void _get_metadata_tracker_from_root_videos_cb(GHashTable *result,
 
         /* If there are previous results, aggregate durations */
         if (result) {
-                if (mc->metadata_values) {
+                if (mc->metadata_value) {
                         gvalcur = mafw_metadata_first(
                                 result,
                                 MAFW_METADATA_KEY_DURATION);
                         gvalnew = mafw_metadata_first(
-                                mc->metadata_values,
+                                mc->metadata_value,
                                 MAFW_METADATA_KEY_DURATION);
                         if (gvalcur && gvalnew) {
                                 g_value_set_int(gvalcur,
                                                 g_value_get_int(gvalcur) +
                                                 g_value_get_int(gvalnew));
                         }
-			mafw_metadata_release(mc->metadata_values);
+			mafw_metadata_release(mc->metadata_value);
                 }
         } else {
-                result = mc->metadata_values;
+                result = mc->metadata_value;
         }
 
         if (result) {
@@ -321,10 +435,10 @@ static void _get_metadata_tracker_from_root_music_cb(GHashTable *result,
         struct _metadata_closure *mc = (struct _metadata_closure *) user_data;
 
         /* Store the current value */
-        mc->metadata_values = result;
+        mc->metadata_value = result;
 
         /* Ask for videos and enqueue results */
-        ti_get_metadata_from_videos(mc->metadata_keys,
+        ti_get_metadata_from_videos(mc->common->metadata_keys,
                                     ROOT_TITLE,
                                     _get_metadata_tracker_from_root_videos_cb,
                                     mc);
@@ -401,12 +515,38 @@ static gboolean _update_metadata_idle(gpointer data)
         return FALSE;
 }
 
+static gchar** _list_to_strv(GList *list)
+{
+        gchar **strv = NULL;
+        gint i;
+
+        strv = g_new0(gchar *, g_list_length(list) + 1);
+        i=0;
+        while (list) {
+                strv[i] = list->data;
+                i++;
+                list = list->next;
+        }
+
+        return strv;
+}
+
 void
 mafw_tracker_source_get_metadata(MafwSource *self,
                                  const gchar *object_id,
                                  const gchar *const *metadata_keys,
                                  MafwSourceMetadataResultCb metadata_cb,
                                  gpointer user_data)
+{
+        /* Do nothing */
+}
+
+void
+mafw_tracker_source_get_metadatas(MafwSource *self,
+                                  const gchar **object_ids,
+                                  const gchar *const *metadata_keys,
+                                  MafwSourceMetadataResultsCb metadatas_cb,
+                                  gpointer user_data)
 {
 	GError *error = NULL;
         CategoryType category;
@@ -416,32 +556,17 @@ mafw_tracker_source_get_metadata(MafwSource *self,
         gchar *clip = NULL;
         gchar **clips = NULL;
         gchar *genre = NULL;
+        struct _metadata_common_closure *mcc = NULL;
         struct _metadata_closure *mc = NULL;
+        struct _metadata_closure *video_mc = NULL;
+        struct _metadata_closure *audio_mc = NULL;
+        struct _metadata_closure *playlist_mc = NULL;
+        GList *video_clips = NULL;
+        GList *audio_clips = NULL;
+        GList *playlist_clips = NULL;
+        gint i;
 
 	g_return_if_fail(MAFW_IS_TRACKER_SOURCE(self));
-
-	if (!object_id) {
-		g_set_error(&error,
-			    MAFW_SOURCE_ERROR,
-			    MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
-			    "No object id was specified");
-		metadata_cb(self, object_id, NULL, user_data, error);
-		g_error_free(error);
-		return;
-        }
-
-        category = util_extract_category_info(object_id, &genre, &artist,
-                                              &album, &clip);
-
-        if (category == CATEGORY_ERROR) {
-                g_set_error(&error,
-                            MAFW_SOURCE_ERROR,
-                            MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
-                            "Invalid object id");
-		metadata_cb(self, object_id, NULL, user_data, error);
-                g_error_free(error);
-                return;
-        }
 
 	if (mafw_source_all_keys(metadata_keys)) {
 		meta_keys = MAFW_SOURCE_LIST(KNOWN_METADATA_KEYS);
@@ -449,141 +574,213 @@ mafw_tracker_source_get_metadata(MafwSource *self,
 		meta_keys = metadata_keys;
 	}
 
-	/* Prepare get_metadata operation */
-	mc = g_new0(struct _metadata_closure, 1);
-	mc->source = self;
-	mc->object_id = g_strdup(object_id);
-	mc->metadata_keys = g_strdupv((gchar **) meta_keys);
-	mc->callback = metadata_cb;
-	mc->user_data = user_data;
+	/* Prepare common structure operation */
+        mcc = g_new0(struct _metadata_common_closure, 1);
+	mcc->source = self;
+        mcc->metadata_keys = g_strdupv((gchar **) meta_keys);
+	mcc->callback = metadatas_cb;
+	mcc->user_data = user_data;
+        mcc->remaining = object_ids? g_strv_length((gchar **) object_ids): 0;
+        mcc->metadatas =
+                g_hash_table_new_full(g_str_hash,
+                                      g_str_equal,
+                                      (GDestroyNotify) g_free,
+                                      (GDestroyNotify) mafw_metadata_release);
 
-        if (clip) {
-                clips = g_new0(gchar *, 2);
-                clips[0] = clip;
-                switch (category) {
-                case CATEGORY_VIDEO:
-                        ti_get_metadata_from_videoclip(clips, mc->metadata_keys,
-                                                       _get_metadata_tracker_cb,
-                                                       mc);
-                        break;
-		case CATEGORY_MUSIC_PLAYLISTS:
-			if (util_is_duration_requested(
-				    (const gchar **) mc->metadata_keys)) {
-				mc->metadata_keys =
-					util_add_tracker_data_to_check_pls_duration(
-						mc->metadata_keys);
-			}
+	if (!object_ids || !object_ids[0]) {
+		mcc->error = g_error_new(MAFW_SOURCE_ERROR,
+                                         MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
+                                         "No object id was specified");
+		_emit_metadata_results(mcc);
+		return;
+        }
 
-			ti_get_metadata_from_playlist(
-				clips,
-				mc->metadata_keys,
-				_get_metadata_tracker_from_playlist_cb,
-				mc);
-			break;
-                default:
-                        ti_get_metadata_from_audioclip(clips, mc->metadata_keys,
-                                                       _get_metadata_tracker_cb,
-                                                       mc);
-                        break;
+        i = 0;
+        while (object_ids[i]) {
+                category = util_extract_category_info(object_ids[i],
+                                                      &genre, &artist,
+                                                      &album, &clip);
+
+                if (category == CATEGORY_ERROR) {
+                        mc = g_new0(struct _metadata_closure, 1);
+                        mc->object_id = g_strdup(object_ids[i]);
+                        mc->common = mcc;
+
+                        error = g_error_new(MAFW_SOURCE_ERROR,
+                                            MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
+                                            "Invalid object id");
+
+                        _get_metadata_tracker_cb(NULL, error, mc);
+                } else if (clip) {
+                        /* Accumulate clips for later processing */
+                        switch (category) {
+                        case CATEGORY_VIDEO:
+                                if (!video_mc) {
+                                        video_mc = g_new0(
+                                                struct _metadata_closure, 1);
+                                        video_mc->common = mcc;
+                                }
+                                video_mc->object_ids =
+                                        g_list_prepend(video_mc->object_ids,
+                                                       g_strdup(object_ids[i]));
+                                video_clips = g_list_prepend(video_clips,
+                                                             clip);
+                                break;
+                        case CATEGORY_MUSIC_PLAYLISTS:
+                                if (!playlist_mc) {
+                                        playlist_mc = g_new0(
+                                                struct _metadata_closure, 1);
+                                        playlist_mc->common = mcc;
+                                }
+                                if (util_is_duration_requested(
+                                            (const gchar **) mcc->metadata_keys)) {
+                                        mcc->metadata_keys =
+                                                util_add_tracker_data_to_check_pls_duration(
+                                                        mcc->metadata_keys);
+                                }
+                                playlist_mc->object_ids =
+                                        g_list_prepend(playlist_mc->object_ids,
+                                                       g_strdup(object_ids[i]));
+                                playlist_clips = g_list_prepend(playlist_clips,
+                                                                clip);
+
+                                break;
+                        default:
+                                if (!audio_mc) {
+                                        audio_mc = g_new0(
+                                                struct _metadata_closure, 1);
+                                        audio_mc->common = mcc;
+                                }
+                                audio_mc->object_ids =
+                                        g_list_prepend(audio_mc->object_ids,
+                                                       g_strdup(object_ids[i]));
+                                audio_clips = g_list_prepend(audio_clips,
+                                                             clip);
+                                break;
+                        }
+                } else {
+                        mc = g_new0(struct _metadata_closure, 1);
+                        mc->object_id = g_strdup(object_ids[i]);
+                        mc->common = mcc;
+
+                        switch (category) {
+                        case CATEGORY_ROOT:
+                                ti_get_metadata_from_music(
+                                        mcc->metadata_keys,
+                                        ROOT_TITLE,
+                                        _get_metadata_tracker_from_root_music_cb,
+                                        mc);
+                                break;
+
+                        case CATEGORY_VIDEO:
+                                ti_get_metadata_from_videos(mcc->metadata_keys,
+                                                            ROOT_VIDEOS_TITLE,
+                                                            _get_metadata_tracker_cb,
+                                                            mc);
+                                break;
+
+                        case CATEGORY_MUSIC:
+                                ti_get_metadata_from_music(
+                                        mcc->metadata_keys,
+                                        ROOT_MUSIC_TITLE,
+                                        _get_metadata_tracker_from_music_cb,
+                                        mc);
+                                break;
+
+                        case CATEGORY_MUSIC_ARTISTS:
+                                ti_get_metadata_from_category(
+                                        genre, artist, album,
+                                        MAFW_METADATA_KEY_ARTIST,
+                                        ROOT_MUSIC_ARTISTS_TITLE,
+                                        mcc->metadata_keys,
+                                        _get_metadata_tracker_cb,
+                                        mc);
+                                break;
+                        case CATEGORY_MUSIC_ALBUMS:
+                                ti_get_metadata_from_category(
+                                        genre, artist, album,
+                                        MAFW_METADATA_KEY_ALBUM,
+                                        ROOT_MUSIC_ALBUMS_TITLE,
+                                        mcc->metadata_keys,
+                                        _get_metadata_tracker_cb,
+                                        mc);
+                                break;
+
+                        case CATEGORY_MUSIC_GENRES:
+                                ti_get_metadata_from_category(
+                                        genre, artist, album,
+                                        MAFW_METADATA_KEY_GENRE,
+                                        ROOT_MUSIC_GENRES_TITLE,
+                                        mcc->metadata_keys,
+                                        _get_metadata_tracker_cb,
+                                        mc);
+                                break;
+
+                        case CATEGORY_MUSIC_SONGS:
+                                ti_get_metadata_from_music(
+                                        mcc->metadata_keys,
+                                        ROOT_MUSIC_SONGS_TITLE,
+                                        _get_metadata_tracker_cb,
+                                        mc);
+                                break;
+
+                        case CATEGORY_MUSIC_PLAYLISTS:
+                                ti_get_metadata_from_playlists(
+                                        mcc->metadata_keys,
+                                        ROOT_MUSIC_PLAYLISTS_TITLE,
+                                        _get_metadata_tracker_from_playlist_cb,
+                                        mc);
+                                break;
+
+                        default:
+                                /* CATEGORY_ERROR was already considered
+                                 * above */
+                                break;
+                        }
                 }
+                if (genre) {
+                        g_free(genre);
+                };
 
-		g_strfreev(clips);
+                if (artist) {
+                        g_free(artist);
+                };
 
-		if (genre) {
-			g_free(genre);
-		};
+                if (album) {
+                        g_free(album);
+                };
 
-		if (artist) {
-			g_free(artist);
-		};
-
-		if (album) {
-			g_free(album);
-		};
-
-                return;
+                i++;
         }
 
-        switch (category) {
-        case CATEGORY_ROOT:
-                ti_get_metadata_from_music(
-                        mc->metadata_keys,
-                        ROOT_TITLE,
-                        _get_metadata_tracker_from_root_music_cb,
-                        mc);
-                break;
-
-        case CATEGORY_VIDEO:
-                ti_get_metadata_from_videos(mc->metadata_keys,
-                                            ROOT_VIDEOS_TITLE,
-                                            _get_metadata_tracker_cb,
-                                            mc);
-                break;
-
-        case CATEGORY_MUSIC:
-                ti_get_metadata_from_music(
-                        mc->metadata_keys,
-                        ROOT_MUSIC_TITLE,
-                        _get_metadata_tracker_from_music_cb,
-                        mc);
-                break;
-
-        case CATEGORY_MUSIC_ARTISTS:
-                ti_get_metadata_from_category(genre, artist, album,
-                                              MAFW_METADATA_KEY_ARTIST,
-                                              ROOT_MUSIC_ARTISTS_TITLE,
-                                              mc->metadata_keys,
-                                              _get_metadata_tracker_cb,
-                                              mc);
-                break;
-        case CATEGORY_MUSIC_ALBUMS:
-                ti_get_metadata_from_category(genre, artist, album,
-                                              MAFW_METADATA_KEY_ALBUM,
-                                              ROOT_MUSIC_ALBUMS_TITLE,
-                                              mc->metadata_keys,
-                                              _get_metadata_tracker_cb,
-                                              mc);
-                break;
-
-        case CATEGORY_MUSIC_GENRES:
-                ti_get_metadata_from_category(genre, artist, album,
-                                              MAFW_METADATA_KEY_GENRE,
-                                              ROOT_MUSIC_GENRES_TITLE,
-                                              mc->metadata_keys,
-                                              _get_metadata_tracker_cb,
-                                              mc);
-                break;
-
-        case CATEGORY_MUSIC_SONGS:
-                ti_get_metadata_from_music(mc->metadata_keys,
-                                           ROOT_MUSIC_SONGS_TITLE,
-                                           _get_metadata_tracker_cb,
-                                           mc);
-                break;
-
-        case CATEGORY_MUSIC_PLAYLISTS:
-		ti_get_metadata_from_playlists(
-			mc->metadata_keys,
-			ROOT_MUSIC_PLAYLISTS_TITLE,
-			_get_metadata_tracker_from_playlist_cb,
-			mc);
-                break;
-
-        default:
-		/* CATEGORY_ERROR was already considered above */
-                break;
+        if (audio_mc) {
+                clips = _list_to_strv(audio_clips);
+                ti_get_metadata_from_audioclip(clips, mcc->metadata_keys,
+                                               _get_metadatas_tracker_cb,
+                                               audio_mc);
+                g_strfreev(clips);
+                g_list_free(audio_clips);
         }
-        if (genre) {
-                g_free(genre);
-        };
 
-        if (artist) {
-                g_free(artist);
-        };
+        if (video_mc) {
+                clips = _list_to_strv(video_clips);
+                ti_get_metadata_from_videoclip(clips, mcc->metadata_keys,
+                                               _get_metadatas_tracker_cb,
+                                               video_mc);
+                g_strfreev(clips);
+                g_list_free(video_clips);
+        }
 
-        if (album) {
-                g_free(album);
-        };
+        if (playlist_mc) {
+                clips = _list_to_strv(playlist_clips);
+                ti_get_metadata_from_playlist(
+                        clips,
+                        mcc->metadata_keys,
+                        _get_metadatas_tracker_from_playlist_cb,
+                        playlist_mc);
+                g_strfreev(clips);
+                g_list_free(playlist_clips);
+        }
 }
 
 void
