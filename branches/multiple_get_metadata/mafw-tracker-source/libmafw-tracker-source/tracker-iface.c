@@ -56,7 +56,10 @@ struct _mafw_query_closure {
 
 struct _mafw_metadata_closure {
         /* Mafw callback */
-        MafwTrackerMetadataResultCB callback;
+        union {
+                MafwTrackerMetadataResultCB callback;
+                MafwTrackerMetadatasResultCB mult_callback;
+        };
         /* Callback's user data */
         gpointer user_data;
         /* If the childcount key must be counted instead of aggregated
@@ -325,12 +328,12 @@ static void _tracker_metadata_cb(GPtrArray *results,
         if (!error) {
                 tracker_cache_values_add_results(mc->cache, results);
                 metadata_list = tracker_cache_build_metadata(mc->cache);
-                mc->callback(metadata_list->data, NULL, mc->user_data);
+                mc->mult_callback(metadata_list, NULL, mc->user_data);
                 g_list_free(metadata_list);
         } else {
                 g_warning("Error while getting metadata: %s\n",
                           error->message);
-                mc->callback(NULL, error, mc->user_data);
+                mc->mult_callback(NULL, error, mc->user_data);
         }
 
         tracker_cache_free(mc->cache);
@@ -353,7 +356,7 @@ static gchar **_uris_to_filenames(gchar **uris)
 static void _do_tracker_get_metadata(gchar **uris,
 				     gchar **keys,
 				     enum TrackerObjectType tracker_obj_type,
-				     MafwTrackerMetadataResultCB callback,
+				     MafwTrackerMetadatasResultCB callback,
 				     gpointer user_data)
 {
 	gchar **tracker_keys;
@@ -373,7 +376,7 @@ static void _do_tracker_get_metadata(gchar **uris,
 
         /* Save required information */
         mc = g_new0(struct _mafw_metadata_closure, 1);
-        mc->callback = callback;
+        mc->mult_callback = callback;
         mc->user_data = user_data;
         mc->cache = tracker_cache_new(service_type,
                                       TRACKER_CACHE_RESULT_TYPE_GET_METADATA);
@@ -1236,7 +1239,7 @@ void ti_get_metadata_from_category(const gchar *genre,
 
 void ti_get_metadata_from_videoclip(gchar **uris,
                                     gchar **keys,
-                                    MafwTrackerMetadataResultCB callback,
+                                    MafwTrackerMetadatasResultCB callback,
                                     gpointer user_data)
 {
         _do_tracker_get_metadata(uris, keys, TRACKER_TYPE_VIDEO,
@@ -1245,7 +1248,7 @@ void ti_get_metadata_from_videoclip(gchar **uris,
 
 void ti_get_metadata_from_audioclip(gchar **uris,
                                     gchar **keys,
-                                    MafwTrackerMetadataResultCB callback,
+                                    MafwTrackerMetadatasResultCB callback,
                                     gpointer user_data)
 {
         _do_tracker_get_metadata(uris, keys, TRACKER_TYPE_MUSIC,
@@ -1254,7 +1257,7 @@ void ti_get_metadata_from_audioclip(gchar **uris,
 
 void ti_get_metadata_from_playlist(gchar **uris,
 				   gchar **keys,
-				   MafwTrackerMetadataResultCB callback,
+				   MafwTrackerMetadatasResultCB callback,
 				   gpointer user_data)
 {
         _do_tracker_get_metadata(uris, keys, TRACKER_TYPE_PLAYLIST,
