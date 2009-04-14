@@ -363,7 +363,7 @@ static gboolean _update_metadata_idle(gpointer data)
 
         umc = (struct _update_metadata_closure *) data;
 
-        non_updated_keys = ti_set_metadata(umc->clip, umc->metadata, 
+        non_updated_keys = ti_set_metadata(umc->clip, umc->metadata,
 					   &updated);
 
         if (!non_updated_keys) {
@@ -391,7 +391,7 @@ static gboolean _update_metadata_idle(gpointer data)
 
         if (error) {
                 g_error_free(error);
-        } 		
+        }
         g_hash_table_unref(umc->metadata);
         g_free(umc->object_id);
         g_free(umc->clip);
@@ -414,6 +414,7 @@ mafw_tracker_source_get_metadata(MafwSource *self,
         gchar *album = NULL;
         gchar *artist = NULL;
         gchar *clip = NULL;
+        gchar **clips = NULL;
         gchar *genre = NULL;
         struct _metadata_closure *mc = NULL;
 
@@ -457,9 +458,11 @@ mafw_tracker_source_get_metadata(MafwSource *self,
 	mc->user_data = user_data;
 
         if (clip) {
+                clips = g_new0(gchar *, 2);
+                clips[0] = clip;
                 switch (category) {
                 case CATEGORY_VIDEO:
-                        ti_get_metadata_from_videoclip(clip, mc->metadata_keys,
+                        ti_get_metadata_from_videoclip(clips, mc->metadata_keys,
                                                        _get_metadata_tracker_cb,
                                                        mc);
                         break;
@@ -472,19 +475,19 @@ mafw_tracker_source_get_metadata(MafwSource *self,
 			}
 
 			ti_get_metadata_from_playlist(
-				clip,
+				clips,
 				mc->metadata_keys,
 				_get_metadata_tracker_from_playlist_cb,
 				mc);
 			break;
                 default:
-                        ti_get_metadata_from_audioclip(clip, mc->metadata_keys,
+                        ti_get_metadata_from_audioclip(clips, mc->metadata_keys,
                                                        _get_metadata_tracker_cb,
                                                        mc);
                         break;
                 }
 
-		g_free(clip);
+		g_strfreev(clips);
 
 		if (genre) {
 			g_free(genre);

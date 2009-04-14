@@ -1071,28 +1071,35 @@ tracker_cache_build_metadata(TrackerCache *cache)
         for (result_index = 0;
              result_index < cache->tracker_results->len;
              result_index++) {
-                metadata = mafw_metadata_new();
-                for (key_index = 0; user_keys[key_index]; key_index++) {
-                        /* Special cache: title must use filename if
-                         * it doesn't contain title */
-                        if (strcmp(user_keys[key_index],
-                                   MAFW_METADATA_KEY_TITLE) == 0) {
-                                value = _get_title(cache, result_index);
-                        } else {
-                                value = tracker_cache_value_get(
-                                        cache,
-                                        user_keys[key_index],
-                                        result_index);
+                /* Check if we have results for this element */
+                if (g_ptr_array_index(cache->tracker_results, result_index)) {
+                        metadata = mafw_metadata_new();
+                        for (key_index = 0; user_keys[key_index]; key_index++) {
+                                /* Special cache: title must use filename if
+                                 * it doesn't contain title */
+                                if (strcmp(user_keys[key_index],
+                                           MAFW_METADATA_KEY_TITLE) == 0) {
+                                        value = _get_title(cache, result_index);
+                                } else {
+                                        value = tracker_cache_value_get(
+                                                cache,
+                                                user_keys[key_index],
+                                                result_index);
+                                }
+                                if (_value_is_allowed(value,
+                                                      user_keys[key_index])) {
+                                        _replace_various_values(value);
+                                        mafw_metadata_add_val(
+                                                metadata,
+                                                user_keys[key_index],
+                                                value);
+                                }
+                                util_gvalue_free(value);
                         }
-                        if (_value_is_allowed(value, user_keys[key_index])) {
-                                _replace_various_values(value);
-                                mafw_metadata_add_val(metadata,
-                                                      user_keys[key_index],
-                                                      value);
-                        }
-                        util_gvalue_free(value);
+                        mafw_list = g_list_prepend(mafw_list, metadata);
+                } else {
+                        mafw_list = g_list_prepend(mafw_list, NULL);
                 }
-                mafw_list = g_list_prepend(mafw_list, metadata);
         }
 
         /* Place elements in right order */
