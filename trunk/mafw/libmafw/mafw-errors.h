@@ -156,6 +156,10 @@ typedef enum
  *    Renderer tried to parse a media playlist and it corrupted (or empty).
  * @MAFW_RENDERER_ERROR_CODEC_NOT_FOUND:
  *    Renderer could not find suitable coded for the given media.
+ * @MAFW_RENDERER_ERROR_VIDEO_CODEC_NOT_FOUND:
+ *    Renderer could not find suitable coded for the given video.
+ * @MAFW_RENDERER_ERROR_AUDIO_CODEC_NOT_FOUND:
+ *    Renderer could not find suitable coded for the given audio.
  * @MAFW_RENDERER_ERROR_NO_PLAYLIST:
  *    Renderer does not have a playlist.
  * @MAFW_RENDERER_ERROR_INDEX_OUT_OF_BOUNDS:
@@ -190,6 +194,8 @@ typedef enum
   MAFW_RENDERER_ERROR_CORRUPTED_FILE,
   MAFW_RENDERER_ERROR_PLAYLIST_PARSING,
   MAFW_RENDERER_ERROR_CODEC_NOT_FOUND,
+  MAFW_RENDERER_ERROR_VIDEO_CODEC_NOT_FOUND,
+  MAFW_RENDERER_ERROR_AUDIO_CODEC_NOT_FOUND,
   MAFW_RENDERER_ERROR_NO_PLAYLIST,
   MAFW_RENDERER_ERROR_INDEX_OUT_OF_BOUNDS,
   MAFW_RENDERER_ERROR_CANNOT_PLAY,
