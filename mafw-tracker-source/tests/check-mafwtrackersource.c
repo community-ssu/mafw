@@ -52,6 +52,8 @@ static gboolean g_browse_error = FALSE;
 static gboolean g_metadata_called = FALSE;
 static gboolean g_metadata_error = FALSE;
 static gboolean g_destroy_called = FALSE;
+static gboolean g_metadatas_called = FALSE;
+static gboolean g_metadatas_error = FALSE;
 static gboolean g_destroy_error = FALSE;
 static gboolean g_set_metadata_called = FALSE;
 static gboolean g_set_metadata_error = FALSE;
@@ -212,6 +214,19 @@ static void clear_metadata_results(void)
 {
 	g_metadata_called = FALSE;
         g_metadata_error = FALSE;
+	if (g_metadata_results != NULL) {
+		g_list_foreach(g_metadata_results, (GFunc) remove_metadata_item,
+			       NULL);
+		g_list_free(g_metadata_results);
+		g_metadata_results = NULL;
+	}
+        RUNNING_CASE = "no_case";
+}
+
+static void clear_metadatas_results(void)
+{
+	g_metadatas_called = FALSE;
+        g_metadatas_error = FALSE;
 	if (g_metadata_results != NULL) {
 		g_list_foreach(g_metadata_results, (GFunc) remove_metadata_item,
 			       NULL);
@@ -2525,6 +2540,82 @@ START_TEST(test_get_metadata_root)
 END_TEST
 
 static void
+metadatas_result_cb(MafwSource * source,
+		   GHashTable * metadatas,
+		   gpointer user_data, const GError *error)
+{
+	MetadataResult *result = NULL;
+        GList *object_ids;
+        GList *current_obj;
+
+	g_metadatas_called = TRUE;
+
+        if (error) {
+                g_metadatas_error = TRUE;
+                return;
+        }
+
+        object_ids = g_hash_table_get_keys(metadatas);
+        current_obj = object_ids;
+        while (current_obj) {
+                result = (MetadataResult *) malloc(sizeof(MetadataResult));
+                result->objectid = g_strdup(current_obj->data);
+                result->metadata = g_hash_table_lookup(metadatas, current_obj->data);
+                if (result->metadata)
+                        g_hash_table_ref(result->metadata);
+                g_metadata_results = g_list_append(g_metadata_results, result);
+                current_obj = g_list_next(current_obj);
+        }
+
+        g_list_free(object_ids);
+}
+
+START_TEST(test_get_metadatas_none)
+{
+        GMainLoop *loop = NULL;
+        GMainContext *context = NULL;
+        const gchar *const *metadata_keys = NULL;
+        gchar **object_ids = NULL;
+
+        RUNNING_CASE = "test_get_metadatas_none";
+        loop = g_main_loop_new(NULL, FALSE);
+        context = g_main_loop_get_context(loop);
+
+	/* Metadata we are interested in */
+	metadata_keys = MAFW_SOURCE_LIST(
+		MAFW_METADATA_KEY_TITLE,
+		MAFW_METADATA_KEY_MIME,
+		MAFW_METADATA_KEY_DURATION,
+		MAFW_METADATA_KEY_CHILDCOUNT);
+
+        object_ids = g_new0(gchar *, 1);
+
+        /* Execute query */
+        mafw_source_get_metadatas(g_tracker_source,
+                                  (const gchar **) object_ids, metadata_keys,
+                                  metadatas_result_cb,
+                                  NULL);
+
+        /* Check results... */
+        while (g_main_context_pending(context))
+                g_main_context_iteration(context, TRUE);
+
+        fail_if(g_metadatas_called == FALSE,
+                "No metadatas_result signal received");
+
+        fail_if(g_metadatas_error == FALSE,
+                "No error was obtained");
+
+        fail_if(g_list_length(g_metadata_results) != 0,
+                "Getting metadata from none returns some result");
+
+        clear_metadatas_results();
+
+        g_main_loop_unref(loop);
+}
+END_TEST
+
+static void
 metadata_set_cb(MafwSource *self,
 		const gchar *object_id,
 		const gchar **failed_keys,
@@ -3077,6 +3168,7 @@ SRunner * configure_tests(void)
 	/* Create test cases */
 	TCase *tc_browse = tcase_create("Browse");
 	TCase *tc_get_metadata = tcase_create("GetMetadata");
+	TCase *tc_get_metadatas = tcase_create("GetMetadatas");
 	TCase *tc_set_metadata = tcase_create("SetMetadata");
 	TCase *tc_destroy = tcase_create("DestroyObject");
 
@@ -3130,6 +3222,14 @@ SRunner * configure_tests(void)
 
 	suite_add_tcase(s, tc_get_metadata);
 
+	/* Create unit tests for test case "GetMetadatas" */
+	tcase_add_checked_fixture(tc_get_metadatas, fx_setup_dummy_tracker_source,
+				  fx_teardown_dummy_tracker_source);
+
+	tcase_add_test(tc_get_metadatas, test_get_metadatas_none);
+
+	suite_add_tcase(s, tc_get_metadatas);
+
 	/* Create unit tests for test case "SetMetadata" */
 	tcase_add_checked_fixture(tc_set_metadata, fx_setup_dummy_tracker_source,
 				  fx_teardown_dummy_tracker_source);
@@ -3155,6 +3255,7 @@ SRunner * configure_tests(void)
 	/*Valgrind may require more time to run*/
 	tcase_set_timeout(tc_browse, 60);
 	tcase_set_timeout(tc_get_metadata, 60);
+	tcase_set_timeout(tc_get_metadatas, 60);
 	tcase_set_timeout(tc_set_metadata, 60);
 	tcase_set_timeout(tc_destroy, 60);
 
