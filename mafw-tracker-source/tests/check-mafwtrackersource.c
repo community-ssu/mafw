@@ -102,6 +102,14 @@ tracker_metadata_get_async(TrackerClient *client,
                            TrackerArrayReply callback,
                            gpointer user_data);
 
+void
+tracker_metadata_get_multiple_async(TrackerClient *client,
+                                    ServiceType service,
+                                    const char **ids,
+                                    const char **keys,
+                                    TrackerGPtrArrayReply callback,
+                                    gpointer user_data);
+
 static char **
 _get_metadata(gint index,
               char **keys);
@@ -2609,6 +2617,63 @@ START_TEST(test_get_metadatas_none)
         fail_if(g_list_length(g_metadata_results) != 0,
                 "Getting metadata from none returns some result");
 
+        g_strfreev(object_ids);
+        clear_metadatas_results();
+
+        g_main_loop_unref(loop);
+}
+END_TEST
+
+START_TEST(test_get_metadatas_several)
+{
+        GMainLoop *loop = NULL;
+        GMainContext *context = NULL;
+        const gchar *const *metadata_keys = NULL;
+        gchar **object_ids = NULL;
+
+        RUNNING_CASE = "test_get_metadatas_several";
+        loop = g_main_loop_new(NULL, FALSE);
+        context = g_main_loop_get_context(loop);
+
+	/* Metadata we are interested in */
+	metadata_keys = MAFW_SOURCE_LIST(
+		MAFW_METADATA_KEY_TITLE,
+		MAFW_METADATA_KEY_MIME,
+		MAFW_METADATA_KEY_DURATION,
+		MAFW_METADATA_KEY_CHILDCOUNT);
+
+        object_ids = g_new(gchar *, 4);
+        object_ids[0] = g_strdup(MAFW_TRACKER_SOURCE_UUID
+                                 "::music/songs/"
+                                 "%2Fhome%2Fuser%2FMyDocs%2Fclip1.mp3");
+        object_ids[1] = g_strdup(MAFW_TRACKER_SOURCE_UUID
+                                 "::music/artists/Artist 1/Album 1/"
+                                 "%2Fhome%2Fuser%2FMyDocs%2Fclip1.mp3");
+        object_ids[2] = g_strdup(MAFW_TRACKER_SOURCE_UUID
+                                 "::music/albums");
+        object_ids[3] = NULL;
+
+        /* Execute query */
+        mafw_source_get_metadatas(g_tracker_source,
+                                  (const gchar **) object_ids, metadata_keys,
+                                  metadatas_result_cb,
+                                  NULL);
+
+        /* Check results... */
+        while (g_main_context_pending(context))
+                g_main_context_iteration(context, TRUE);
+
+        fail_if(g_metadatas_called == FALSE,
+                "No metadatas_result signal received");
+
+        fail_if(g_metadatas_error == TRUE,
+                "An error was obtained");
+
+        fail_if(g_list_length(g_metadata_results) != 3,
+                "Query metadatas of 3 elements returned %d results",
+                g_list_length(g_metadata_results));
+
+        g_strfreev(object_ids);
         clear_metadatas_results();
 
         g_main_loop_unref(loop);
@@ -3227,6 +3292,7 @@ SRunner * configure_tests(void)
 				  fx_teardown_dummy_tracker_source);
 
 	tcase_add_test(tc_get_metadatas, test_get_metadatas_none);
+	tcase_add_test(tc_get_metadatas, test_get_metadatas_several);
 
 	suite_add_tcase(s, tc_get_metadatas);
 
@@ -3394,7 +3460,8 @@ _check_query_case(const gchar *actual_query)
 	} else if ((g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_albums") == 0) ||
 		   (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_music") == 0) ||
 		   (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_videos") == 0) ||
-		   (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_root") == 0)) {
+		   (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_root") == 0) ||
+                   (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadatas_several") ==0)) {
 		return actual_query == NULL;
         } else {
                 return FALSE;
@@ -3421,7 +3488,8 @@ _check_count_case(gchar *actual_count)
         if (g_ascii_strcasecmp(RUNNING_CASE, "test_browse_music_artists") == 0 ||
             g_ascii_strcasecmp(RUNNING_CASE, "test_browse_music_genres_genre2") == 0 ||
             g_ascii_strcasecmp(RUNNING_CASE, "test_browse_music_genres_unknown") == 0 ||
-            g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_albums") == 0) {
+            g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_albums") == 0 ||
+            g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadatas_several") ==0) {
                 return g_ascii_strcasecmp(actual_count, "Audio:Album") == 0;
         } else if (g_ascii_strcasecmp(RUNNING_CASE, "test_browse_root") == 0 ||
                    g_ascii_strcasecmp(RUNNING_CASE, "test_browse_music_artists_artist1") == 0 ||
@@ -3669,7 +3737,6 @@ _get_metadata(gint index,
         return result;
 }
 
-
 static void
 _send_metadata(gint index,
                char **keys,
@@ -3687,6 +3754,38 @@ _send_metadata(gint index,
         } else {
                 result = _get_metadata(index, keys);
                 cb(result, NULL, user_data);
+        }
+}
+
+static void
+_send_metadatas(gint *indexes,
+                gint num_indexes,
+                const char **keys,
+                TrackerGPtrArrayReply cb,
+                gpointer user_data)
+{
+        GPtrArray *results = NULL;
+        gint i = 0;
+        GError *error = NULL;
+
+        results = g_ptr_array_sized_new(num_indexes);
+
+        for (i=0; i < num_indexes; i++) {
+                if (indexes[i] < 0) {
+                        /* Domain and code are not relevant */
+                        if (!error) {
+                                error = g_error_new(1, 1, "error getting metadata");
+                        }
+                } else {
+                        g_ptr_array_add(results, _get_metadata(indexes[i], (char **) keys));
+                }
+        }
+
+        cb(results, error, user_data);
+
+        /* Free data */
+        if (error) {
+                g_error_free(error);
         }
 }
 
@@ -3758,7 +3857,8 @@ _send_count_and_sum_expected_result(TrackerGPtrArrayReply callback,
         } else if (g_ascii_strcasecmp(RUNNING_CASE, "test_browse_music_genres_genre2_artist2") == 0) {
                 result = g_ptr_array_sized_new(1);
                 _add_count_and_sum_to_result(result, 2, keys, "1", "17");
-	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_albums") == 0) {
+	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_albums") == 0 ||
+                   g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadatas_several") == 0) {
 		result = g_ptr_array_sized_new(9);
 		_add_count_and_sum_to_result(result, 0, keys, "1", "36");
 		_add_count_and_sum_to_result(result, 1, keys, "1", "23");
@@ -4070,6 +4170,40 @@ tracker_metadata_get_async(TrackerClient *client,
 	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_playlist") == 0 &&
 		   g_ascii_strcasecmp(id, "/tmp/playlist1.pls") == 0) {
 		_send_metadata(14, keys, callback, user_data);
+        }
+}
+
+void
+tracker_metadata_get_multiple_async(TrackerClient *client,
+                                    ServiceType service,
+                                    const char **ids,
+                                    const char **keys,
+                                    TrackerGPtrArrayReply callback,
+                                    gpointer user_data)
+{
+        gint indexes[2] = { 0 };
+
+        if ((g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_clip") == 0 ||
+             g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_artist_album_clip") == 0 ||
+             g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_genre_artist_album_clip") == 0 ||
+             g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_album_clip") == 0) &&
+            g_ascii_strcasecmp(ids[0], "/home/user/MyDocs/clip1.mp3") == 0) {
+                indexes[0] = 1;
+                _send_metadatas(indexes, 1, keys, callback, user_data);
+	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_video") == 0) {
+                indexes[0] = 16;
+		_send_metadatas(indexes, 1, keys, callback, user_data);
+	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_invalid") == 0) {
+                indexes[0] = -1;
+                _send_metadatas(indexes, 1, keys, callback, user_data);
+	} else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadata_playlist") == 0 &&
+		   g_ascii_strcasecmp(ids[0], "/tmp/playlist1.pls") == 0) {
+                indexes[0] = 14;
+		_send_metadatas(indexes, 1, keys, callback, user_data);
+        } else if (g_ascii_strcasecmp(RUNNING_CASE, "test_get_metadatas_several") == 0) {
+                indexes[0] = 1;
+                indexes[1] = 1;
+                _send_metadatas(indexes, 2, keys, callback, user_data);
         }
 }
 
