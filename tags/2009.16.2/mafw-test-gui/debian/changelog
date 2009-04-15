@@ -1,3 +1,19 @@
+mafw-test-gui (0.1.2009.17-1) unstable; urgency=low
+
+  * MAFW Test GUI, pre-release 0.2009.17-1
+  * Fixes: NB#110304
+  * Fixes: NB#110725
+  * Fixed a compilation warning.
+  * No need to show an info note when we get metadata for an item 
+    that's not in the view, just ignoring this is ok.
+  * Disable value-changed handlers for seekbar when setting the duration 
+    of the current stream, to prevent value-changed signals being emitted 
+    due to the need to adjust the seekbar value to fit in the new range 
+    on EOS, when moving to a new (shorter) stream.
+  * Moved to Garage (MAFW Test GUI).
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Wed, 15 Apr 2009 15:41:41 +0300
+
 mafw-test-gui (0.1.2009.15-2) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.15-2
