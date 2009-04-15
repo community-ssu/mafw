@@ -1,8 +1,9 @@
-mafw-tracker-source (0.1.2009.16-2) unstable; urgency=low
+mafw-tracker-source (0.1.2009.17-1) unstable; urgency=low
 
-  * Version increased.
+  * MAFW tracker source, pre-release 0.2009.17-1
+  * Fixes: NB#110568
 
- -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Tue, 14 Apr 2009 10:09:52 +0300
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 16:05:40 +0300
 
 mafw-tracker-source (0.1.2009.16-1) unstable; urgency=low
 

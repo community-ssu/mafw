@@ -1,3 +1,14 @@
+mafw-gst-renderer (0.1.2009.17-1) unstable; urgency=low
+
+  * MAFW gst renderer, pre-release 0.2009.17-1
+  * Fixes: NB#104494
+  * Added support to distinguish between audio and video codec errors.
+  * Fixed critical warning message.
+  * When we get the ckey coming from the sync bus to the async bus, we check
+    the caps and raise an error if they are not suitable.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 15:59:15 +0300
+
 mafw-gst-renderer (0.1.2009.16-2) unstable; urgency=low
 
   * MAFW gst renderer, pre-release 0.2009.16-2

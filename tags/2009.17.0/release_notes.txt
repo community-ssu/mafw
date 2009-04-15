@@ -4,48 +4,63 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.16-1
-Date       2009.08.03
+Version    0.2009.17-1
+Date       2009.08.15
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 4
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
 
-libmafw 0.1.2009.16-1
-mafw-shared 0.1.2009.16-1
-mafw-gst-renderer 0.1.2009.16-1
-mafw-tracker-source 0.1.2009.16-1
+libmafw 0.1.2009.17-1
+mafw-gst-renderer 0.1.2009.17-1
+mafw-iradio-source 0.1.2009.17-1
+mafw-shared 0.1.2009.17-1
+mafw-test-gui 0.1.2009.17-1
+mafw-tracker-source 0.1.2009.17-1
+
 
 Change logs: 
 
-libmafw (0.1.2009.16-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.16-1
-  * Updated changelogs, configure files and release notes.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 08 Apr 2009 13:05:14 +0300
-mafw-shared (0.1.2009.16-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.16-1
-  * Unit test disabled by default for system integration purposes.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 08 Apr 2009 12:41:14 +0300
-mafw-gst-renderer (0.1.2009.16-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.16-1
-  * All tags reported by Gst are referenced and freed later on, 
-    when they have emitted to clients. However, _emit_renderer_art
-    was obtaining a reference to a tag value and freeing that
-    reference when done, leading to a double unref later on.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 08 Apr 2009 12:41:14 +0300
-mafw-tracker-source (0.1.2009.16-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.16-1
-  * Unit tests disabled by default.
-  * Removed useless g_warning.
-  * Now object identifiers for music/albums/album do not contain
-    artist information.
-  * Use a NULL when a parameter in tracker is not actually required.
-  * Removed unused code.
-  * Removed commented out code for mime-type detection of media 
-    not indexed by tracker, it is too slow to enable this.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 08 Apr 2009 12:41:14 +0300
+libmafw (0.1.2009.17-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.17-1
+  * Added support to distinguish between audio and video codec errors.
+  * Unit tests disabled for mafw package in trunk.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 15:58:22 +0300
+mafw-gst-renderer (0.1.2009.17-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.17-1
+  * Added support to distinguish between audio and video codec errors.
+  * Fixed critical warning message.
+  * When we get the ckey coming from the sync bus to the async bus, we check
+    the caps and raise an error if they are not suitable.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 15:59:15 +0300
+mafw-iradio-source (0.1.2009.17-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.17-1
+  * Updating DB, if there is a new vendor-file
+  * Adding 'added' metadata at building the default bookmarks
+  * Adding duration support for default bookmarks
+  * Modified mafw-tracker-source rules.
+  * Source code moved to Gnome.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 16:00:41 +0300
+mafw-shared (0.1.2009.17-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.17-1
+  * Remove remaining wrong NameOwnerChanged signal handlers
+  * Do not use NameOwnerChanged signal for detecting extension-startup
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 16:01:39 +0300
+mafw-test-gui (0.1.2009.17-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.17-1
+  * Fixed a compilation warning.
+  * No need to show an info note when we get metadata for an item that's 
+    not in the view, just ignoring this is ok.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 16:02:30 +0300
+mafw-tracker-source (0.1.2009.17-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.17-1
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 16:05:40 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog:
+From changelog: 4
+* Fixes: NB#104494
+* Fixes: NB#110304
+* Fixes: NB#110725
+* Fixes: NB#110568
