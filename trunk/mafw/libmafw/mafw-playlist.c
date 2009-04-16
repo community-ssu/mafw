@@ -541,9 +541,33 @@ gchar **mafw_playlist_get_items(MafwPlaylist *playlist,
 			      guint first_index, guint last_index,
 			      GError **error)
 {
+	GPtrArray *oids = NULL;
+	gchar *cur_item, **retarray;
+	guint i;
+	GError *err = NULL;
+
 	g_return_val_if_fail(MAFW_IS_PLAYLIST(playlist), NULL);
-	return MAFW_PLAYLIST_GET_IFACE(playlist)->get_items(playlist, first_index,
+	if (MAFW_PLAYLIST_GET_IFACE(playlist)->get_items)
+		return MAFW_PLAYLIST_GET_IFACE(playlist)->get_items(playlist,
+							   first_index,
 							   last_index, error);
+	oids = g_ptr_array_new();
+	i = first_index;
+	while (i <= last_index)
+	{
+		cur_item = mafw_playlist_get_item(playlist, i, &err);
+		if (err)
+		{
+			g_error_free(err);
+			break;
+		}
+		g_ptr_array_add(oids, cur_item);
+		i++;
+	}
+	g_ptr_array_add(oids, NULL);
+	retarray = (gchar**)oids->pdata;
+	g_ptr_array_free(oids, FALSE);
+	return retarray;
 }
 
 /**
@@ -724,117 +748,183 @@ gboolean mafw_playlist_is_shuffled(MafwPlaylist *pls)
 
 /* Multiple Items With Metadata */
 
-/*
- * @cancelled:     TRUE if the operation has been cancelled
- * @pending_calls: tracks pending get_metadata() callbacks (their GMD*'s)
- * @idle:          GSource id of the miwmd_idle() callback
- */
-struct MIWMD {
-	MafwPlaylist *pls;
+/* Active requests (struct GetPlItemData *). */
+static GQueue *Active_miwmds = NULL;
+
+struct GetPlItemData
+{
+	gchar **oids;
 	guint from;
-	gint to;
-	guint current;
+	gboolean cancelled;
+	guint remaining_reqs;
+	GHashTable *indexhash;
 	gchar **keys;
 	MafwPlaylistGetItemsCB cb;
 	gpointer cbarg;
+	MafwPlaylist *pls;
 	GDestroyNotify free_cbarg;
-	gboolean cancelled;
 };
 
-/* Active requests (struct MIWMD *). */
-static GQueue *Active_miwmds = NULL;
-
-static gboolean miwmd_get_next(struct MIWMD *mi);
-
-static void miwmd_free(struct MIWMD *mi)
+static void miwmd_free(struct GetPlItemData *mi)
 {
 	g_assert(g_queue_find(Active_miwmds, mi));
 	g_queue_remove(Active_miwmds, mi);
 	if (mi->free_cbarg)
 		mi->free_cbarg(mi->cbarg);
 	g_strfreev(mi->keys);
+	if (mi->indexhash)
+		g_hash_table_unref(mi->indexhash);
+	g_strfreev(mi->oids);
 	g_free(mi);
 }
-
-static void miwmd_got_md(MafwSource *src, const gchar *oid,
-			 GHashTable *metadata, gpointer user_data,
-			 const GError *err)
+static void miwd_got_mdatas(MafwSource *self, GHashTable *metadatas,
+				struct GetPlItemData *data, const GError *error)
 {
-	struct MIWMD *mi = user_data;
+	GHashTableIter htiter;
+	GSList *idxlist, *iter;;
+	gchar *oid;
+	GHashTable *cur_md;
 
-	/* If someone is still interested in the results, call their callback.
-	 * Additionally clear ourselves from $mi->pending_calls, and if we were
-	 * the last, free $mi. */
-	if (!mi->cancelled)
-		mi->cb(mi->pls, mi->current - 1, oid, metadata, mi->cbarg);
+	if (metadatas)
+	{
+		g_hash_table_iter_init(&htiter, metadatas);
+
+		while (!data->cancelled && g_hash_table_iter_next(&htiter,
+							(gpointer*)&oid,
+							(gpointer*)&cur_md))
+		{
+			idxlist = g_hash_table_lookup(data->indexhash, oid);
+			iter = idxlist;
+		
+			while (!data->cancelled && iter)
+			{
+				data->cb(data->pls, GPOINTER_TO_UINT(iter->data),
+					oid, cur_md, data->cbarg);
+				iter = g_slist_next(iter);
+			}
+			g_hash_table_remove(data->indexhash, oid);
+		}
+	}
 	
-	miwmd_get_next(mi);
+	data->remaining_reqs--;
+	
+	if (!data->remaining_reqs)
+	{
+		/* Call the remaining objects with NULL mdata */
+		g_hash_table_iter_init(&htiter, data->indexhash);
+		while (!data->cancelled && g_hash_table_iter_next(&htiter,
+						(gpointer*)&oid,
+						(gpointer*)&idxlist))
+		{
+			iter = idxlist;
+			while (iter && !data->cancelled)
+			{
+				data->cb(data->pls, GPOINTER_TO_UINT(iter->data),
+					oid, NULL, data->cbarg);
+				iter = g_slist_next(iter);
+			}
+		}
+		miwmd_free(data);
+	}
 }
 
-/* This idle callback walks the playlist and issues a Source::get_metadata() for
- * each item. */
-static gboolean miwmd_get_next(struct MIWMD *mi)
+static void _free_ptr_array(gpointer key, GPtrArray *arr, gpointer user_data)
 {
-	if (!mi->cancelled && mi->current <= mi->to) {
-		gboolean shall_iterate = TRUE;
-		gchar *oid;
-		MafwRegistry *reg;
+	g_ptr_array_free(arr, TRUE);
+}
 
-		reg = MAFW_REGISTRY(mafw_registry_get_instance());
+static gboolean miwd_send_requests(struct GetPlItemData *pldata)
+{
+	guint i = 0;
+	GHashTable *helperhash;
+	MafwRegistry *reg;
+	GHashTableIter htiter;
+	GPtrArray *oblist;
+	MafwSource *source;
+	gchar *uuid = NULL;
 
-		oid = mafw_playlist_get_item(mi->pls, mi->current, NULL);
-		if (oid != NULL) {
-			gchar *uuid = NULL;
-			if (mafw_source_split_objectid(oid, &uuid, NULL)) {
-				MafwSource *source;
+	if (pldata->cancelled)
+	{
+		miwmd_free(pldata);
+		return FALSE;
+	}
+	
+	helperhash = g_hash_table_new(g_direct_hash, g_direct_equal);
+	pldata->indexhash = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
+						(GDestroyNotify)g_slist_free);
+	reg = MAFW_REGISTRY(mafw_registry_get_instance());
 
-				source = MAFW_SOURCE(
+	while(!pldata->cancelled && pldata->oids[i])
+	{
+		if (mafw_source_split_objectid(pldata->oids[i], &uuid, NULL)) {
+			GSList *idxlist;
+
+			source = MAFW_SOURCE(
 				mafw_registry_get_extension_by_uuid(reg,
 								    uuid));
-				if (!source || !mi->keys) {
-					/* Call the callback to notify
-					 * that we could not get
-					 * metadata for this item,
-					 * either because the source
-					 * is not available (!source)
-					 * or because we have not been
-					 * asked any metadata at all
-					 * (!mi->keys) */
-					mi->cb(mi->pls, mi->current, oid, NULL,
-					       mi->cbarg);
-				} else {
-					/* We assume:
-					 * - if
-					 *   mafw_source_get_metadata()
-					 *   calls our callback, it
-					 *   WILL NOT do so before the
-					 *   call returns.
-					 * - if the call returned
-					 *   FALSE, the callback WILL
-					 *   NOT be called. */
-					mafw_source_get_metadata(
-						source, oid,
-						(const gchar *const *) mi->keys,
-						miwmd_got_md, mi);
-					shall_iterate = FALSE;
-				}
-			}
 			g_free(uuid);
-			g_free(oid);
+			if (!source || !pldata->keys) {
+				/* Call the callback to notify
+				 * that we could not get
+				 * metadata for this item,
+				 * either because the source
+				 * is not available (!source)
+				 * or because we have not been
+				 * asked any metadata at all
+				 * (!mi->keys) */
+				pldata->cb(pldata->pls, pldata->from + i,
+					pldata->oids[i], NULL,
+				       pldata->cbarg);
+			} else {
+				oblist = g_hash_table_lookup(helperhash, source);
+				
+				if (!oblist)
+				{
+					oblist = g_ptr_array_new();
+				}
+				
+				g_ptr_array_add(oblist, pldata->oids[i]);
+				
+				g_hash_table_replace(helperhash, source, oblist);
+				idxlist = g_hash_table_lookup(pldata->indexhash,
+								pldata->oids[i]);
+				idxlist = g_slist_prepend(idxlist, 
+						GUINT_TO_POINTER(pldata->from + i));
+				g_hash_table_replace(pldata->indexhash,
+							pldata->oids[i], 
+							idxlist);
+			}
 		}
 		else
 		{
-			miwmd_free(mi);
-			return FALSE;
+			pldata->cb(pldata->pls, pldata->from + i,
+					pldata->oids[i], NULL, pldata->cbarg);
 		}
-		mi->current++;
-
-		if (shall_iterate) {
-			g_idle_add((GSourceFunc) miwmd_get_next, mi);
-		}
-	} else {
-		miwmd_free(mi);
+		i++;
 	}
+
+	if (pldata->cancelled || ((i = g_hash_table_size(helperhash)) == 0))
+	{
+		miwmd_free(pldata);
+		g_hash_table_foreach(helperhash, (GHFunc)_free_ptr_array, NULL);
+		g_hash_table_destroy(helperhash);
+		return FALSE;
+	}
+
+	
+	pldata->remaining_reqs = i;
+	g_hash_table_iter_init(&htiter, helperhash);
+	while (g_hash_table_iter_next(&htiter, (gpointer*)&source,
+						(gpointer*)&oblist))
+	{
+		g_ptr_array_add(oblist, NULL);
+		mafw_source_get_metadatas(source, (const gchar**)oblist->pdata,
+					(const gchar**)pldata->keys, 
+					(MafwSourceMetadataResultsCb)miwd_got_mdatas, 
+					pldata);
+	}
+	g_hash_table_foreach(helperhash, (GHFunc)_free_ptr_array, NULL);
+	g_hash_table_destroy(helperhash);
 
 	return FALSE;
 }
@@ -867,11 +957,17 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 				    MafwPlaylistGetItemsCB cb, gpointer cbarg,
 				    GDestroyNotify free_cbarg)
 {
-	struct MIWMD *clo;
+	gchar **pl_items;
+	GError *err = NULL;
+	
+	struct GetPlItemData *pldata;
 
 	g_return_val_if_fail(pls, NULL);
 	g_return_val_if_fail(cb, NULL);
 	g_return_val_if_fail(to < 0 || from <= to, NULL);
+
+	if (!Active_miwmds)
+		Active_miwmds = g_queue_new();
 
 	if (to < 0) {
 		gint size;
@@ -896,22 +992,32 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 		}
 	}
 
-	if (!Active_miwmds)
-		Active_miwmds = g_queue_new();
+	pl_items = mafw_playlist_get_items(pls, from, to, &err);
+	
+	if (err)
+	{
+		g_warning("Could not get playlist items to get items "
+				  "metadata because: %s", err->message);
+		g_error_free(err);
+		return NULL;
+	}
 
-	clo = g_malloc(sizeof(*clo));
-	clo->pls = pls;
-	clo->from = from;
-	clo->to = to;
-	clo->current = from;
-	clo->keys = g_strdupv((gchar **)keys);
-	clo->cb = cb;
-	clo->cbarg = cbarg;
-	clo->free_cbarg = free_cbarg;
-	clo->cancelled = FALSE;
-	g_idle_add((GSourceFunc)miwmd_get_next, clo);
-	g_queue_push_tail(Active_miwmds, clo);
-	return clo;
+	pldata = g_new0(struct GetPlItemData, 1);
+	pldata->remaining_reqs = 0;
+	pldata->cb = cb;
+	pldata->pls = pls;
+	pldata->cbarg = cbarg;
+	pldata->oids = pl_items;
+	pldata->free_cbarg = free_cbarg;
+	pldata->cancelled = FALSE;
+	pldata->from = from;
+	if (keys)
+		pldata->keys = g_strdupv((gchar**)keys);
+	pldata->indexhash = NULL;
+	
+	g_queue_push_tail(Active_miwmds, pldata);
+	g_idle_add((GSourceFunc)miwd_send_requests, pldata);
+	return pldata;
 }
 
 /**
@@ -923,7 +1029,7 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 void mafw_playlist_cancel_get_items_md(gconstpointer op)
 {
 	GList *link;
-	struct MIWMD *mi;
+	struct GetPlItemData *mi;
 
 	if (!Active_miwmds)
 		/* Canceling without ever initiating any operation, ey ey. */

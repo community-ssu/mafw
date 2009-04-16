@@ -34,6 +34,7 @@
 #include "mafw-marshal.h"
 #include "mafw-uri-source.h"
 #include "mafw-errors.h"
+#include "mafw-metadata.h"
 
 /**
  * SECTION:mafwsource
@@ -447,6 +448,115 @@ void mafw_source_get_metadata(MafwSource *self,
 							 metadata_keys,
 							 metadata_cb,
 							 user_data);
+}
+
+struct metadatas_data
+{
+	MafwSource *self;
+	GHashTable *metadatas;	/*< collected metadatas */
+	guint remaining_count;	/*< number or missing metadata-requests */
+	guint result_id;	/*< source-id of the _emit_result idle cb */
+	MafwSourceMetadataResultsCb cb;
+	GError *err;
+	gpointer udata;
+};
+
+/* Calls the get_metadatas_cb */
+static gboolean _emit_result(struct metadatas_data *mdatas_data)
+{
+	if (mdatas_data->remaining_count)
+	{
+		mdatas_data->result_id = 0;
+		return FALSE;
+	}
+	mdatas_data->cb(mdatas_data->self, mdatas_data->metadatas, mdatas_data->udata,
+				mdatas_data->err);
+	g_hash_table_unref(mdatas_data->metadatas);
+	if (mdatas_data->err)
+		g_error_free(mdatas_data->err);
+	g_object_unref(mdatas_data->self);
+	g_free(mdatas_data);
+	return FALSE;
+}
+
+/* Collect the requested metadatas */
+static void _metadata_collector(MafwSource *self,
+					   const gchar *object_id,
+					   GHashTable *metadata,
+					   struct metadatas_data *mdatas_data,
+					   const GError *error)
+{
+	mdatas_data->remaining_count--;
+	if (metadata)
+		g_hash_table_insert(mdatas_data->metadatas, g_strdup(object_id),
+				g_hash_table_ref(metadata));
+	
+	if (error && !mdatas_data->err)
+	{
+		mdatas_data->err = g_error_copy(error);
+	}
+	
+	if (!mdatas_data->remaining_count && !mdatas_data->result_id)
+	{/* Call the cb on idle, so it should work with sync get_metadata too*/
+		mdatas_data->result_id = g_idle_add((GSourceFunc)_emit_result,
+					(gpointer)mdatas_data);
+	}
+}
+
+/**
+ * mafw_source_get_metadatas:
+ * @self:          A #MafwSource instance.
+ * @object_ids:     %NULL terminated list of object IDs, whose metadata is being requested.
+ * @metadata_keys: A %NULL-terminated array of requested metadata keys.
+ * @metadatas_cb:   The function to call with results.
+ * @user_data:     Optional user data pointer passed along with @metadata_cb.
+ *
+ * Queries the metadatas for the given @object_id. The caller is informed of
+ * results via the @metadatas_cb callback.
+ *
+ * If @metadata_keys is #MAFW_SOURCE_ALL_KEYS then the source should
+ * try to retrieve all possible (see <link
+ * linkend="mafw-MafwMetadata">MafwMetadata</link>) metadata it can
+ * related to the given object.
+ */
+void mafw_source_get_metadatas(MafwSource *self,
+				  const gchar **object_ids,
+				  const gchar *const *metadata_keys,
+				  MafwSourceMetadataResultsCb metadatas_cb,
+				  gpointer user_data)
+{
+	if (MAFW_SOURCE_GET_CLASS(self)->get_metadatas)
+	{
+		MAFW_SOURCE_GET_CLASS(self)->get_metadatas(self,
+							 object_ids,
+							 metadata_keys,
+							 metadatas_cb,
+							 user_data);
+	}
+	else
+	{
+		gint i;
+		struct metadatas_data *mdatas_data = g_new0(struct metadatas_data, 1);
+	
+		g_assert(object_ids && object_ids[0]);
+	
+		mdatas_data->cb = metadatas_cb;
+		mdatas_data->udata = user_data;
+		mdatas_data->self = g_object_ref(self);
+		mdatas_data->metadatas = g_hash_table_new_full(g_str_hash,
+						g_str_equal,
+						(GDestroyNotify)g_free,
+						(GDestroyNotify)mafw_metadata_release);
+
+		for (i = 0; object_ids[i]; i++)
+		{
+			mdatas_data->remaining_count++;
+			mafw_source_get_metadata(self, object_ids[i],
+							metadata_keys,
+							(MafwSourceMetadataResultCb)_metadata_collector,
+							mdatas_data);
+		}
+	}
 }
 
 /**

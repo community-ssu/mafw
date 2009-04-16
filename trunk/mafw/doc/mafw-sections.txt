@@ -156,12 +156,14 @@ MAFW_SOURCE_PTRLIST
 MafwSourceError
 MafwSourceBrowseResultCb
 MafwSourceMetadataResultCb
+MafwSourceMetadataResultsCb
 MafwSourceObjectCreatedCb
 MafwSourceObjectDestroyedCb
 MafwSourceMetadataSetCb
 mafw_source_browse
 mafw_source_cancel_browse
 mafw_source_get_metadata
+mafw_source_get_metadatas
 mafw_source_create_object
 mafw_source_destroy_object
 mafw_source_set_metadata
