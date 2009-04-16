@@ -1,8 +1,16 @@
-libmafw (0.1.2009.16-2) unstable; urgency=low
+libmafw (0.1.2009.17-2) unstable; urgency=low
 
   * Version increased.
 
- -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Tue, 14 Apr 2009 10:08:37 +0300
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Thu, 16 Apr 2009 11:05:30 +0300
+
+libmafw (0.1.2009.17-1) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.17-1
+  * Added support to distinguish between audio and video codec errors.
+  * Unit tests disabled for mafw package in trunk.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 15 Apr 2009 15:58:22 +0300
 
 libmafw (0.1.2009.16-1) unstable; urgency=low
 
