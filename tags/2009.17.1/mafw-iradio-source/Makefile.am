@@ -7,9 +7,9 @@
 
 SUBDIRS				= iradio-source
 
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 noinst_DATA			= mafw-iradio-source-uninstalled.pc
 EXTRA_DIST			= mafw-iradio-source-uninstalled.pc.in
