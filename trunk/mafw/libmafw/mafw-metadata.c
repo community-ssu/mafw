@@ -100,6 +100,7 @@ static GType check_mdvtype(GType type)
 	case G_TYPE_ULONG:
 	case G_TYPE_INT64:
 	case G_TYPE_UINT64:
+        case G_TYPE_FLOAT:
 	case G_TYPE_DOUBLE:
 	case G_TYPE_STRING:
 		return type;

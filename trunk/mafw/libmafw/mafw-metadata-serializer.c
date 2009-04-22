@@ -45,6 +45,7 @@ X2BARY(boolean);
 X2BARY(int);
 X2BARY(long);
 X2BARY(int64);
+X2BARY(float);
 X2BARY(double);
 
 /* Encodes a string together with its termination. */
@@ -77,6 +78,8 @@ static void gval2bary(GByteArray *bary, GValue *value)
 		int642bary(bary, g_value_get_int64(value));
 	else if (type == G_TYPE_UINT64)
 		int642bary(bary, (gint64)g_value_get_uint64(value));
+        else if (type == G_TYPE_FLOAT)
+                float2bary(bary, g_value_get_float(value));
 	else if (type == G_TYPE_DOUBLE)
 		double2bary(bary, g_value_get_double(value));
 	else if (type == G_TYPE_STRING)
@@ -147,6 +150,7 @@ BARY2X(boolean);
 BARY2X(int);
 BARY2X(long);
 BARY2X(int64);
+BARY2X(float);
 BARY2X(double);
 
 /* Decodes the serialized mafw metadata hash table value in the stream
@@ -179,6 +183,9 @@ static void bary2gval(GValue *value, GByteArray *bary, gsize *index)
 	case G_TYPE_UINT64:
 		g_value_set_uint64(value, (guint64)bary2int64(bary, index));
 		break;
+        case G_TYPE_FLOAT:
+                g_value_set_float(value, bary2float(bary, index));
+                break;
 	case G_TYPE_DOUBLE:
 		g_value_set_double(value, bary2double(bary, index));
 		break;
@@ -252,7 +259,7 @@ gpointer mafw_metadata_val_thaw_bary(GByteArray *bary, gsize *i)
 		val = g_new0(GValue, 1);
 		bary2gval(val, bary, i);
 	}
-	
+
 	return val;
 
 }
