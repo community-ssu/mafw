@@ -141,7 +141,7 @@ static void mymd(MafwSource *self,
 	info->mdkeys = mdkeys;
 	info->cb = cb;
 	info->user_data = user_data;
-	g_timeout_add(g_random_int_range(1, 5) * 1000, runoldmd, info);
+	g_timeout_add_seconds(g_random_int_range(1, 5), runoldmd, info);
 }
 
 /* The stuff. */
