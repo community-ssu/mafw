@@ -1,15 +1,22 @@
-libmafw (0.1.2009.17-3) unstable; urgency=low
+libmafw (0.1.2009.18-2) unstable; urgency=low
 
-  * MAFW, pre-release 0.2009.17-3
+  * MAFW, pre-release 0.2009.18-2
 
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Apr 2009 09:18:07 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
+
+libmafw (0.1.2009.18-1) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.18-1
+  * Handle G_TYPE_FLOAT type in metadata.
+  * Merged branch 'get_metadatas_v4' changes r35:133 into the trunk.
+  * Added support to distinguish between audio and video codec errors.
+  * Unit tests disabled for mafw package in trunk.
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
 
 libmafw (0.1.2009.17-2) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.17-2
-  * Merged branch 'get_metadatas_v4' changes r35:133 into the trunk.
-  * Added support to distinguish between audio and video codec errors.
-  * Unit tests disabled for mafw package in trunk.
 
  -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Apr 2009 09:18:07 +0300
 
