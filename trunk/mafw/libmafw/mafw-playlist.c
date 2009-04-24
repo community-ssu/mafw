@@ -765,6 +765,11 @@ struct GetPlItemData
 	GDestroyNotify free_cbarg;
 };
 
+static void _free_slistcb(gpointer key, GSList *sl, gpointer user_data)
+{
+	g_slist_free(sl);
+}
+
 static void miwmd_free(struct GetPlItemData *mi)
 {
 	g_assert(g_queue_find(Active_miwmds, mi));
@@ -773,7 +778,10 @@ static void miwmd_free(struct GetPlItemData *mi)
 		mi->free_cbarg(mi->cbarg);
 	g_strfreev(mi->keys);
 	if (mi->indexhash)
+	{
+		g_hash_table_foreach(mi->indexhash, (GHFunc)_free_slistcb, NULL);
 		g_hash_table_unref(mi->indexhash);
+	}
 	g_strfreev(mi->oids);
 	g_free(mi);
 }
@@ -802,10 +810,10 @@ static void miwd_got_mdatas(MafwSource *self, GHashTable *metadatas,
 					oid, cur_md, data->cbarg);
 				iter = g_slist_next(iter);
 			}
+			g_slist_free(idxlist);
 			g_hash_table_remove(data->indexhash, oid);
 		}
 	}
-	
 	data->remaining_reqs--;
 	
 	if (!data->remaining_reqs)
@@ -851,7 +859,7 @@ static gboolean miwd_send_requests(struct GetPlItemData *pldata)
 	
 	helperhash = g_hash_table_new(g_direct_hash, g_direct_equal);
 	pldata->indexhash = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
-						(GDestroyNotify)g_slist_free);
+						NULL);
 	reg = MAFW_REGISTRY(mafw_registry_get_instance());
 
 	while(!pldata->cancelled && pldata->oids[i])
