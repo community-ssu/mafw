@@ -170,7 +170,6 @@ From changelog: 25
 * Fixes: NB#112540 - Album art URI is not displayed for Album container
 * Fixes: NB#110221 - ML: Album Art is not displaying in All Album and in Artists library view
 * Fixes: NB#110477 - DBus connectivity lost while Pause/Play default video clip
-* Fixes: NB#112540 - Album art URI is not displayed for Album container 
 * Fixes: NB#110568 - Tracker source returns addition date as a gchararray instead of glong
 * Fixes: NB#108725 - DLNA CTT tool gives a failed verdict on "MT HTTP Header: Range - use in HEAD/GET requests"
 * Fixes: NB#110397 - Not all items under a UPnP container are shown
