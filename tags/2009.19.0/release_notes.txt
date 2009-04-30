@@ -149,7 +149,7 @@ mafw-upnp-source (0.1.2009.19-1) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 25
+From changelog: 24
 * Fixes: NB#113028 - mafw_playlist_get_items_md returns completely wrong indices in some scenarios
 * Fixes: NB#108833 - [Onsite] Audio volume is turned full when song is changed
 * Fixes: NB#113464 - Dbus connection lost error message displayed in while trying to up/down volume level from MTG 
