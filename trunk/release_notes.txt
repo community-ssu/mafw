@@ -4,33 +4,44 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.18-1
-Date       2009.04.23
+Version    0.2009.19-1
+Date       2009.04.30
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.18-1
-mafw-gst-renderer 0.1.2009.18-1
-mafw-iradio-source 0.1.2009.18-1
-mafw-shared 0.1.2009.18-1
-mafw-test-gui 0.1.2009.18-1
-mafw-tracker-source 0.1.2009.18-1
-mafw-upnp-source 0.1.2009.18-1
+libmafw 0.1.2009.19-1
+mafw-gst-renderer 0.1.2009.19-1
+mafw-iradio-source 0.1.2009.19-1
+mafw-shared 0.1.2009.19-1
+mafw-test-gui 0.1.2009.19-1
+mafw-tracker-source 0.1.2009.19-1
+mafw-upnp-source 0.1.2009.19-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.18-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.18-1
+libmafw (0.1.2009.19-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.19-1
+  * Bugfix for pl_get_mds
+  * Use 'g_timeout_add_seconds' where possible.
   * Handle G_TYPE_FLOAT type in metadata.
   * Merged branch 'get_metadatas_v4' changes r35:133 into the trunk.
   * Added support to distinguish between audio and video codec errors.
   * Unit tests disabled for mafw package in trunk.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
-mafw-gst-renderer (0.1.2009.18-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-gst-renderer (0.1.2009.19-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.19-1
+  * Fixes power management issues caused by the volume pipeline
+    being always in PAUSED state. While a proper implementation
+    for volume management is not in place, this temporal fix
+    workarounds the problem by setting it to PAUSED on demand
+    when global volume has to be read, and then setting it back
+    to READY.
+  * Do not check video caps on prepare-xwindow-id, instead wait
+    for prerolling to finish, otherwise caps are not set yet.
+  * Use 'g_timeout_add_seconds' where possible.
   * Added monitor volume hack again, but when going to playing instead of
     stopping.
   * Revert "Added monitor_hack again but called only when stopping the worker."
@@ -61,23 +72,26 @@ mafw-gst-renderer (0.1.2009.18-1) unstable; urgency=low
   * Fixed critical warning message.
   * When we get the ckey coming from the sync bus to the async bus, we check
     the caps and raise an error if they are not suitable.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
-mafw-iradio-source (0.1.2009.18-1) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-iradio-source (0.1.2009.19-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.19-1
   * Updating DB, if there is a new vendor-file
   * Adding 'added' metadata at building the default bookmarks
   * Adding duration support for default bookmarks
   * Modified mafw-tracker-source rules.
   * Source code moved to Gnome.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
-mafw-shared (0.1.2009.18-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-shared (0.1.2009.19-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.19-1
+  * Compilation fix
+  * Use 'g_timeout_add_seconds' where possible.
   * Merged branch 'get_metadatas_v4' changes r35:133 into the trunk.
   * Remove remaining wrong NameOwnerChanged signal handlers
   * Do not use NameOwnerChanged signal for detecting extension-startup
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
-mafw-test-gui (0.1.2009.18-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-test-gui (0.1.2009.19-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.19-1
+  * Check if metadata is not NULL before trying to get data.
   * Better playlist-change handling
   * Removed function to change volume in GUI as it was only used by hardware
     keys handlers.
@@ -85,9 +99,13 @@ mafw-test-gui (0.1.2009.18-1) unstable; urgency=low
   * Fixed a compilation warning.
   * No need to show an info note when we get metadata for an item that's 
     not in the view, just ignoring this is ok.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
-mafw-tracker-source (0.1.2009.18-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-tracker-source (0.1.2009.19-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.19-1
+  * Check first if key is related with album-art or thumbnail when inserting in 
+    the cache.
+  * When getting metadata from just one clip, don't ask tracker for the URI 
+    value: it's just already coded in objectid.
   * Handle the case when some entry is not found in tracker within get_metadatas
     function.
   * Fix unit tests.
@@ -118,34 +136,41 @@ mafw-tracker-source (0.1.2009.18-1) unstable; urgency=low
   * Removed unused functions of the Tracker mockup.
   * Fixing browse unit tests.
   * Fixing get_metadata unit tests.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Apr 2009 09:18:07 +0300
-mafw-upnp-source (0.1.2009.18-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.18-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
+mafw-upnp-source (0.1.2009.19-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.19-1
   * Removed useless warning message and fixed critical error message.
   * If browse with a skip count > 0 returns
     no results, invoke the user callback with appropriate
     parameters. Also, when browsing an empty container, do not return 
     an error.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 23 Apr 2009 15:30:00 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 30 Apr 2009 10:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 17
-* Fixes: NB#96483 - Gstreamer renderer does not change from GST_STATE_PAUSED to GST_STATE_READY after timeout
+From changelog: 24
+* Fixes: NB#113028 - mafw_playlist_get_items_md returns completely wrong indices in some scenarios
 * Fixes: NB#108833 - [Onsite] Audio volume is turned full when song is changed
+* Fixes: NB#113464 - Dbus connection lost error message displayed in while trying to up/down volume level from MTG 
+* Fixes: NB#96483 - Gstreamer renderer does not change from GST_STATE_PAUSED to GST_STATE_READY after timeout
 * Fixes: NB#104494 - Missing renderer error when video clib has high framerate
 * Fixes: NB#110654 - mafw-dbus-wrapper prints about a critical error
 * Fixes: NB#103987 - Audio playback is breaking for few seconds while playing mms live streams.
+* Fixes: NB#113710 - mafw-playlist-daemon: service already running
+* Fixes: NB#107240 - MAFW DBUS WRAPPER crashed  when switched between now playing view and main view ,while now playlist is updaiung
+* Fixes: NB#108828 - Seekbar is enable for is-seekable attribute 'FALSE' for aac/amr from tracker-source and UPnP server
+* Fixes: NB#112319 - Items of proxy playlist being shuffled after re-launch MTG
+* Fixes: NB#111854 - Index no getting changing for  Playlist view->Save playlist as
 * Fixes: NB#104504 - Metadata view does not clear  after playback over
 * Fixes: NB#110469 - ‘There is no media to play’ info note showing for existing playlist items
 * Fixes: NB#110304 - MAFW Test GUI window does not show its playing items
 * Fixes: NB#110725 - 'Unable to update metadata for item' info note displayed for 'Go up' operation
 * Fixes: NB#110733 - Unable to play the item from proxy playlist after clear the playlist
-* Fixes: NB#112319 - Items of proxy playlist being shuffled after re-launch MTG
-* Fixes: NB#111854 - Index no getting changing for  Playlist view->Save playlist as
+* Fixes: NB#112540 - Album art URI is not displayed for Album container
+* Fixes: NB#110221 - ML: Album Art is not displaying in All Album and in Artists library view
 * Fixes: NB#110477 - DBus connectivity lost while Pause/Play default video clip
-* Fixes: NB#112540 - Album art URI is not displayed for Album container 
 * Fixes: NB#110568 - Tracker source returns addition date as a gchararray instead of glong
+* Fixes: NB#108725 - DLNA CTT tool gives a failed verdict on "MT HTTP Header: Range - use in HEAD/GET requests"
 * Fixes: NB#110397 - Not all items under a UPnP container are shown
 * Fixes: NB#101038 - UPnP source returns wrong remaining count if request count is not MAFW_SOURCE_BROWSE_ALL
