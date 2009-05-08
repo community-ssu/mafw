@@ -48,6 +48,10 @@ dnl Prerequisites.
 AM_PATH_GLIB_2_0(2.15.0, [], [], [gobject gmodule])
 PKG_CHECK_MODULES(SQLITE,  [sqlite3])
 
+dnl Checkmore prerequisite.
+
+PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
+
 GLIB_PREFIX="`pkg-config --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
@@ -72,14 +76,8 @@ fi
 
 dnl Tests.
 ENABLED_BY_DEFAULT([tests], [disable unit tests])
-#if test "x$enable_tests" = xyes; then
-#	PKG_CHECK_MODULES(CHECK, [check >= 0.9.4])
-#	if test -z "$CHECK_LIBS"; then
-#		AC_MSG_WARN([check is needed for unit tests!])
-#	fi
-#fi
 AM_CONDITIONAL(ENABLE_TESTS,
-               [test "x$enable_tests" = xyes && test -n "$CHECK_LIBS"])
+               [test "x$enable_tests" = xyes])
 
 dnl Tracing.
 DISABLED_BY_DEFAULT([tracing], [enable function instrumentation (tracing)])
