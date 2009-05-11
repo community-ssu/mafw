@@ -75,7 +75,7 @@ else
 fi
 
 dnl Tests.
-ENABLED_BY_DEFAULT([tests], [disable unit tests])
+#ENABLED_BY_DEFAULT([tests], [disable unit tests])
 AM_CONDITIONAL(ENABLE_TESTS,
                [test "x$enable_tests" = xyes])
 
