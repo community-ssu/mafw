@@ -50,11 +50,10 @@ mafw-upnp-source (0.1.2009.20-1) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 7
+From changelog: 6
 * Fixes: NB#107221 - Connecting and disconnecting with an AP while playing an MP3 cause audio breakage
 * Fixes: NB#114181 - Video aspect ratio is not preserved
 * Fixes: NB#114093 - Possible to rename the proxy playlist with existing name
 * Fixes: NB#112946 - MTG can not set the id of the video window after playback from browser
 * Fixes: NB#112615 - Seek bar disabled while playing as ‘play selected URI’ 
-* Fixes: NB#109315 - Local source doesn't found first item enought fast when shuffle 5000 items
 * Fixes: NB#108725 - DLNA CTT tool gives a failed verdict on "MT HTTP Header: Range - use in HEAD/GET requests"
