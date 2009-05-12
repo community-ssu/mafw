@@ -4,56 +4,84 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.20-1
-Date       2009.05.07
+Version    0.2009.20-2
+Date       2009.05.12
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 5
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
 
-mafw-gst-renderer 0.1.2009.20-1
-mafw-shared 0.1.2009.20-1
-mafw-test-gui 0.1.2009.20-1
-mafw-tracker-source 0.1.2009.20-1
-mafw-upnp-source 0.1.2009.20-1
+libmafw 0.1.2009.20-2
+mafw-gst-renderer 0.1.2009.20-2
+mafw-shared 0.1.2009.20-2
+mafw-test-gui 0.1.2009.20-2
+mafw-tracker-source 0.1.2009.20-2
+mafw-upnp-source 0.1.2009.20-2
 
 
 Change logs: 
 
-mafw-gst-renderer (0.1.2009.20-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.20-1
-  * Set appropriate buffering settings for audio sink
-    to avoid audio glitches on certain scenarios.
+libmafw (0.1.2009.20-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.20-2
+  * Tests disabled.
+  * Checkmore needs check to build. Adding dependency.
   * Maintainer changed in control file.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 07 May 2009 11:00:00 +0300
-mafw-shared (0.1.2009.20-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.20-1
-  * Fix for a possible crash
-  * Fixed unit tests according to the new playlist implementation.
-  * Implemented a shuffle-on-demand algorithm in playlist manager.
-  * Maintainer changed in control file.
-  * Minor changes affecting only codestyle.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 07 May 2009 11:00:00 +0300
-mafw-test-gui (0.1.2009.20-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.20-1
-  * Maintainer changed in control file.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 07 May 2009 11:00:00 +0300
-mafw-tracker-source (0.1.2009.20-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.20-1
-  * Maintainer changed in control file.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 07 May 2009 11:00:00 +0300
-mafw-upnp-source (0.1.2009.20-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.20-1
-  * Maintainer changed in control file.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 07 May 2009 11:00:00 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
+mafw-gst-renderer (0.1.2009.20-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.20-2
+  * Changed _handle_duration to use _check_duration and added for
+    seekability too.
+  * Reworked _query_duration_and_seekability into _check_duration and _check
+    seekability.
+  * Added timeout to query duration and seekability and changed when it was
+    called.
+  * Set timeout id to 0 when timeout is removed
+  * Used function to compare duration in seconds instead of comparing pure
+    nano seconds.
+  * Added function to compare durations in seconds.
+  * Query duration and seek after buffering is complete.
+  * Reworked adding the timeout to use a function.
+  * Modified seekability emission to be done only with changes and adapted
+    to type changes.
+  * Modified duration emission to be emitted only with changes.
+  * Media seekability initialized to unknown when playback begins.
+  * SeekabilityType renamed and moved to renderer worker.
+  * Renderer worker seekability uses its type now instead of gboolean.
+  * Stored duration and seek timeout id to be able to remove it later in
+    renderer worker.
+  * Added query for duration and seekability some seconds after going to
+    PLAYING to have more accurate information from GStreamer in renreder
+    worker.
+  * Reworked _finalize_startup in renderer worker into _finalize_startup and
+    _query_duration_and_seekability. The first uses now the second.
+  * Set pulse sink's latency-time property to half of buffer-time,
+    this provides double buffering capabilities and should also help
+    with avoiding audio glitches. Also, removed buffering for volume
+    pipeline, since that is not needed.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
+mafw-shared (0.1.2009.20-2) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.20-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
+mafw-test-gui (0.1.2009.20-2) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.20-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
+mafw-tracker-source (0.1.2009.20-2) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.20-2
+  * Avoid calling Tracker when no metadata is requested get metadatas
+    function.
+  * Updated to changes in hildon-thumbnail beahvior.
+  * This reverts commit r208.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
+mafw-upnp-source (0.1.2009.20-2) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.20-2
+  * Changed code to detect seekability in upnp source to make it a bit
+    better readable. For non containers, it sets default to 0 and it is only
+    set to 1 if parameter is found and it is 1.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 12 May 2009 11:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 6
-* Fixes: NB#107221 - Connecting and disconnecting with an AP while playing an MP3 cause audio breakage
-* Fixes: NB#114181 - Video aspect ratio is not preserved
-* Fixes: NB#114093 - Possible to rename the proxy playlist with existing name
-* Fixes: NB#112946 - MTG can not set the id of the video window after playback from browser
-* Fixes: NB#112615 - Seek bar disabled while playing as ‘play selected URI’ 
-* Fixes: NB#108725 - DLNA CTT tool gives a failed verdict on "MT HTTP Header: Range - use in HEAD/GET requests"
+From changelog: 2
+* Fixes: NB#115126 - Media Player abuses Tracker API while playing songs
+* Fixes: NB#114405 - playlist items are displayed in reverse order when imported in different methods
