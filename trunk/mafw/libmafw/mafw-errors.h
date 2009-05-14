@@ -146,6 +146,10 @@ typedef enum
  *    Renderer could not carry on playing the current media anymore.
  * @MAFW_RENDERER_ERROR_UNSUPPORTED_TYPE: 
  *    The media item mime-type is not supported. Renderer cannot play it.
+ * @MAFW_RENDERER_ERROR_UNSUPPORTED_RESOLUTION: 
+ *    The media item resolution is not supported. Renderer cannot play it.
+ * @MAFW_RENDERER_ERROR_UNSUPPORTED_FPS: 
+ *    The media item frame rate is not supported. Renderer cannot play it.
  * @MAFW_RENDERER_ERROR_DRM:
  *    The media item has drm protection and cannot be played.
  * @MAFW_RENDERER_ERROR_DEVICE_UNAVAILABLE: 
@@ -189,6 +193,8 @@ typedef enum
   MAFW_RENDERER_ERROR_STREAM_DISCONNECTED,
   MAFW_RENDERER_ERROR_TYPE_NOT_AVAILABLE,
   MAFW_RENDERER_ERROR_UNSUPPORTED_TYPE,
+  MAFW_RENDERER_ERROR_UNSUPPORTED_RESOLUTION,
+  MAFW_RENDERER_ERROR_UNSUPPORTED_FPS,
   MAFW_RENDERER_ERROR_DRM,
   MAFW_RENDERER_ERROR_DEVICE_UNAVAILABLE,
   MAFW_RENDERER_ERROR_CORRUPTED_FILE,
