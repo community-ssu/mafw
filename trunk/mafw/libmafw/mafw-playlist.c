@@ -1010,22 +1010,26 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 		return NULL;
 	}
 
-	pldata = g_new0(struct GetPlItemData, 1);
-	pldata->remaining_reqs = 0;
-	pldata->cb = cb;
-	pldata->pls = pls;
-	pldata->cbarg = cbarg;
-	pldata->oids = pl_items;
-	pldata->free_cbarg = free_cbarg;
-	pldata->cancelled = FALSE;
-	pldata->from = from;
-	if (keys)
-		pldata->keys = g_strdupv((gchar**)keys);
-	pldata->indexhash = NULL;
+	if (pl_items) {
+		pldata = g_new0(struct GetPlItemData, 1);
+		pldata->remaining_reqs = 0;
+		pldata->cb = cb;
+		pldata->pls = pls;
+		pldata->cbarg = cbarg;
+		pldata->oids = pl_items;
+		pldata->free_cbarg = free_cbarg;
+		pldata->cancelled = FALSE;
+		pldata->from = from;
+		if (keys)
+			pldata->keys = g_strdupv((gchar**)keys);
+		pldata->indexhash = NULL;
 	
-	g_queue_push_tail(Active_miwmds, pldata);
-	g_idle_add((GSourceFunc)miwd_send_requests, pldata);
-	return pldata;
+		g_queue_push_tail(Active_miwmds, pldata);
+		g_idle_add((GSourceFunc)miwd_send_requests, pldata);
+		return pldata;
+	} else {
+		return NULL;
+	}
 }
 
 /**
