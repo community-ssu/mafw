@@ -1,8 +1,13 @@
-mafw-gst-renderer (0.1.2009.21-1) unstable; urgency=low
+mafw-gst-renderer (0.1.2009.21-2) unstable; urgency=low
 
-  * MAFW gst renderer, pre-release 0.2009.21-1
+  * MAFW gst renderer, pre-release 0.2009.21-2
+  * Fixes: NB#104494 - Missing renderer error when video clib has high framerate 
+  * Fixes: NB#115514 - UPnP:After seeking the seekbar on Pause state audio/video clip started playing
   * Fixes: NB#100842 - seeking in aac over http fails
   * Fixes: NB#115126 - Media Player abuses Tracker API while playing songs
+  * Properly initialize variable.
+  * Use specific error codes for unsupported 
+    resolution and unsupported fps conditions.
   * Create and configure audio and video sinks once, then provide these
     to playbin2 when a new pipeline is created.
   * Changed _handle_duration to use _check_duration and added for
@@ -34,6 +39,12 @@ mafw-gst-renderer (0.1.2009.21-1) unstable; urgency=low
     this provides double buffering capabilities and should also help
     with avoiding audio glitches. Also, removed buffering for volume
     pipeline, since that is not needed.
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 18 May 2009 11:00:00 +0300
+
+mafw-gst-renderer (0.1.2009.21-1) unstable; urgency=low
+
+  * MAFW gst renderer, pre-release 0.2009.21-1
 
  -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
 

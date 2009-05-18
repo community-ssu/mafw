@@ -7,9 +7,9 @@
 
 SUBDIRS				= upnp-source
 
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 noinst_DATA			= mafw-upnp-source-uninstalled.pc
 EXTRA_DIST			= mafw-upnp-source-uninstalled.pc.in

@@ -8,9 +8,9 @@
 
 SUBDIRS				= libmafw-gst-renderer
 
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 noinst_DATA			= mafw-gst-renderer-uninstalled.pc
 EXTRA_DIST			= mafw-gst-renderer-uninstalled.pc.in
