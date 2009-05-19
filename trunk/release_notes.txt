@@ -4,97 +4,64 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.21-1
-Date       2009.05.14
+Version    0.2009.21-3
+Date       2009.05.19
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
 
-libmafw 0.1.2009.21-1
-mafw-gst-renderer 0.1.2009.21-1
-mafw-shared 0.1.2009.21-1
-mafw-test-gui 0.1.2009.21-1
-mafw-tracker-source 0.1.2009.21-1
-mafw-upnp-source 0.1.2009.21-1
+libmafw 0.1.2009.21-3
+mafw-gst-renderer 0.1.2009.21-3
+mafw-shared 0.1.2009.21-3
+mafw-test-gui 0.1.2009.21-3
+mafw-tracker-source 0.1.2009.21-3
+mafw-upnp-source 0.1.2009.21-3
 
 
 Change logs: 
 
-libmafw (0.1.2009.21-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.21-1
-  * Enabled tests.
-  * Tests disabled.
-  * Checkmore needs check to build. Adding dependency.
-  * Maintainer changed in control file.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
-mafw-gst-renderer (0.1.2009.21-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.21-1
-  * Do not reuse video sink for now, somehow it gets
-    broken after some time and as a result we cannot set XID of target
-    video window to use.
-  * Create and configure audio and video sinks once, then provide these
-    to playbin2 when a new pipeline is created.
-  * Changed _handle_duration to use _check_duration and added for
-    seekability too.
-  * Reworked _query_duration_and_seekability into _check_duration and _check
-    seekability.
-  * Added timeout to query duration and seekability and changed when it was
-    called.
-  * Set timeout id to 0 when timeout is removed
-  * Used function to compare duration in seconds instead of comparing pure
-    nano seconds.
-  * Added function to compare durations in seconds.
-  * Query duration and seek after buffering is complete.
-  * Reworked adding the timeout to use a function.
-  * Modified seekability emission to be done only with changes and adapted
-    to type changes.
-  * Modified duration emission to be emitted only with changes.
-  * Media seekability initialized to unknown when playback begins.
-  * SeekabilityType renamed and moved to renderer worker.
-  * Renderer worker seekability uses its type now instead of gboolean.
-  * Stored duration and seek timeout id to be able to remove it later in
-    renderer worker.
-  * Added query for duration and seekability some seconds after going to
-    PLAYING to have more accurate information from GStreamer in renreder
-    worker.
-  * Reworked _finalize_startup in renderer worker into _finalize_startup and
-    _query_duration_and_seekability. The first uses now the second.
-  * Set pulse sink's latency-time property to half of buffer-time,
-    this provides double buffering capabilities and should also help
-    with avoiding audio glitches. Also, removed buffering for volume
-    pipeline, since that is not needed.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
-mafw-shared (0.1.2009.21-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.21-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
-mafw-test-gui (0.1.2009.21-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.21-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
-mafw-tracker-source (0.1.2009.21-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.21-1
-  * Use the new API for getting thumbnails.
-  * Check GPtrArray boundary limits.
-  * Avoid calling Tracker when no metadata is requested get metadatas
-    function.
-  * Updated to changes in hildon-thumbnail beahvior.
-  * This reverts commit r208.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
-mafw-upnp-source (0.1.2009.21-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.21-1
-  * Changed code to detect seekability in upnp source to make it a bit
-    better readable. For non containers, it sets default to 0 and it is only
-    set to 1 if parameter is found and it is 1.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 14 May 2009 10:09:18 +0300
+libmafw (0.1.2009.21-3) unstable; urgency=low
+  * MAFW, pre-release 0.2009.21-3
+  * Check if playlist really has contents before starting 
+    metadata resolution.
+  * Added error codes for unsupported resolution and unsupported 
+    frame rate.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+mafw-gst-renderer (0.1.2009.21-3) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.21-3
+  * Properly initialize variable.
+  * Use specific error codes for unsupported 
+    resolution and unsupported fps conditions.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+mafw-shared (0.1.2009.21-3) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.21-3
+  * Allow to load more than one plugin with a wrapper
+  * Check browse results properly to handle empty containers
+    adequately.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+mafw-test-gui (0.1.2009.21-3) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.21-3
+  * If we do not have mime-type information, use other keys to detect 
+    video (resolution, framerate or video-codec).
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+mafw-tracker-source (0.1.2009.21-3) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.21-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+mafw-upnp-source (0.1.2009.21-3) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.21-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 7
-* Fixes: NB#116647 - ‘mafw-playlist-daemon’ crash observed while rename proxy playlist 
-* Fixes: NB#117015 - video plays in windowed mode
-* Fixes: NB#100842 - seeking in aac over http fails
-* Fixes: NB#115126 - Media Player abuses Tracker API while playing songs
-* Fixes: NB#116598 - ‘Import selected object-id’ not working for playlist file from tracker source
-* Fixes: NB#114405 - playlist items are displayed in reverse order when imported in different methods
-* Fixes: NB#115303 - Media Player gets song and video counts too slowly from tracker
+From changelog: 9
+* Fixes: NB#110344 - The song set to play first in shuffled playlist is not the first in playing order.
+* Fixes: NB#117083 - 'mafw-test-gui' crashed observed while import empty playlist file
+* Fixes: NB#104494 - Missing renderer error when video clib has high framerate 
+* Fixes: NB#115514 - UPnP:After seeking the seekbar on Pause state audio/video clip started playing
+* Fixes: NB#115304 - Video playback will stop if we plug in usb cable
+* Fixes: NB#115299 - Media player seek bar comes to starting position if usb cable is pluged in
+* Fixes: NB#87712 - Video plugin is not activated for streaming links , after playing an audio item
+* Fixes: NB#100164 - 'All albums' displays 1 icon per artist per album iso 1 icon per album
+* Fixes: NB#103164 - 'Most played ' automatic playlist is not updating properly 

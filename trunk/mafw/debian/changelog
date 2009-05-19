@@ -1,3 +1,21 @@
+libmafw (0.1.2009.21-3) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.21-3
+  * Fixes: NB#110344 - The song set to play first in shuffled playlist is not the first in playing order.
+  * Fixes: NB#117083 - 'mafw-test-gui' crashed observed while import empty playlist file
+  * Check if playlist really has contents before starting 
+    metadata resolution.
+  * Added error codes for unsupported resolution and unsupported 
+    frame rate.
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+
+libmafw (0.1.2009.21-2) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.21-2
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 18 May 2009 11:00:00 +0300
+
 libmafw (0.1.2009.21-1) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.21-1
