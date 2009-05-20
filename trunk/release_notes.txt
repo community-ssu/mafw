@@ -4,64 +4,55 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.21-3
-Date       2009.05.19
+Version    0.2009.21-4
+Date       2009.05.20
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
 
-libmafw 0.1.2009.21-3
-mafw-gst-renderer 0.1.2009.21-3
-mafw-shared 0.1.2009.21-3
-mafw-test-gui 0.1.2009.21-3
-mafw-tracker-source 0.1.2009.21-3
-mafw-upnp-source 0.1.2009.21-3
+libmafw 0.1.2009.21-4
+mafw-gst-renderer 0.1.2009.21-4
+mafw-shared 0.1.2009.21-4
+mafw-test-gui 0.1.2009.21-4
+mafw-tracker-source 0.1.2009.21-4
+mafw-upnp-source 0.1.2009.21-4
 
 
 Change logs: 
 
-libmafw (0.1.2009.21-3) unstable; urgency=low
-  * MAFW, pre-release 0.2009.21-3
-  * Check if playlist really has contents before starting 
-    metadata resolution.
-  * Added error codes for unsupported resolution and unsupported 
-    frame rate.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
-mafw-gst-renderer (0.1.2009.21-3) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.21-3
-  * Properly initialize variable.
-  * Use specific error codes for unsupported 
-    resolution and unsupported fps conditions.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
-mafw-shared (0.1.2009.21-3) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.21-3
-  * Allow to load more than one plugin with a wrapper
-  * Check browse results properly to handle empty containers
-    adequately.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
-mafw-test-gui (0.1.2009.21-3) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.21-3
-  * If we do not have mime-type information, use other keys to detect 
-    video (resolution, framerate or video-codec).
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
-mafw-tracker-source (0.1.2009.21-3) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.21-3
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
-mafw-upnp-source (0.1.2009.21-3) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.21-3
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 19 May 2009 10:30:00 +0300
+libmafw (0.1.2009.21-4) unstable; urgency=low
+  * MAFW, pre-release 0.2009.21-4
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+mafw-gst-renderer (0.1.2009.21-4) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.21-4
+  * Reuse video sink component, do not create a new one every time
+    we play something.
+  * Ref audio and video sink before setting them, since we want them
+    to persist after the pipeline has been destroyed.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+mafw-shared (0.1.2009.21-4) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.21-4
+  * CID 15766
+  * CID 15778
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+mafw-test-gui (0.1.2009.21-4) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.21-4
+  * Disable seekbar before requesting metadata to the
+    source, otherwise we can run in a race condition with the renderer
+    metadata and override the renderer info.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+mafw-tracker-source (0.1.2009.21-4) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.21-4
+  * CID 15696
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+mafw-upnp-source (0.1.2009.21-4) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.21-4
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 9
-* Fixes: NB#110344 - The song set to play first in shuffled playlist is not the first in playing order.
-* Fixes: NB#117083 - 'mafw-test-gui' crashed observed while import empty playlist file
-* Fixes: NB#104494 - Missing renderer error when video clib has high framerate 
-* Fixes: NB#115514 - UPnP:After seeking the seekbar on Pause state audio/video clip started playing
-* Fixes: NB#115304 - Video playback will stop if we plug in usb cable
-* Fixes: NB#115299 - Media player seek bar comes to starting position if usb cable is pluged in
-* Fixes: NB#87712 - Video plugin is not activated for streaming links , after playing an audio item
-* Fixes: NB#100164 - 'All albums' displays 1 icon per artist per album iso 1 icon per album
-* Fixes: NB#103164 - 'Most played ' automatic playlist is not updating properly 
+From changelog: 2
+* Fixes: NB#107711 - Audio cutting/breaks when opening Web browser
+* Fixes: NB#112615 - Seek bar disabled while playing as ‘play selected URI’
