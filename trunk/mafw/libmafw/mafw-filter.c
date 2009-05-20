@@ -644,9 +644,6 @@ MafwFilter *mafw_filter_add_children_n(MafwFilter *filter, ...)
 
         g_return_val_if_fail (filter != NULL, NULL);
 
-        if (!filter) {
-                return NULL;
-        }
 	if (filter->type != mafw_f_and && filter->type != mafw_f_or)
 		return filter;
 
