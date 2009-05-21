@@ -796,10 +796,11 @@ static void miwd_got_mdatas(MafwSource *self, GHashTable *metadatas,
 	if (metadatas)
 	{
 		g_hash_table_iter_init(&htiter, metadatas);
-
+        	/* middle (void*) cast prevents gcc warning "defreferencing type-punned
+        	pointer will break strict-aliasing rules" */
 		while (!data->cancelled && g_hash_table_iter_next(&htiter,
-							(gpointer*)&oid,
-							(gpointer*)&cur_md))
+							(gpointer*)(void*)&oid,
+							(gpointer*)(void*)&cur_md))
 		{
 			idxlist = g_hash_table_lookup(data->indexhash, oid);
 			iter = idxlist;
@@ -821,8 +822,8 @@ static void miwd_got_mdatas(MafwSource *self, GHashTable *metadatas,
 		/* Call the remaining objects with NULL mdata */
 		g_hash_table_iter_init(&htiter, data->indexhash);
 		while (!data->cancelled && g_hash_table_iter_next(&htiter,
-						(gpointer*)&oid,
-						(gpointer*)&idxlist))
+						(gpointer*)(void*)&oid,
+						(gpointer*)(void*)&idxlist))
 		{
 			iter = idxlist;
 			while (iter && !data->cancelled)
@@ -922,8 +923,8 @@ static gboolean miwd_send_requests(struct GetPlItemData *pldata)
 	
 	pldata->remaining_reqs = i;
 	g_hash_table_iter_init(&htiter, helperhash);
-	while (g_hash_table_iter_next(&htiter, (gpointer*)&source,
-						(gpointer*)&oblist))
+	while (g_hash_table_iter_next(&htiter, (gpointer*)(void*)&source,
+						(gpointer*)(void*)&oblist))
 	{
 		g_ptr_array_add(oblist, NULL);
 		mafw_source_get_metadatas(source, (const gchar**)oblist->pdata,
