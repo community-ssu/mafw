@@ -513,7 +513,8 @@ void checkmore_unfakeroot(void)
 		uid_t uid, euid;
 
 		if (sscanf(line, "Uid: %u %u", &uid, &euid) == 2) {
-			setreuid(uid, euid);
+			if (setreuid(uid, euid) == -1)
+				g_warning("Error calling setreuid: %m");
 			break;
 		}
 	}
