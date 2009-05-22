@@ -4,55 +4,77 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.21-4
-Date       2009.05.20
+Version    0.2009.22-1
+Date       2009.05.22
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.21-4
-mafw-gst-renderer 0.1.2009.21-4
-mafw-shared 0.1.2009.21-4
-mafw-test-gui 0.1.2009.21-4
-mafw-tracker-source 0.1.2009.21-4
-mafw-upnp-source 0.1.2009.21-4
+libmafw 0.1.2009.22-1
+mafw-gst-renderer 0.1.2009.22-1
+mafw-iradio-source 0.1.2009.22-1
+mafw-shared 0.1.2009.22-1
+mafw-test-gui 0.1.2009.22-1
+mafw-tracker-source 0.1.2009.22-1
+mafw-upnp-source 0.1.2009.22-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.21-4) unstable; urgency=low
-  * MAFW, pre-release 0.2009.21-4
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
-mafw-gst-renderer (0.1.2009.21-4) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.21-4
-  * Reuse video sink component, do not create a new one every time
-    we play something.
-  * Ref audio and video sink before setting them, since we want them
-    to persist after the pipeline has been destroyed.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
-mafw-shared (0.1.2009.21-4) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.21-4
-  * CID 15766
-  * CID 15778
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
-mafw-test-gui (0.1.2009.21-4) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.21-4
-  * Disable seekbar before requesting metadata to the
-    source, otherwise we can run in a race condition with the renderer
-    metadata and override the renderer info.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
-mafw-tracker-source (0.1.2009.21-4) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.21-4
-  * CID 15696
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
-mafw-upnp-source (0.1.2009.21-4) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.21-4
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 20 May 2009 11:00:00 +0300
+libmafw (0.1.2009.22-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.22-1
+  * CID 224
+  * CID 231
+  * killing a gcc warning
+  * CID 14845
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-gst-renderer (0.1.2009.22-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.22-1
+  * If we fallback to use playbin instead of playbin2, check that
+    we can actually create an instance before attempting to
+    set properties.
+  * Changed to filter volume and mute changes to join several in a single
+    call.
+  * Setting property to ensure pulse role when initializing volume manager
+    in renderer.
+  * Separated role and its prefix for checking in volume manager in renderer
+  * Added more debug to volume manager in renderer
+  * Added dependencies to debian/control and configure.ac
+  * Migrated volume management in worker to use pulse implementation.
+  * Added code to manage volume with pulse. This code was developed in
+    collaboration with Marc-André Lureau in gitorious. Link:
+    http://gitorious.org/~calvaris/mafw-pulse/calvaris
+  * Added compilation of volume files to Makefile.am in renderer.
+  * Added empty files with licenses for volume management in renderer.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-iradio-source (0.1.2009.22-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.22-1
+  * CID 343
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-shared (0.1.2009.22-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.22-1
+  * CID 237
+  * CID 612
+  * CID 13332
+  * CID 15637
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-test-gui (0.1.2009.22-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.22-1
+  * CID 9162
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-tracker-source (0.1.2009.22-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.22-1
+  * CID 1188
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
+mafw-upnp-source (0.1.2009.22-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.22-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 22 May 2009 12:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 2
-* Fixes: NB#107711 - Audio cutting/breaks when opening Web browser
-* Fixes: NB#112615 - Seek bar disabled while playing as ‘play selected URI’
+From changelog: 3
+* Fixes: NB#112697 - gst-renderer not listening volume change events from pulseaudio
+* Fixes: NB#118001 - seekbar is disabled after playing a unsupported clip
+* Fixes: NB#98869 - Terminated N95 Server is still showing in Main view 
