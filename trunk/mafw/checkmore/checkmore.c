@@ -136,7 +136,10 @@ static gboolean is_libtool_victim(const char *path)
 	/* Return if it's a shell script. */
 	memset(shebang, 0, sizeof(shebang));
 	if ((hfd = open(path, O_RDONLY)) < 0)
+	{
 		fail("%s: %s", strerror(errno));
+		exit(-1);
+	}
 	read(hfd, shebang, sizeof(shebang));
 	close(hfd);
 
