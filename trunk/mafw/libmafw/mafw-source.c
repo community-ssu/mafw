@@ -697,10 +697,15 @@ gchar *mafw_source_create_objectid(const gchar *uri)
 		 * have any source at all.  This RE is slightly altered compared
 		 * the one found in RFC3986, modified for validation, rather
 		 * than breakdown. */
-		regcomp(&re,
+		if (regcomp(&re,
 		    "^(([^:/?#]+):)(//([^/?#]*))([^?#]*)(\\?([^#]*))?(#(.*))?$",
-		    REG_EXTENDED | REG_NOSUB);
-		re_compiled = TRUE;
+		    REG_EXTENDED | REG_NOSUB) == 0)
+			re_compiled = TRUE;
+		else
+		{
+			g_critical("Unable to compile regexp");
+			return NULL;
+		}
 	}
 
 	if (regexec(&re, uri, 0, NULL, 0) == 0) {
