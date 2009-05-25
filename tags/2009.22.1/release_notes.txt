@@ -68,7 +68,7 @@ mafw-upnp-source (0.1.2009.22-2) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 7
+From changelog: 6
 * Fixes: NB#116070 - video plays before displaying unsupported resolution error message
 * Fixes: NB#112697 - gst-renderer not listening volume change events from pulseaudio
 * Fixes: NB#118001 - seekbar is disabled after playing a unsupported clip
