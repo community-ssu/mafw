@@ -1,6 +1,8 @@
 mafw-gst-renderer (0.1.2009.22-2) unstable; urgency=low
 
   * MAFW gst renderer, pre-release 0.2009.22-2
+  * Fixes: NB#114972 - NP: AUdio- Taping on Next or Previous song volume goes to 0 level
+  * Fixes: NB#109166 - NP view - Volume bar does not popup for Hardware volume +/- key presses
   * Fixes: NB#116070 - video plays before displaying unsupported resolution error message
   * Fixes: NB#112697 - gst-renderer not listening volume change events from pulseaudio
   * Fixes: NB#118001 - seekbar is disabled after playing a unsupported clip
