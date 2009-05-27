@@ -1,3 +1,10 @@
+libmafw (0.1.2009.22-3) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.22-3
+  * Added new error codes
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 27 May 2009 10:30:00 +0300
+
 libmafw (0.1.2009.22-2) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.22-2
