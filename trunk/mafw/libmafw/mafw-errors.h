@@ -140,6 +140,11 @@ typedef enum
  *    The URI of a media object is not valid. The object cannot be played.
  * @MAFW_RENDERER_ERROR_TYPE_NOT_AVAILABLE: 
  *    Renderer couldn't obtain a mime-type to a media object.
+ * @MAFW_RENDERER_ERROR_PLAYBACK: 
+ *    Renderer found a general error that prevents or limits playback of 
+ * a particular media.
+ * @MAFW_RENDERER_ERROR_UNABLE_TO_PERFORM: 
+ *    Renderer found a general error.
  * @MAFW_RENDERER_ERROR_MEDIA_NOT_FOUND:
  *    Renderer could not open a media.
  * @MAFW_RENDERER_ERROR_STREAM_DISCONNECTED:
@@ -161,9 +166,9 @@ typedef enum
  * @MAFW_RENDERER_ERROR_CODEC_NOT_FOUND:
  *    Renderer could not find suitable coded for the given media.
  * @MAFW_RENDERER_ERROR_VIDEO_CODEC_NOT_FOUND:
- *    Renderer could not find suitable coded for the given video.
+ *    Renderer could not find suitable codec for the given video.
  * @MAFW_RENDERER_ERROR_AUDIO_CODEC_NOT_FOUND:
- *    Renderer could not find suitable coded for the given audio.
+ *    Renderer could not find suitable codec for the given audio.
  * @MAFW_RENDERER_ERROR_NO_PLAYLIST:
  *    Renderer does not have a playlist.
  * @MAFW_RENDERER_ERROR_INDEX_OUT_OF_BOUNDS:
@@ -192,6 +197,8 @@ typedef enum
   MAFW_RENDERER_ERROR_MEDIA_NOT_FOUND,
   MAFW_RENDERER_ERROR_STREAM_DISCONNECTED,
   MAFW_RENDERER_ERROR_TYPE_NOT_AVAILABLE,
+  MAFW_RENDERER_ERROR_PLAYBACK,
+  MAFW_RENDERER_ERROR_UNABLE_TO_PERFORM,
   MAFW_RENDERER_ERROR_UNSUPPORTED_TYPE,
   MAFW_RENDERER_ERROR_UNSUPPORTED_RESOLUTION,
   MAFW_RENDERER_ERROR_UNSUPPORTED_FPS,
