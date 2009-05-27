@@ -1,3 +1,10 @@
+libmafw (0.1.2009.22-2) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.22-2
+  * CID 2818
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 25 May 2009 12:21:24 +0300
+
 libmafw (0.1.2009.22-1) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.22-1
