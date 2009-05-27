@@ -657,6 +657,78 @@
 #define MAFW_METADATA_KEY_CHILDCOUNT(n)		g_strdup_printf("childcount(%d)", (n))
 
 /**
+ * MAFW_METADATA_KEY_CHILDCOUNT_1:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(1).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_1          "childcount(1)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_2:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(2).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_2          "childcount(2)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_3:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(3).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_3          "childcount(3)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_4:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(4).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_4          "childcount(4)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_5:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(5).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_5          "childcount(5)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_6:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(6).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_6          "childcount(6)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_7:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(7).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_7          "childcount(7)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_8:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(8).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_8          "childcount(8)"
+
+/**
+ * MAFW_METADATA_KEY_CHILDCOUNT_9:
+ *
+ * Static version of MAFW_METADATA_KEY_CHILDCOUNT(9).
+ *
+ */
+#define MAFW_METADATA_KEY_CHILDCOUNT_9          "childcount(9)"
+
+/**
  * MAFW_METADATA_KEY_ICON_URI:
  *
  * An URI pointing to icon image. Its value is a string.
