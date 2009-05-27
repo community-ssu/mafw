@@ -644,10 +644,17 @@
 
 /**
  * MAFW_METADATA_KEY_CHILDCOUNT:
+ * @n: at which level should the count be computed. First is level 1
+ * (children)
  *
- * Describes the amount of child items the item has. Its value is an integer.
+ * Describes the amount of child items the item has at level
+ * @n. #MAFW_METADATA_KEY_CHILDCOUNT(1) is the number of chldren,
+ * #MAFW_METADATA_KEY_CHILDCOUNT(2) is the number of grandchildren, and so
+ * on. Its value is an integer. Everytime this macro is invoked, new memory is
+ * created. User must free it when no needed.
+ *
  */
-#define MAFW_METADATA_KEY_CHILDCOUNT		"childcount"
+#define MAFW_METADATA_KEY_CHILDCOUNT(n)		g_strdup_printf("childcount(%d)", (n))
 
 /**
  * MAFW_METADATA_KEY_ICON_URI:
