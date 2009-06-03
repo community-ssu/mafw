@@ -1,3 +1,16 @@
+libmafw (0.1.2009.23-3) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.23-3
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+
+libmafw (0.1.2009.23-2) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.23-2
+  * Fixes: NB#119064 - Media Player crashes with signal 11 after every reboot. 
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+
 libmafw (0.1.2009.23-1) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.23-1

@@ -4,88 +4,68 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.23-1
-Date       2009.05.29
+Version    0.2009.23-2
+Date       2009.06.02
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.23-1
-mafw-gst-renderer 0.1.2009.23-1
-mafw-iradio-source 0.1.2009.23-1
-mafw-shared 0.1.2009.23-1
-mafw-test-gui 0.1.2009.23-1
-mafw-tracker-source 0.1.2009.23-1
-mafw-upnp-source 0.1.2009.23-1
+libmafw 0.1.2009.23-2
+mafw-gst-renderer 0.1.2009.23-2
+mafw-iradio-source 0.1.2009.23-2
+mafw-shared 0.1.2009.23-2
+mafw-test-gui 0.1.2009.23-2
+mafw-tracker-source 0.1.2009.23-2
+mafw-upnp-source 0.1.2009.23-2
 
 
 Change logs: 
 
-libmafw (0.1.2009.23-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.23-1
-  * Add static versions of MAFW_METADATA_KEY_CHILDCOUNT.
-  * Extend MAFW_METADATA_KEY_CHILDCOUNT to specify at which level should the 
-    count be done.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
-mafw-gst-renderer (0.1.2009.23-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.23-1
-  * Signalling volume when reconnecting to pulse
-  * Added code to reconnect to pulse when it gets disconnected.
-  * Closure callback for initialization is not called if it is NULL in
-    volume manager.
-  * Created _connect function to connect with pulse and reworker the init
-    function in volume manager.
-  * Created _destroy_context function and changed _destroy_idle function to
-    do it in volume manager.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
-mafw-iradio-source (0.1.2009.23-1) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.23-1
-  * Add static versions of MAFW_METADATA_KEY_CHILDCOUNT.
-  * Extend MAFW_METADATA_KEY_CHILDCOUNT to specify at which level should the 
-    count be done.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
-mafw-test-gui (0.1.2009.23-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.23-1
-  * Fixing a warning.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
-mafw-tracker-source (0.1.2009.23-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.23-1
-  * Fix a stack overflow in tracker-source unit tests.
-  * Fix childcount and duration when getting metadata from songs.
-  * Add static versions of MAFW_METADATA_KEY_CHILDCOUNT.
-  * Fix unit tests.
-  * Support several childcounts when getting metadata from 
-    'localtagfs::music/*'.
-  * Handle only one unique key in cache instead of an array.
-  * Support several childcounts when browsing through 
-    'localtagfs::music/genres'.
-  * Support several childcounts when browsing through 
-    'localtagfs::music/artists'.
-  * Support several childcounts when browsing through 
-    'localtagfs::music/albums'.
-  * Extend MAFW_METADATA_KEY_CHILDCOUNT to specify at which level should the 
-    count be done.
-  * Add tracker_metadata_get_unique_values_with_aggregates_async to 
-    tracker-mockup.
-  * Get rid of 
-    tracker_metadata_get_unique_values_with_concat_count_and_sum_async
-    function and use tracker_metadata_get_unique_values_with_aggregates_async
-    instead.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
-mafw-upnp-source (0.1.2009.23-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.23-1
-  * Fixed compilation error
-  * Check for conic instead armel platform to use libconic functions.
-  * Add static versions of MAFW_METADATA_KEY_CHILDCOUNT.
-  * Extend MAFW_METADATA_KEY_CHILDCOUNT to specify at which level should the 
-    count be done.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 29 May 2009 10:30:00 +0300
+libmafw (0.1.2009.23-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.23-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-gst-renderer (0.1.2009.23-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.23-2
+  * No need to ref the playlist in the renderer, 
+    the playlist manager does that already.
+  * Changed to avoid setting the timeout if neither volume nor mute have
+    changed in volume manager
+  * Changed debug messages in volume manager
+  * We ignore mute if it not enabled (default = not enabled).
+  * Added option to configure.ac to disable or enable mute handling
+  * Use g_error_new_literal if string is constant.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-iradio-source (0.1.2009.23-2) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.23-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-shared (0.1.2009.23-2) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.23-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-test-gui (0.1.2009.23-2) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.23-2
+  * Set mute toggle_button insensitive by default in mafw-test-gui
+  * Added --enable-mute disabled by default in mafw-test-gui configuration
+  * Added ENABLED_BY_DEFAULT and DISABLED_BY_DEFAULT functions in
+    mafw-test-gui configure.ac
+  * Replace deprecated GTK_SIGNAL_FUNC by G_CALLBACK.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-tracker-source (0.1.2009.23-2) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.23-2
+  * Fixed album-art-large-uri metadata support.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+mafw-upnp-source (0.1.2009.23-2) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.23-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 3
+From changelog: 7
+* Fixes: NB#119064 - Media Player crashes with signal 11 after every reboot. 
+* Fixes: NB#119440 - Dbus wrapper crashes when high bit rate, high resolution clips are played.
+* Fixes: NB#119613 - Random mafw-dbus-wrapper coredump generated after booting.
+* Fixes: NB#119467 - Deleted playlists are not freed.
 * Fixes: NB#118459 - Cannot play Nokia 5800 video clip 
 * Fixes: NB#115776 - Renderer state changed signal are not coming when playing and seeking video
 * Fixes: NB#117083 - 'mafw-test-gui' crashed observed while import empty playlist file 
