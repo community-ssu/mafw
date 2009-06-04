@@ -151,6 +151,27 @@ typedef void (*MafwRendererStatusCB) (MafwRenderer *self, MafwPlaylist *playlist
 typedef void (*MafwRendererPositionCB) (MafwRenderer *self, gint position,
 				    gpointer user_data, const GError *error);
 
+/**
+ * MafwRendererMetadataResultCB:
+ * @self:      A renderer, whose current media's metadata has been queried.
+ * @object_id: The object ID of the current media or %NULL if there wasn't any
+ *             media.
+ * @metadata:  Metadata of the current media.
+ * @user_data: Optional user data pointer passed to
+ *             mafw_renderer_get_current_metadata()
+ * @error:     A GError that is set if an error has occurred. If not %NULL, none
+ *             of the other parameters (except @self) are valid.
+ *
+ * When mafw_renderer_get_current_metadata() is called, the renderer will send
+ * its metadata reply through the given callback function that is of this type.
+ * This means that the reply might come asynchronously.
+ */
+typedef void (*MafwRendererMetadataResultCB) (MafwRenderer *self,
+					      const gchar *object_id,
+					      GHashTable *metadata,
+					      gpointer user_data,
+					      const GError *error);
+
 /* Class definition */
 /**
  * MafwRendererClass:
@@ -170,6 +191,8 @@ typedef void (*MafwRendererPositionCB) (MafwRenderer *self, gint position,
  * stream.
  * @get_position: virtual method to get the position of the playing
  * stream.
+ * @get_current_metadata: virtual method to get the metadata of the current
+ * media.
  * @emit_buffering_info: virtual method to emit the buffering-info
  * signal
  * @state_changed: virtual method to be run when the state_changed
@@ -227,6 +250,11 @@ struct _MafwRendererClass {
 	void (*get_position)(MafwRenderer *self, MafwRendererPositionCB callback,
 			     gpointer user_data);
 
+	/* Metadata */
+
+	void (*get_current_metadata)(MafwRenderer *self,
+				     MafwRendererMetadataResultCB cb,
+				     gpointer user_data);
 	/* Signals emission */
 
         void (*emit_buffering_info)(MafwRenderer *self, gfloat fraction);
@@ -420,6 +448,12 @@ void mafw_renderer_set_position(MafwRenderer *self, MafwRendererSeekMode mode,
 			     MafwRendererPositionCB callback, gpointer user_data);
 void mafw_renderer_get_position(MafwRenderer *self, MafwRendererPositionCB callback,
 			     gpointer user_data);
+
+/* Metadata */
+
+void mafw_renderer_get_current_metadata(MafwRenderer *self,
+					MafwRendererMetadataResultCB callback,
+					gpointer user_data);
 
 G_END_DECLS
 #endif				/* __MAFW_RENDERER_H__ */

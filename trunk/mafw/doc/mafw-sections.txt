@@ -71,6 +71,7 @@ MafwRendererPositionCB
 MafwRendererStatusCB
 MafwRendererItemCB
 MafwRendererPlaybackCB
+MafwRendererMetadataResultCB
 mafw_renderer_play
 mafw_renderer_play_object
 mafw_renderer_play_uri
@@ -84,6 +85,7 @@ mafw_renderer_previous
 mafw_renderer_goto_index
 mafw_renderer_set_position
 mafw_renderer_get_position
+mafw_renderer_get_current_metadata
 mafw_renderer_emit_metadata
 mafw_renderer_emit_metadata_boolean
 mafw_renderer_emit_metadata_double

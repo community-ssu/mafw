@@ -289,6 +289,27 @@ static void mafw_renderer_default_get_position(MafwRenderer *self,
 }
 
 /*----------------------------------------------------------------------------
+  Default metadata implementations
+  ----------------------------------------------------------------------------*/
+
+static void mafw_renderer_default_get_current_metadata(
+	MafwRenderer *self,
+	MafwRendererMetadataResultCB callback,
+	gpointer user_data)
+{
+	if (callback != NULL)
+	{
+		GError *error = NULL;
+		g_set_error(&error,
+			    MAFW_EXTENSION_ERROR,
+			    MAFW_EXTENSION_ERROR_UNSUPPORTED_OPERATION,
+			    "Not implemented");
+		callback(self, NULL, NULL, user_data, error);
+		g_error_free(error);
+	}
+}
+
+/*----------------------------------------------------------------------------
   Signals
   ----------------------------------------------------------------------------*/
 
@@ -351,6 +372,11 @@ static void mafw_renderer_class_init(MafwRendererClass *klass)
 
 	klass->set_position = mafw_renderer_default_set_position;
 	klass->get_position = mafw_renderer_default_get_position;
+
+	/* Metadata */
+
+	klass->get_current_metadata =
+		mafw_renderer_default_get_current_metadata;
 
 	/* Signals emission */
 	klass->emit_buffering_info = mafw_renderer_default_emit_buffering_info;
@@ -783,6 +809,30 @@ void mafw_renderer_get_position(MafwRenderer *self, MafwRendererPositionCB callb
 			    gpointer user_data)
 {
 	MAFW_RENDERER_GET_CLASS(self)->get_position(self, callback, user_data);
+}
+
+/*----------------------------------------------------------------------------
+  Metadata
+  ----------------------------------------------------------------------------*/
+
+/**
+ * mafw_renderer_get_current_metadata:
+ * @self:      A #MafwRenderer instance.
+ * @callback:  A #MafwRendererMetadataResultCB callback that receives the
+ *             object ID and the metadata of the current media.
+ * @user_data: Optional user data pointer passed to the callback.
+ *
+ * Gets the renderer's current media's object ID and its metadata (if there isn't
+ * any media the returned object ID will be %NULL). This information is
+ * asynchronously returned through a #MafwRendererMetadataResultCB callback.
+ */
+void mafw_renderer_get_current_metadata(MafwRenderer *self,
+					MafwRendererMetadataResultCB callback,
+					gpointer user_data)
+{
+	MAFW_RENDERER_GET_CLASS(self)->get_current_metadata(self,
+							    callback,
+							    user_data);
 }
 
 /* vi: set noexpandtab ts=8 sw=8 cino=t0,(0: */
