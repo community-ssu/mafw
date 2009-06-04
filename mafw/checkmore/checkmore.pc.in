@@ -1,5 +1,0 @@
-Name: checkmore
-Description: Enhancements to check, a unit test framework for C
-Version: 0.1
-Libs: -lcheckmore -lcheck
-Requires: check, gobject-2.0
