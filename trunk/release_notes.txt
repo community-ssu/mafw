@@ -4,68 +4,65 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.23-2
-Date       2009.06.02
+Version    0.2009.24-1
+Date       2009.06.04
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.23-2
-mafw-gst-renderer 0.1.2009.23-2
-mafw-iradio-source 0.1.2009.23-2
-mafw-shared 0.1.2009.23-2
-mafw-test-gui 0.1.2009.23-2
-mafw-tracker-source 0.1.2009.23-2
-mafw-upnp-source 0.1.2009.23-2
+libmafw 0.1.2009.24-1
+mafw-gst-renderer 0.1.2009.24-1
+mafw-iradio-source 0.1.2009.24-1
+mafw-shared 0.1.2009.24-1
+mafw-test-gui 0.1.2009.24-1
+mafw-tracker-source 0.1.2009.24-1
+mafw-upnp-source 0.1.2009.24-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.23-2) unstable; urgency=low
-  * MAFW, pre-release 0.2009.23-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-gst-renderer (0.1.2009.23-2) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.23-2
-  * No need to ref the playlist in the renderer, 
-    the playlist manager does that already.
-  * Changed to avoid setting the timeout if neither volume nor mute have
-    changed in volume manager
-  * Changed debug messages in volume manager
-  * We ignore mute if it not enabled (default = not enabled).
-  * Added option to configure.ac to disable or enable mute handling
-  * Use g_error_new_literal if string is constant.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-iradio-source (0.1.2009.23-2) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.23-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-shared (0.1.2009.23-2) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.23-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-test-gui (0.1.2009.23-2) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.23-2
-  * Set mute toggle_button insensitive by default in mafw-test-gui
-  * Added --enable-mute disabled by default in mafw-test-gui configuration
-  * Added ENABLED_BY_DEFAULT and DISABLED_BY_DEFAULT functions in
-    mafw-test-gui configure.ac
-  * Replace deprecated GTK_SIGNAL_FUNC by G_CALLBACK.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-tracker-source (0.1.2009.23-2) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.23-2
-  * Fixed album-art-large-uri metadata support.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
-mafw-upnp-source (0.1.2009.23-2) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.23-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 02 Jun 2009 12:00:00 +0300
+libmafw (0.1.2009.24-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-gst-renderer (0.1.2009.24-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.24-1
+  * Fixed debug for seekability in renderer.
+  * We check always GStreamer seekability unless it is reported FALSE from
+    source.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-iradio-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-shared (0.1.2009.24-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.24-1
+  * Do not call glib main loop functions from signal handler.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-test-gui (0.1.2009.24-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-tracker-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-upnp-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.24-1
+  * Using only one GUPnPDIDLLiteParser object for all the upnp-sources, and 
+    finetuning mafw_upnp_source_plugin_gupnp_down documentation, thanks to Zeeshan 
+    Ali
+  * Added debug to print uri when that metadata field is requested
+  * Fixed problem with no reporting FALSE seekability when it is explicitely
+    set in server information
+  * Added debug to report that we are setting seekability as FALSE when DLNA
+    info is present but there is no seekability info.
+  * Fixed code style to make it according our coding rules
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 7
-* Fixes: NB#119064 - Media Player crashes with signal 11 after every reboot. 
-* Fixes: NB#119440 - Dbus wrapper crashes when high bit rate, high resolution clips are played.
-* Fixes: NB#119613 - Random mafw-dbus-wrapper coredump generated after booting.
-* Fixes: NB#119467 - Deleted playlists are not freed.
-* Fixes: NB#118459 - Cannot play Nokia 5800 video clip 
-* Fixes: NB#115776 - Renderer state changed signal are not coming when playing and seeking video
-* Fixes: NB#117083 - 'mafw-test-gui' crashed observed while import empty playlist file 
+From changelog: 5
+* Fixes: NB#119741 - <coverity> Defects from MAFW
+* Fixes: NB#120287 - Video recorded using other camera (e.g. Canon, Pentax) not playing smooth
+* Fixes: NB#119594 - Memory corruption code in mafw-shared
+* Fixes: NB#118639 - Media player crash after selecting a song to play and changing WLAN IAP
+* Fixes: NB#106278 - UPNP:Playback error displayed and seekbar is moved to 00.00 when trying to seek wma clip
