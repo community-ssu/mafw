@@ -54,6 +54,6 @@ mafw-upnp-source (0.1.2009.24-2) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 5
+From changelog: 2
 * Fixes: NB#118019 - Playing a clip of Unsupported format will stop the playback. 
 * Fixes: NB#120378 - Video doesn't start to play when clicked
