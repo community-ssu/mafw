@@ -10,9 +10,9 @@ SUBDIRS				= libmafw checkmore
 if ENABLE_GTK_DOC
 SUBDIRS				+= doc
 endif
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 xdgmimedir			= $(datadir)/mime/packages
 xdgmime_DATA			= mafw.xml
