@@ -1,0 +1,68 @@
+
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    0.2009.24-1
+Date       2009.06.04
+Maintainer veitikka6@gmail.com
+           mika.tapojarvi@sse.fi
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+
+libmafw 0.1.2009.24-1
+mafw-gst-renderer 0.1.2009.24-1
+mafw-iradio-source 0.1.2009.24-1
+mafw-shared 0.1.2009.24-1
+mafw-test-gui 0.1.2009.24-1
+mafw-tracker-source 0.1.2009.24-1
+mafw-upnp-source 0.1.2009.24-1
+
+
+Change logs: 
+
+libmafw (0.1.2009.24-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-gst-renderer (0.1.2009.24-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.24-1
+  * Fixed debug for seekability in renderer.
+  * We check always GStreamer seekability unless it is reported FALSE from
+    source.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-iradio-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-shared (0.1.2009.24-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.24-1
+  * Do not call glib main loop functions from signal handler.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-test-gui (0.1.2009.24-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-tracker-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.24-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+mafw-upnp-source (0.1.2009.24-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.24-1
+  * Using only one GUPnPDIDLLiteParser object for all the upnp-sources, and 
+    finetuning mafw_upnp_source_plugin_gupnp_down documentation, thanks to Zeeshan 
+    Ali
+  * Added debug to print uri when that metadata field is requested
+  * Fixed problem with no reporting FALSE seekability when it is explicitely
+    set in server information
+  * Added debug to report that we are setting seekability as FALSE when DLNA
+    info is present but there is no seekability info.
+  * Fixed code style to make it according our coding rules
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 04 Jun 2009 10:00:00 +0300
+
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 5
+* Fixes: NB#119741 - <coverity> Defects from MAFW
+* Fixes: NB#120287 - Video recorded using other camera (e.g. Canon, Pentax) not playing smooth
+* Fixes: NB#119594 - Memory corruption code in mafw-shared
+* Fixes: NB#118639 - Media player crash after selecting a song to play and changing WLAN IAP
+* Fixes: NB#106278 - UPNP:Playback error displayed and seekbar is moved to 00.00 when trying to seek wma clip
