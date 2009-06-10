@@ -4,56 +4,61 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.24-2
-Date       2009.06.08
+Version    0.2009.24-3
+Date       2009.06.10
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.24-2
-mafw-gst-renderer 0.1.2009.24-2
-mafw-iradio-source 0.1.2009.24-2
-mafw-shared 0.1.2009.24-2
-mafw-test-gui 0.1.2009.24-2
-mafw-tracker-source 0.1.2009.24-2
-mafw-upnp-source 0.1.2009.24-2
+libmafw 0.1.2009.24-3
+mafw-gst-renderer 0.1.2009.24-3
+mafw-iradio-source 0.1.2009.24-3
+mafw-shared 0.1.2009.24-3
+mafw-test-gui 0.1.2009.24-3
+mafw-tracker-source 0.1.2009.24-3
+mafw-upnp-source 0.1.2009.24-3
 
 
 Change logs: 
 
-libmafw (0.1.2009.24-2) unstable; urgency=low
-  * MAFW, pre-release 0.2009.24-2
-  * Added "mafw_renderer_get_current_metadata" function to the API.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-gst-renderer (0.1.2009.24-2) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.24-2
-  * Added "mafw_renderer_get_current_metadata" function to the API.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-iradio-source (0.1.2009.24-2) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.24-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-shared (0.1.2009.24-2) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.24-2
-  * Added "mafw_renderer_get_current_metadata" function to the API.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-test-gui (0.1.2009.24-2) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.24-2
-  * Temporal workaround to be able to use hildon functions that are using GTK
-    deprecated functions.
-  * Replace deprecated functions.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-tracker-source (0.1.2009.24-2) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.24-2
-  * Increase dependency version with tracker (aggregate function is required).
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
-mafw-upnp-source (0.1.2009.24-2) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.24-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 08 Jun 2009 11:00:00 +0300
+libmafw (0.1.2009.24-3) unstable; urgency=low
+  * MAFW, pre-release 0.2009.24-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-gst-renderer (0.1.2009.24-3) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.24-3
+  * Stop setting volume if pulse is down in volume manager
+  * Written small workaround for problem when getting an empty error while
+    saving a pixbuf in renderer worker.
+  * Log a warning message when processing an error.
+  * A mafw-gst-renderer dependency version shortened to 0.9.15-1.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-iradio-source (0.1.2009.24-3) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.24-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-shared (0.1.2009.24-3) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.24-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-test-gui (0.1.2009.24-3) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.24-3
+  * Show menu when creating.
+  * Revert "Temporal workaround to be able to use hildon functions that are 
+    using GTK"
+  * This reverts commit r401, as it is now fixed in hildon.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-tracker-source (0.1.2009.24-3) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.24-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
+mafw-upnp-source (0.1.2009.24-3) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.24-3
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 10 Jun 2009 11:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 2
+From changelog: 5
 * Fixes: NB#118019 - Playing a clip of Unsupported format will stop the playback. 
 * Fixes: NB#120378 - Video doesn't start to play when clicked
+* Fixes: NB#120793 - segmentation fault when video container items are imported by object id
+* Fixes: NB#121428 - Tracker source dbus wrapper crashes when multiple clips are added from tracker source to p-roxy playlist
+* Fixes: NB#119483 - UPNP:No connection to server displayed when trying to play amr,aac clips from tversity server 
