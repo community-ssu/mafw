@@ -1,0 +1,13 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/libmafw
+includedir=${pcfiledir}/
+plugindir=${libdir}/mafw-plugin
+
+Name: mafw
+Description: Media Application Framework (MAFW) library
+Version: @VERSION@
+Libs: ${libdir}/libmafw.la
+Cflags: -I${includedir}
+Requires: gobject-2.0
+Requires.Private:
