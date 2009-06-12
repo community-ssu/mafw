@@ -83,6 +83,7 @@ const gchar * const _mafw_source_all_keys[] = { MAFW_SOURCE_KEY_WILDCARD, NULL }
 enum {
 	METADATA_CHANGED = 0,
 	CONTAINER_CHANGED,
+        UPDATING,
 	LAST_SIGNAL,
 };
 
@@ -156,15 +157,15 @@ static void mafw_source_default_set_metadata(MafwSource *self,
 	{
 		GError *error = NULL;
 		GPtrArray *keylist = g_ptr_array_new();
-		
+
 		g_set_error(&error,
 			    MAFW_EXTENSION_ERROR,
 			    MAFW_EXTENSION_ERROR_UNSUPPORTED_OPERATION,
 			    "Not implemented");
-		
+
 		g_hash_table_foreach(metadata, (GHFunc)get_keys_cb, keylist);
 		g_ptr_array_add(keylist, NULL);
-		
+
 		cb(self, object_id, (const gchar **)keylist->pdata, user_data,
 				error);
 		g_ptr_array_free(keylist, TRUE);
@@ -216,16 +217,16 @@ check_sort_criteria (const gchar *criteria, GError **error)
         if (criteria && criteria[0] != '\0') {
 		guint i = 0;
 		gchar **sort_tokens = NULL;
-		
+
 		sort_tokens = g_strsplit(criteria, ",", 0);
-		
+
 		for (i = 0; (sort_tokens[i] != NULL) && correct_criteria;
 		     i++) {
 			if (get_sorting_modifier(sort_tokens[i]) == 0) {
 				correct_criteria = FALSE;
 			}
 		}
-		
+
 		if (!correct_criteria) {
 			if (error != NULL) {
                                 *error = g_error_new(MAFW_SOURCE_ERROR,
@@ -276,7 +277,7 @@ static void mafw_source_class_init(MafwSourceClass * klass)
 	klass->set_metadata = mafw_source_default_set_metadata;
 	klass->create_object = mafw_source_default_create_object;
 	klass->destroy_object = mafw_source_default_destroy_object;
-	
+
 	/**
 	 * MafwSource::metadata-changed:
 	 * @self:      The emitting #MafwSource instance.
@@ -285,17 +286,17 @@ static void mafw_source_class_init(MafwSourceClass * klass)
 	 * Emitted when the metadata related to an object has changed.
 	 */
 	mafw_source_signals[METADATA_CHANGED] =
-	    g_signal_new("metadata-changed",
-			 G_TYPE_FROM_CLASS(klass),
-			 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-			 0,
-			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__STRING,
-			 G_TYPE_NONE,
-			 1,
-			 G_TYPE_STRING);
-	
+                g_signal_new("metadata-changed",
+                             G_TYPE_FROM_CLASS(klass),
+                             G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                             0,
+                             NULL,
+                             NULL,
+                             g_cclosure_marshal_VOID__STRING,
+                             G_TYPE_NONE,
+                             1,
+                             G_TYPE_STRING);
+
 	/**
 	 * MafwSource::container-changed:
 	 * @self:      The emitting #MafwSource instance.
@@ -304,16 +305,35 @@ static void mafw_source_class_init(MafwSourceClass * klass)
 	 * Emitted when a container's contents have changed.
 	 */
 	mafw_source_signals[CONTAINER_CHANGED] =
-	    g_signal_new("container-changed",
-			 G_TYPE_FROM_CLASS(klass),
-			 G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
-			 0,
+                g_signal_new("container-changed",
+                             G_TYPE_FROM_CLASS(klass),
+                             G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                             0,
+                             NULL,
 			 NULL,
-			 NULL,
-			 g_cclosure_marshal_VOID__STRING,
-			 G_TYPE_NONE,
-			 1,
-			 G_TYPE_STRING);
+                             g_cclosure_marshal_VOID__STRING,
+                             G_TYPE_NONE,
+                             1,
+                             G_TYPE_STRING);
+
+	/**
+	 * MafwSource::updating:
+	 * @self:      The emitting #MafwSource instance.
+	 * @progress: Percentage of completness.
+	 *
+	 * Emitted when a source is updating. 100% means the source is updated.
+	 */
+        mafw_source_signals[UPDATING] =
+                g_signal_new("updating",
+                             G_TYPE_FROM_CLASS(klass),
+                             G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
+                             0,
+                             NULL,
+                             NULL,
+                             g_cclosure_marshal_VOID__INT,
+                             G_TYPE_NONE,
+                             1,
+                             G_TYPE_INT);
 }
 
 /**
@@ -326,7 +346,8 @@ static void mafw_source_class_init(MafwSourceClass * klass)
  * @metadata_keys: A %NULL-terminated array of requested metadata keys.
  * @skip_count:    Number of items to skip from the beginning.
  * @item_count:    Number of items to return.
- * @browse_cb:     Function to call with browse results, or inform about the error
+ * @browse_cb:     Function to call with browse results, or inform about the
+ *                 error.
  * @user_data:     Optional user data pointer passed along with @browse_cb.
  *
  * Starts a browse session on the given source. The caller will be notified of
@@ -490,12 +511,12 @@ static void _metadata_collector(MafwSource *self,
 	if (metadata)
 		g_hash_table_insert(mdatas_data->metadatas, g_strdup(object_id),
 				g_hash_table_ref(metadata));
-	
+
 	if (error && !mdatas_data->err)
 	{
 		mdatas_data->err = g_error_copy(error);
 	}
-	
+
 	if (!mdatas_data->remaining_count && !mdatas_data->result_id)
 	{/* Call the cb on idle, so it should work with sync get_metadata too*/
 		mdatas_data->result_id = g_idle_add((GSourceFunc)_emit_result,
@@ -537,9 +558,9 @@ void mafw_source_get_metadatas(MafwSource *self,
 	{
 		gint i;
 		struct metadatas_data *mdatas_data = g_new0(struct metadatas_data, 1);
-	
+
 		g_assert(object_ids && object_ids[0]);
-	
+
 		mdatas_data->cb = metadatas_cb;
 		mdatas_data->udata = user_data;
 		mdatas_data->self = g_object_ref(self);
