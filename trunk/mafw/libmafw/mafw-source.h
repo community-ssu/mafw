@@ -330,6 +330,8 @@ struct _MafwSourceClass {
 	gboolean (*cancel_browse)(MafwSource *self, guint browse_id,
 				  GError **error);
 
+        gint (*get_update_progress)(MafwSource *self);
+
 	void (*get_metadata)(MafwSource *self,
 				 const gchar *object_id,
 				 const gchar *const *mdkeys,
@@ -371,8 +373,10 @@ extern guint mafw_source_browse(MafwSource *self,
 				MafwSourceBrowseResultCb browse_cb,
 				gpointer user_data);
 
-extern gboolean mafw_source_cancel_browse(MafwSource *self, guint browse_id, 
+extern gboolean mafw_source_cancel_browse(MafwSource *self, guint browse_id,
 					  GError **error);
+
+extern gint mafw_source_get_update_progress(MafwSource *self);
 
 extern void mafw_source_get_metadata(MafwSource *self,
 					 const gchar *object_id,

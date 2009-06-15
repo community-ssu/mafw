@@ -124,6 +124,11 @@ static gboolean mafw_source_default_cancel_browse(MafwSource *self, guint browse
 	return FALSE;
 }
 
+static gint mafw_source_default_get_update_progress(MafwSource *self)
+{
+        return 100;
+}
+
 static void mafw_source_default_get_metadata(MafwSource *self,
 						const gchar *object_id,
 						const gchar *const *mdkeys,
@@ -273,6 +278,7 @@ static void mafw_source_class_init(MafwSourceClass * klass)
 {
 	klass->browse = mafw_source_default_browse;
 	klass->cancel_browse = mafw_source_default_cancel_browse;
+        klass->get_update_progress = mafw_source_default_get_update_progress;
 	klass->get_metadata = mafw_source_default_get_metadata;
 	klass->set_metadata = mafw_source_default_set_metadata;
 	klass->create_object = mafw_source_default_create_object;
@@ -440,6 +446,20 @@ gboolean mafw_source_cancel_browse(MafwSource *self, guint browse_id,
 	return MAFW_SOURCE_GET_CLASS(self)->cancel_browse(self,
 							  browse_id,
 							  error);
+}
+
+/**
+ * mafw_source_get_update_progress:
+ * @self:      A #MafwSource instance.
+ *
+ * Returns the percentage of progress when the source is updating. A value of
+ * 100% means the source is already updated.
+ *
+ * Returns: the progress in percentage.
+ */
+gint mafw_source_get_update_progress(MafwSource *self)
+{
+        return MAFW_SOURCE_GET_CLASS(self)->get_update_progress(self);
 }
 
 /**
