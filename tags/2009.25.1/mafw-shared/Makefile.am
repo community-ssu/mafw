@@ -11,9 +11,9 @@ SUBDIRS				= common libmafw-shared mafw-dbus-wrapper \
 if ENABLE_GTK_DOC
 SUBDIRS				+= doc
 endif
-if ENABLE_TESTS
-SUBDIRS				+= tests
-endif
+#if ENABLE_TESTS
+#SUBDIRS				+= tests
+#endif
 
 pkgconfigdir			= $(libdir)/pkgconfig
 pkgconfig_DATA			= mafw-shared.pc
