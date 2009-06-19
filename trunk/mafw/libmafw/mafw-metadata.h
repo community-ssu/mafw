@@ -270,6 +270,20 @@
 #define MAFW_METADATA_VALUE_MIME_CONTAINER      "x-mafw/container"
 
 /**
+ * MAFW_METADATA_VALUE_MIME_AUDIO:
+ *
+ * This is the MIME type of an audio item provided by MAFW source components.
+ */
+#define MAFW_METADATA_VALUE_MIME_AUDIO      "x-mafw/audio"
+
+/**
+ * MAFW_METADATA_VALUE_MIME_VIDEO:
+ *
+ * This is the MIME type of a video item provided by MAFW source components.
+ */
+#define MAFW_METADATA_VALUE_MIME_VIDEO      "x-mafw/video"
+
+/**
  * MAFW_METADATA_KEY_TITLE:
  *
  * Describes the title of the item. Its value is a string.
