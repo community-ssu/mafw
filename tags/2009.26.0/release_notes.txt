@@ -4,67 +4,77 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.25-2
-Date       2009.06.15
+Version    0.2009.26-1
+Date       2009.06.23
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
 
-libmafw 0.1.2009.25-2
-mafw-gst-renderer 0.1.2009.25-2
-mafw-iradio-source 0.1.2009.25-2
-mafw-shared 0.1.2009.25-2
-mafw-test-gui 0.1.2009.25-2
-mafw-tracker-source 0.1.2009.25-2
-mafw-upnp-source 0.1.2009.25-2
+libmafw 0.1.2009.26-1
+mafw-gst-renderer 0.1.2009.26-1
+mafw-shared 0.1.2009.26-1
+mafw-test-gui 0.1.2009.26-1
+mafw-tracker-source 0.1.2009.26-1
+mafw-upnp-source 0.1.2009.26-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.25-2) unstable; urgency=low
-  * MAFW, pre-release 0.2009.25-2
-  * Add a new signal telling a source is updating.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-gst-renderer (0.1.2009.25-2) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.25-2
-  * Extended current metadata function.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-iradio-source (0.1.2009.25-2) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.25-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-shared (0.1.2009.25-2) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.25-2
-  * Added unit tests for updating signal.
-  * Handle update signal in mafw-shared component.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-test-gui (0.1.2009.25-2) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.25-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-tracker-source (0.1.2009.25-2) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.25-2
-  * Avoid sending twice the same progress value.
-  * Update progress while tracker is indexing.
-  * Send updating signal when tracker starts/end indexing.
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
-mafw-upnp-source (0.1.2009.25-2) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.25-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
+libmafw (0.1.2009.26-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.26-1
+  * Adding 2 metadata-keys for multiple-URI objects
+  * Added a new function to get the source's updating progress
+    (mafw_source_get_update_progress).
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
+mafw-gst-renderer (0.1.2009.26-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.26-1
+  * Check for NULL in the current_metadata.
+  * Removed useles warning message
+  * Updating states and blanking even if we do not need to report them.
+  * Move pause notification from _do_play to handle_buffering.
+  * Build fix.
+  * make _get_position be a state dependant function.
+    On Transitioning it sets position to 0, on Stopped raises an error.
+  * Improved state management in mafw-gst-renderer
+    when seeking (compare new state with worker state to decide
+    if we have to ignore the state transition and in any case,
+    always update the worker state).
+  * Activate playbin2 flags. Speeds up video start time to half.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
+mafw-shared (0.1.2009.26-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.26-1
+  * Added a new function to get the source's updating progress
+    (mafw_source_get_update_progress).
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
+mafw-test-gui (0.1.2009.26-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.26-1
+  * Support to show multiple items in a metadata
+  * Remove update position timeout as soon as we issue the
+    Stop command, to avoid issuing get_position calls
+    when the renderer is already stopped.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
+mafw-tracker-source (0.1.2009.26-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.26-1
+  * Set indexing progress to 0 when Tracker signals total_count = 0.
+  * Fixed division by zero that happened when Tracker emitted
+    indexing signals with total_count == 0.
+  * Implemented mafw_source_get_update_progress in tracker-source.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
+mafw-upnp-source (0.1.2009.26-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.26-1
+  * Adding multiple-URI support, and increasing the performance
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 13
-* Fixes: NB#122186 - Not able to import individual file through importing object id.
-* Fixes: NB#117207 - Random MAFW-DBUS-WRAPPER crashes observed
-* Fixes: NB#104213 - 'Unable to Find Media file' information note not displayed when MMC removed.
-* Fixes: NB#116426 - Renderer fails to go to pause state when media clips are seeked while streaming
-* Fixes: NB#121545 - pa_context_connect fails though flag PA_CONTEXT_NOFAIL set
-* Fixes: NB#120942 - State changed signal is not coming when play issued right after seeking with video streams
-* Fixes: NB#102957 - 'Play URI' option from menu doesn't open completely
-* Fixes: NB#121738 - playback should not stop when proxy playlist is saved
-* Fixes: NB#102987 - Play-count is not incremented after 1
-* Fixes: NB#103172 - 'Never played' automatic playlist not updated properly
-* Fixes: NB#120871 - UPnP source doesnt appear in source's list when wlan connectivity is lost & regained
-* Fixes: NB#122231 - Slow access to network media servers
-* Fixes: NB#120779 - UPNP server is not displayed in Media player when media player is open and changes connection from 3G to WLAN
+From changelog: 8
+* Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
+* Fixes: NB#118946 - Video playback is starting very slowly
+* Fixes: NB#116836 - Streaming stops after taping on Next button during paused state
+* Fixes: NB#120862 - media playback doesnt stop immediately after removing mmc
+* Fixes: NB#123545 - mafw-gst-renderer get-position returns uninitialized value
+* Fixes: NB#123307 - Attached playlist crashes tracker source
+* Fixes: NB#123563 - MAFW-dbus-wrapper crash after launching Playlist view and leaves MediaPlayer unsuable
+* Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added

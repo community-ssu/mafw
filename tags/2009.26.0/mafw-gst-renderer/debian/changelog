@@ -1,8 +1,24 @@
-mafw-gst-renderer (0.1.2009.25-3) unstable; urgency=low
+mafw-gst-renderer (0.1.2009.26-1) unstable; urgency=low
 
-  * MAFW gst renderer, pre-release 0.2009.25-3
+  * MAFW gst renderer, pre-release 0.2009.26-1
+  * Fixes: NB#118946 - Video playback is starting very slowly
+  * Fixes: NB#116836 - Streaming stops after taping on Next button during paused state
+  * Fixes: NB#120862 - media playback doesnt stop immediately after removing mmc
+  * Fixes: NB#123545 - mafw-gst-renderer get-position returns uninitialized value
+  * Check for NULL in the current_metadata.
+  * Removed useles warning message
+  * Updating states and blanking even if we do not need to report them.
+  * Move pause notification from _do_play to handle_buffering.
+  * Build fix.
+  * make _get_position be a state dependant function.
+    On Transitioning it sets position to 0, on Stopped raises an error.
+  * Improved state management in mafw-gst-renderer
+    when seeking (compare new state with worker state to decide
+    if we have to ignore the state transition and in any case,
+    always update the worker state).
+  * Activate playbin2 flags. Speeds up video start time to half.
 
- -- Juha Kellokoski <veitikka6@gmail.com>  Mon, 15 Jun 2009 14:00:00 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 23 Jun 2009 14:33:24 +0300
 
 mafw-gst-renderer (0.1.2009.25-2) unstable; urgency=low
 
