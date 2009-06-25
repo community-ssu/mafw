@@ -27,11 +27,13 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <glib/gstdio.h>
 
 #include "mafw-uri-source.h"
 #include "mafw-metadata.h"
 #include "mafw-callbas.h"
 #include "mafw-marshal.h"
+#include "mafw-errors.h"
 
 /**
  * SECTION:mafwuri
@@ -60,7 +62,6 @@ G_DEFINE_TYPE(MafwURISource, uri_source, MAFW_TYPE_SOURCE);
 /* Program code */
 static void get_metadata(MafwSource *self,
 			     const gchar *object_id,
-
 			     const gchar *const *mdkeys,
 			     MafwSourceMetadataResultCb cb,
 			     gpointer cbarg)
@@ -127,6 +128,48 @@ static void get_metadata(MafwSource *self,
 
 }
 
+static void destroy_object(MafwSource *self,
+			   const gchar *object_id,
+			   MafwSourceObjectDestroyedCb cb,
+			   gpointer user_data)
+{
+	GError *error = NULL;
+	gchar *path;
+	gchar *uri;
+
+        g_return_if_fail(MAFW_IS_SOURCE(self));
+        g_return_if_fail(object_id != NULL);
+	
+	/* Get URI from objectid, skip source uuid */
+	uri = (gchar *) object_id + strlen(MAFW_URI_SOURCE_UUID"::");
+	
+	/* Only local URIs are supported */
+	if (!g_str_has_prefix(uri, "file://")) {
+		error = g_error_new(MAFW_SOURCE_ERROR,
+				    MAFW_SOURCE_ERROR_DESTROY_OBJECT_FAILED,
+				    "Only local resources can be destroyed");
+		
+	} else {
+		/* Skip "file://" prefix */
+		path = uri + 7;
+	}
+
+	if (!error) {
+		if (g_unlink(path) == -1) {
+			error = g_error_new(
+				MAFW_SOURCE_ERROR,
+				MAFW_SOURCE_ERROR_DESTROY_OBJECT_FAILED,
+				"Failed to unlink path %s", path);
+		}
+	}
+
+	if (cb) {
+		cb(self, object_id, user_data, error);
+	}
+
+	g_error_free(error);
+}
+
 /* GObject infrastructure */
 /**
  * mafw_get_uri_source:
@@ -148,6 +191,7 @@ MafwURISource *mafw_get_uri_source(void)
 void uri_source_class_init(MafwURISourceClass *me)
 {
 	me->get_metadata = get_metadata;
+	me->destroy_object = destroy_object;
 }
 
 void uri_source_init(MafwURISource *self)
