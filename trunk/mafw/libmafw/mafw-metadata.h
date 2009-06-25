@@ -392,6 +392,14 @@
 #define MAFW_METADATA_KEY_ADDED		"added"
 
 /**
+ * MAFW_METADATA_KEY_MODIFIED:
+ *
+ * Date when item was added into the database. Its value is a long
+ * integer.
+ */
+#define MAFW_METADATA_KEY_MODIFIED	"modified"
+
+/**
  * MAFW_METADATA_KEY_THUMBNAIL_URI:
  *
  * URI pointing to a thumbnail. Its value is a string.
