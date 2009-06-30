@@ -68,16 +68,13 @@ mafw-upnp-source (0.1.2009.27-1) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 12
+From changelog: 9
 * Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
 * Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
 * Fixes: NB#123701 - mafw-dbus-wrapper-76CE-6-1218.rcore.lzo crashed
-* Fixes: NB#118946 - Video playback is starting very slowly
 * Fixes: NB#116836 - Streaming stops after taping on Next button during paused state
-* Fixes: NB#120862 - media playback doesnt stop immediately after removing mmc
 * Fixes: NB#123545 - mafw-gst-renderer get-position returns uninitialized value
 * Fixes: NB#122273 - While importing the video files through object id, few names are not getting displayed . 
 * Fixes: NB#124442 - mafw-dbus-wrapper offends glib
 * Fixes: NB#123307 - Attached playlist crashes tracker source
-* Fixes: NB#123563 - MAFW-dbus-wrapper crash after launching Playlist view and leaves MediaPlayer unsuable
 * Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added
