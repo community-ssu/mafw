@@ -46,8 +46,9 @@ static const gchar *Contents[] = {
 	MAFW_URI_SOURCE_UUID "::" "file:///whiskey",
 	MAFW_URI_SOURCE_UUID "::" "file:///tango",
 	MAFW_URI_SOURCE_UUID "::" "file:///foxtrot",
+	NULL
 };
-#define PLS_SIZE G_N_ELEMENTS(Contents)
+#define PLS_SIZE (G_N_ELEMENTS(Contents) - 1)
 #define URI(oid) (&oid[sizeof(MAFW_URI_SOURCE_UUID "::") - 1])
 
 static gchar *dumbpls_get_item(MafwPlaylist *pls, guint index, GError **errp)
