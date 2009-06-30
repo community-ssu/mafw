@@ -4,6 +4,12 @@ mafw-tracker-source (0.1.2009.27-1) unstable; urgency=low
   * Fixes: NB#124442 - mafw-dbus-wrapper offends glib
   * Fixes: NB#123307 - Attached playlist crashes tracker source
   * Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
+
+mafw-tracker-source (0.1.2009.27-1) unstable; urgency=low
+
+  * MAFW tracker source, pre-release 0.2009.27-1
   * Update tracker version dependency.
   * Request tracker to sort results by one or more keys, specifying sort type
     (ascending/descending) per key.

@@ -1,8 +1,14 @@
+libmafw (0.1.2009.27-2) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.27-2
+  * Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
+  * Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+
 libmafw (0.1.2009.27-1) unstable; urgency=low
 
   * MAFW, pre-release 0.2009.27-1
-  * Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
-  * Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
   * Implement destroy_object for urisource. Destroy
     only when object-id points to local file, otherwise raise an error.
   * Added MAFW_METADATA_KEY_MODIFIED, being the last time a resource was 

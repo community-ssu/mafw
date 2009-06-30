@@ -4,77 +4,66 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.27-1
-Date       2009.06.25
+Version    0.2009.27-2
+Date       2009.06.30
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.27-1
-mafw-gst-renderer 0.1.2009.27-1
-mafw-iradio-source 0.1.2009.27-1
-mafw-shared 0.1.2009.27-1
-mafw-test-gui 0.1.2009.27-1
-mafw-tracker-source 0.1.2009.27-1
-mafw-upnp-source 0.1.2009.27-1
+libmafw 0.1.2009.27-2
+mafw-gst-renderer 0.1.2009.27-2
+mafw-iradio-source 0.1.2009.27-2
+mafw-shared 0.1.2009.27-2
+mafw-test-gui 0.1.2009.27-2
+mafw-tracker-source 0.1.2009.27-2
+mafw-upnp-source 0.1.2009.27-2
 
 
 Change logs: 
 
-libmafw (0.1.2009.27-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.27-1
-  * Implement destroy_object for urisource. Destroy
-    only when object-id points to local file, otherwise raise an error.
-  * Added MAFW_METADATA_KEY_MODIFIED, being the last time a resource was 
-    modified.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
-mafw-gst-renderer (0.1.2009.27-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.27-1
-  * Added function to remove the _set_timeout and used not to call it twice
-    innecessarily.
-  * Changed the order of adding the timeout to set the volume to pulse and
-    calling the timeout immediately as that runs on the mainloop and that
-    execution is delayed to that
-  * Checked for NULL operation when writing volume to pulse to avoid
-    crashes. Critical used instead.
-  * In _ext_stream_restore2_read_cb changed assertion for critical when
-    getting eol < 0 in volume manager
-  * Discarded ext_stream_restore2 volume event when eol < 0. Crash avoided
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
-mafw-iradio-source (0.1.2009.27-1) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.27-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
-mafw-shared (0.1.2009.27-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.27-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
-mafw-test-gui (0.1.2009.27-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.27-1
-  * Renamed "Import selected object-id" to "Import selected category" to avoid
-    confusions.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
+libmafw (0.1.2009.27-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.27-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+mafw-gst-renderer (0.1.2009.27-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.27-2
+  * Make sure we stay paused while buffering.
+  * Always keep worker->state up-to-date.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+mafw-iradio-source (0.1.2009.27-2) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.27-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+mafw-shared (0.1.2009.27-2) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.27-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+mafw-test-gui (0.1.2009.27-2) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.27-2
+  * Add the elements to the dialog properly.
+    * Patch provided by Juan Suarez Romero.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
 mafw-tracker-source (0.1.2009.27-1) unstable; urgency=low
   * MAFW tracker source, pre-release 0.2009.27-1
-  * Update tracker version dependency.
-  * Request tracker to sort results by one or more keys, specifying sort type
-    (ascending/descending) per key.
-  * Add MAFW_METADATA_KEY_MODIFIED in sources.
  -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
-mafw-upnp-source (0.1.2009.27-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.27-1
-  * Add MAFW_METADATA_KEY_MODIFIED in sources.
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 25 Jun 2009 13:40:00 +0300
+mafw-upnp-source (0.1.2009.27-2) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.27-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 9
+From changelog: 15
 * Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
 * Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
 * Fixes: NB#123701 - mafw-dbus-wrapper-76CE-6-1218.rcore.lzo crashed
 * Fixes: NB#116836 - Streaming stops after taping on Next button during paused state
 * Fixes: NB#123545 - mafw-gst-renderer get-position returns uninitialized value
+* Fixes: NB#124469 - Device going to power saving mode after seek for video streams
+* Fixes: NB#124116 - Position not progressing after seeking
+* Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
 * Fixes: NB#122273 - While importing the video files through object id, few names are not getting displayed . 
+* Fixes: NB#125075 - metadata details are not shown from the MTG player
+* Fixes: NB#124576 - Unable to create more than one playlist 
 * Fixes: NB#124442 - mafw-dbus-wrapper offends glib
 * Fixes: NB#123307 - Attached playlist crashes tracker source
 * Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added
+* Fixes: NB#123323 - play to pause state change is not proper for all streaming files [S3 proposal]
