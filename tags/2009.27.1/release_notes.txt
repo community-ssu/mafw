@@ -51,7 +51,7 @@ mafw-upnp-source (0.1.2009.27-2) unstable; urgency=low
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 15
+From changelog: 13
 * Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
 * Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
 * Fixes: NB#123701 - mafw-dbus-wrapper-76CE-6-1218.rcore.lzo crashed
@@ -60,10 +60,8 @@ From changelog: 15
 * Fixes: NB#124469 - Device going to power saving mode after seek for video streams
 * Fixes: NB#124116 - Position not progressing after seeking
 * Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
-* Fixes: NB#122273 - While importing the video files through object id, few names are not getting displayed . 
 * Fixes: NB#125075 - metadata details are not shown from the MTG player
 * Fixes: NB#124576 - Unable to create more than one playlist 
 * Fixes: NB#124442 - mafw-dbus-wrapper offends glib
 * Fixes: NB#123307 - Attached playlist crashes tracker source
-* Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added
 * Fixes: NB#123323 - play to pause state change is not proper for all streaming files [S3 proposal]

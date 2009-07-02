@@ -1,7 +1,6 @@
 mafw-test-gui (0.1.2009.27-2) unstable; urgency=low
 
   * MAFW Test GUI, pre-release 0.2009.27-2
-  * Fixes: NB#122273 - While importing the video files through object id, few names are not getting displayed . 
   * Fixes: NB#125075 - metadata details are not shown from the MTG player
   * Fixes: NB#124576 - Unable to create more than one playlist 
   * Add the elements to the dialog properly.
