@@ -124,8 +124,23 @@ static gboolean mafw_source_default_cancel_browse(MafwSource *self, guint browse
 	return FALSE;
 }
 
-static gint mafw_source_default_get_update_progress(MafwSource *self)
+static gint mafw_source_default_get_update_progress(MafwSource *self,
+                                                    gint *processed_items,
+                                                    gint *remaining_items,
+                                                    gint *remaining_time)
 {
+        if (processed_items) {
+                *processed_items = -1;
+        }
+
+        if (remaining_items) {
+                *remaining_items = 0;
+        }
+
+        if (remaining_time) {
+                *remaining_time = 0;
+        }
+
         return 100;
 }
 
@@ -316,7 +331,7 @@ static void mafw_source_class_init(MafwSourceClass * klass)
                              G_SIGNAL_RUN_FIRST | G_SIGNAL_ACTION,
                              0,
                              NULL,
-			 NULL,
+                             NULL,
                              g_cclosure_marshal_VOID__STRING,
                              G_TYPE_NONE,
                              1,
@@ -324,10 +339,14 @@ static void mafw_source_class_init(MafwSourceClass * klass)
 
 	/**
 	 * MafwSource::updating:
-	 * @self:      The emitting #MafwSource instance.
-	 * @progress: Percentage of completness.
+	 * @self:            The emitting #MafwSource instance.
+	 * @progress:        Percentage of completness.
+         * @processed_items: How many elements has been processed so far.
+         * @remaining_items: How many items remain to be processed.
+         * @remaining_time:  Estimated time (in seconds) to finish the update.
 	 *
-	 * Emitted when a source is updating. 100% means the source is updated.
+	 * Emitted when a source is updating. 100% means the source is
+	 * updated. '-1' in any parameter means an unknown value.
 	 */
         mafw_source_signals[UPDATING] =
                 g_signal_new("updating",
@@ -336,10 +355,10 @@ static void mafw_source_class_init(MafwSourceClass * klass)
                              0,
                              NULL,
                              NULL,
-                             g_cclosure_marshal_VOID__INT,
+                             mafw_marshal_VOID__INT_INT_INT_INT,
                              G_TYPE_NONE,
-                             1,
-                             G_TYPE_INT);
+                             4,
+                             G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 }
 
 /**
@@ -456,10 +475,19 @@ gboolean mafw_source_cancel_browse(MafwSource *self, guint browse_id,
  * 100% means the source is already updated.
  *
  * Returns: the progress in percentage.
+ * @processed_items: How many elements has been processed so far.
+ * @remaining_items: How many items remain to be processed.
+ * @remaining_time:  Estimated time (in seconds) to finish the update.
  */
-gint mafw_source_get_update_progress(MafwSource *self)
+gint mafw_source_get_update_progress(MafwSource *self,
+                                     gint *processed_items,
+                                     gint *remaining_items,
+                                     gint *remaining_time)
 {
-        return MAFW_SOURCE_GET_CLASS(self)->get_update_progress(self);
+        return MAFW_SOURCE_GET_CLASS(self)->get_update_progress(self,
+                                                                processed_items,
+                                                                remaining_items,
+                                                                remaining_time);
 }
 
 /**

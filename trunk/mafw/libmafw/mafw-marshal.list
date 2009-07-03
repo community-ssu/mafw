@@ -23,3 +23,6 @@ VOID: STRING, BOXED
 
 # MafwSource::MetadataResultCb([self], object_id, metadata, user_data, error)
 VOID: STRING, BOXED, POINTER, POINTER
+# MafwSource::updating(progress, processed_items, remaining_items, remaining-time)
+VOID: INT, INT, INT, INT
+
