@@ -4,64 +4,89 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.27-2
-Date       2009.06.30
+Version    0.2009.28-1
+Date       2009.07.03
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.27-2
-mafw-gst-renderer 0.1.2009.27-2
-mafw-iradio-source 0.1.2009.27-2
-mafw-shared 0.1.2009.27-2
-mafw-test-gui 0.1.2009.27-2
-mafw-tracker-source 0.1.2009.27-2
-mafw-upnp-source 0.1.2009.27-2
+libmafw 0.1.2009.28-1
+mafw-gst-renderer 0.1.2009.28-1
+mafw-iradio-source 0.1.2009.28-1
+mafw-shared 0.1.2009.28-1
+mafw-test-gui 0.1.2009.28-1
+mafw-tracker-source 0.1.2009.28-1
+mafw-upnp-source 0.1.2009.28-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.27-2) unstable; urgency=low
-  * MAFW, pre-release 0.2009.27-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-gst-renderer (0.1.2009.27-2) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.27-2
-  * Make sure we stay paused while buffering.
-  * Always keep worker->state up-to-date.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-iradio-source (0.1.2009.27-2) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.27-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-shared (0.1.2009.27-2) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.27-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-test-gui (0.1.2009.27-2) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.27-2
-  * Add the elements to the dialog properly.
-    * Patch provided by Juan Suarez Romero.
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-tracker-source (0.1.2009.27-2) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.27-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
-mafw-upnp-source (0.1.2009.27-2) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.27-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 30 Jun 2009 14:00:00 +0300
+libmafw (0.1.2009.28-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.28-1
+  * Fixed segmentation fault in unit tests (test_get_metadatas). The
+    Contents array was missing a NULL termination.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-gst-renderer (0.1.2009.28-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.28-1
+  * Ref the assigned playlist
+  * Removing an unnecessary comparison.
+  * Added g_debug in volume manager to indicate that it is initialized and
+    return the instance
+  * Changed _connect function to get an InitCbCallback in volume manager
+  * Modified _reconnect function in volume manager to receive an
+    InitCbCallback and propertly return the volume manager if reconnection
+    happens before having connected a first time
+  * Written function to create the InitCbClosure in volume manager
+  * When [re-]connection to pulse fails, we log a critical and reconnect
+    after 1 second
+  * Modified log in renderer tests to log only errors
+  * Added tests for pulseaudio reconnection in renderer
+  * Removed volume tests in playing since it is not needed anymore as it
+    does not depend on the playing state.
+  * Added check for receiving mute when property is changed in renderer
+    tests
+  * In renderer tests, wait for the volume manager to be initialized when
+    testing properties
+  * Added pulseaudio mock to renderer tests
+  * Added small code comment in renderer tests
+  * Solved problem with mute not enable in renderer tests
+  * Fixed problem when adding elements to a mock playlist in renderer
+    tests
+  * Fixed problem with playlist size initialization in playlist iterator in
+    renderer that was causing problems in the tests
+  * Fixed a bug in the tests when testing the stats updating
+  * Fixed problem with playlist reference count in renderer tests.
+  * Replaced pulsesink and xvimagesink by fakesink in renderer tests
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-iradio-source (0.1.2009.28-1) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.28-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-shared (0.1.2009.28-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.28-1
+  * Fixed playlist leaks
+  * Fixed coverity issue #13109.
+    * Patch provided by Antía Puentes Felpeto.
+  * Adding a missing check.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-test-gui (0.1.2009.28-1) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.28-1
+  * Fixed playlist leaks
+  * Moved the playlist combo to a different place, this
+    goes around a problem introduced recently in Gtk+/Hildon that makes the
+    scrolled window within the combo shrink when showing certain dialogs.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-tracker-source (0.1.2009.28-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.28-1
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
+mafw-upnp-source (0.1.2009.28-1) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.28-1
+  * Adding more tests
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 03 Jul 2009 11:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 13
-* Fixes: NB#124197 - 'error:Not Implemented' message displayed while tryin to delete video launched from camera. [S3 proposal]
-* Fixes: NB#122316 - Internet radio not usable after a non-valid bookmark used 
-* Fixes: NB#123701 - mafw-dbus-wrapper-76CE-6-1218.rcore.lzo crashed
-* Fixes: NB#116836 - Streaming stops after taping on Next button during paused state
-* Fixes: NB#123545 - mafw-gst-renderer get-position returns uninitialized value
-* Fixes: NB#124469 - Device going to power saving mode after seek for video streams
-* Fixes: NB#124116 - Position not progressing after seeking
-* Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
-* Fixes: NB#125075 - metadata details are not shown from the MTG player
-* Fixes: NB#124576 - Unable to create more than one playlist 
-* Fixes: NB#124442 - mafw-dbus-wrapper offends glib
-* Fixes: NB#123307 - Attached playlist crashes tracker source
-* Fixes: NB#123323 - play to pause state change is not proper for all streaming files [S3 proposal]
+From changelog: 2
+* Fixes: NB#123689 - mafw-dbus-wrapper-76CE-6-4559.rcore.lzo crashed
+* Fixes: NB#119049 - 'Recently added' automatic playlist not displaying 30 songs that were lastly added
