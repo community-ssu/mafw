@@ -110,6 +110,7 @@ int main(void)
 {
 	Suite *suite;
 
+	unlink("test.log");
 	suite = suite_create("Mafw logging");
 	checkmore_add_tcase(suite, "Mafw logging", test_logging);
 
