@@ -1,0 +1,56 @@
+
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    0.2009.28-2
+Date       2009.07.07
+Maintainer veitikka6@gmail.com
+           mika.tapojarvi@sse.fi
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+
+libmafw 0.1.2009.28-2
+mafw-gst-renderer 0.1.2009.28-2
+mafw-iradio-source 0.1.2009.28-2
+mafw-shared 0.1.2009.28-2
+mafw-test-gui 0.1.2009.28-2
+mafw-tracker-source 0.1.2009.28-2
+mafw-upnp-source 0.1.2009.28-2
+
+
+Change logs: 
+
+libmafw (0.1.2009.28-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.28-2
+  * Changed signature in updating function/signal.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-gst-renderer (0.1.2009.28-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.28-2
+  * Ref the assigned playlist
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-iradio-source (0.1.2009.28-2) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.28-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-shared (0.1.2009.28-2) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.28-2
+  * Changed signature in updating function/signal.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-test-gui (0.1.2009.28-2) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.28-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-tracker-source (0.1.2009.28-2) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.28-2
+  * Implement the new signature for updating function/signal in
+    mafw-tracker-source.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+mafw-upnp-source (0.1.2009.28-2) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.28-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 07 Jul 2009 14:00:00 +0300
+
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 0
+
