@@ -4,66 +4,56 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.30-1
-Date       2009.07.17
+Version    0.2009.30-2
+Date       2009.07.22
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw 0.1.2009.30-1
-mafw-gst-renderer 0.1.2009.30-1
-mafw-iradio-source 0.1.2009.30-1
-mafw-shared 0.1.2009.30-1
-mafw-test-gui 0.1.2009.30-1
-mafw-tracker-source 0.1.2009.30-1
-mafw-upnp-source 0.1.2009.30-1
+libmafw 0.1.2009.30-2
+mafw-gst-renderer 0.1.2009.30-2
+mafw-iradio-source 0.1.2009.30-2
+mafw-shared 0.1.2009.30-2
+mafw-test-gui 0.1.2009.30-2
+mafw-tracker-source 0.1.2009.30-2
+mafw-upnp-source 0.1.2009.30-2
 
 
 Change logs: 
 
-libmafw (0.1.2009.30-1) unstable; urgency=low
-  * MAFW, pre-release 0.2009.30-1
-  * Fixing a test
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-gst-renderer (0.1.2009.30-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.30-1
-  * Added more debug to the _handle_buffering function in renderer worker
-  * Just set pipeline to playing when finished buffering of a stream when
-    seeking to avoid signalling PAUSE.
-  * Added documentation in _handle_state_changed function in renderer worker
-  * Added comments in _do_play function in renderer worker
-  * Added comments in _finalize_startup funcion in renderer worker
-  * Reworked _handle_state_changed to use GST_STATE_TRANSITION in renderer 
-    worker.
-  * Reworked _handle_state_changed to use _do_pause in renderer worker
-  * Created _do_pause function to notify the state change and get the
-    current frame on pause if needed in renderer worker.
-  * Removed buffering info from renderer as it was being handled by worker
-  * Removed seek in pause comments as we are not using them in renderer worker
-  * Simplified if condition in state managegement in renderer worker.
-  * Removed state assignment because it could be done at one point in
-    _handle_state_changed in renderer worker.
-  * Added comments in field names in renderer worker to clarify their use
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-iradio-source (0.1.2009.30-1) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.30-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-shared (0.1.2009.30-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.30-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-test-gui (0.1.2009.30-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.30-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-tracker-source (0.1.2009.30-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.30-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
-mafw-upnp-source (0.1.2009.30-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.30-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 17 Jul 2009 14:00:00 +0300
+libmafw (0.1.2009.30-2) unstable; urgency=low
+  * MAFW, pre-release 0.2009.30-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-gst-renderer (0.1.2009.30-2) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.30-2
+  * Solved problem when pausing while buffering in renderer worker
+  * We activate state changes if we resume while buffering to report the
+    state change to playing in renderer worker
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-iradio-source (0.1.2009.30-2) unstable; urgency=low
+  * MAFW iradio source, pre-release 0.2009.30-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-shared (0.1.2009.30-2) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.30-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-test-gui (0.1.2009.30-2) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.30-2
+  * Reset seekbar label to 00:00 on Stop.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-tracker-source (0.1.2009.30-2) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.30-2
+  * Support album art thumbnails for clips which album has a single character.
+  * Emit container-changed signal for playlists container.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+mafw-upnp-source (0.1.2009.30-2) unstable; urgency=low
+  * MAFW uPnP source, pre-release 0.2009.30-2
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 1
-* Fixes: NB#128630 - Cannot remove playlist on renderer crash
+From changelog: 3
+* Fixes: NB#128479 - Seeking in UPnP signals pause and keeps on playing 
+* Fixes: NB#125125 - Album art thumbnails is not shown for the files which have single characters in album and artist fields
+* Fixes: NB#129321 - Main view:Playlist count not updated when the device has no songs
