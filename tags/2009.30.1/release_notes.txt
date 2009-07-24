@@ -56,4 +56,3 @@ BUGS RESOLVED IN THIS RELEASE
 From changelog: 3
 * Fixes: NB#128479 - Seeking in UPnP signals pause and keeps on playing 
 * Fixes: NB#125125 - Album art thumbnails is not shown for the files which have single characters in album and artist fields
-* Fixes: NB#129321 - Main view:Playlist count not updated when the device has no songs
