@@ -23,7 +23,7 @@ CFG_OPTS := --disable-dependency-tracking --prefix=/usr --enable-static
 CFLAGS   += $(if $(filter noopt,$(DBO)),-O0,-O2)
 CFG_OPTS += $(if $(filter debug,$(DBO)),--enable-debug,--disable-debug)
 CFLAGS   += $(if $(filter thumb,$(DBO)),-mthumb)
-CFG_OPTS += $(if $(filter nocheck,$(DBO)),--disable-tests,--enable-tests)
+CFG_OPTS += $(if $(filter nocheck,$(DBO)),--enable-tests,--disable-tests)
 CFG_OPTS += $(if $(filter nodoc,$(DBO)),--disable-gtk-doc,--enable-gtk-doc)
 CFG_OPTS += $(if $(filter lcov,$(DBO)),--enable-coverage)
 # `nostrip' is handled by dh_strip.
