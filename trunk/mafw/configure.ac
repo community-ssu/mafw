@@ -76,6 +76,10 @@ fi
 
 dnl Tests.
 ENABLED_BY_DEFAULT([tests], [disable unit tests])
+if test "x${SBOX_DPKG_INST_ARCH}" = "xarmel"; then
+   AC_MSG_WARN([Tests are disabled for compilation in armel])
+   enable_tests="no"
+fi
 AM_CONDITIONAL(ENABLE_TESTS,
                [test "x$enable_tests" = xyes])
 
