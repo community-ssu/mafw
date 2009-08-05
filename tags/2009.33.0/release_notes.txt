@@ -4,55 +4,37 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.30-2
-Date       2009.07.22
-Maintainer veitikka6@gmail.com
-           mika.tapojarvi@sse.fi
+Version    0.2009.33-1
+Date       2009.08.05
+Maintainer mika.tapojarvi@sse.fi
+           veitikka6@gmail.com
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 3
 
-libmafw 0.1.2009.30-2
-mafw-gst-renderer 0.1.2009.30-2
-mafw-iradio-source 0.1.2009.30-2
-mafw-shared 0.1.2009.30-2
-mafw-test-gui 0.1.2009.30-2
-mafw-tracker-source 0.1.2009.30-2
-mafw-upnp-source 0.1.2009.30-2
+libmafw            0.1.2009.33-1
+mafw-shared        0.1.2009.33-1
+mafw-gst-renderer  0.1.2009.33-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.30-2) unstable; urgency=low
-  * MAFW, pre-release 0.2009.30-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-gst-renderer (0.1.2009.30-2) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.30-2
-  * Solved problem when pausing while buffering in renderer worker
-  * We activate state changes if we resume while buffering to report the
-    state change to playing in renderer worker
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-iradio-source (0.1.2009.30-2) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.30-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-shared (0.1.2009.30-2) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.30-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-test-gui (0.1.2009.30-2) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.30-2
-  * Reset seekbar label to 00:00 on Stop.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-tracker-source (0.1.2009.30-2) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.30-2
-  * Support album art thumbnails for clips which album has a single character.
-  * Emit container-changed signal for playlists container.
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
-mafw-upnp-source (0.1.2009.30-2) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.30-2
- -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 22 Jul 2009 14:00:00 +0300
+libmafw (0.1.2009.33-1) unstable; urgency=low
+  * MAFW, pre-release 0.2009.33-1
+  * Build tests by default, but do not do so if building 
+    in ARMEL.
+  * Unit tests disabled when building .deb packages.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 05 Aug 2009 12:31:25 +0300
+mafw-shared (0.1.2009.33-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.33-1
+  * Do not build the tests in ARMEL.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 05 Aug 2009 12:36:06 +0300
+mafw-gst-renderer (0.1.2009.33-1) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.33-1
+  * New Build-Dependency libosso-gnomevfs2-dev added.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 05 Aug 2009 12:37:05 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 2
-* Fixes: NB#128479 - Seeking in UPnP signals pause and keeps on playing 
-* Fixes: NB#125125 - Album art thumbnails is not shown for the files which have single characters in album and artist fields
+From changelog: 1
+* Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
