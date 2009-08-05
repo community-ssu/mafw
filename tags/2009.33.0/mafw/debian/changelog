@@ -1,3 +1,12 @@
+libmafw (0.1.2009.33-1) unstable; urgency=low
+
+  * MAFW, pre-release 0.2009.33-1
+  * Build tests by default, but do not do so if building 
+    in ARMEL.
+  * Unit tests disabled when building .deb packages.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 05 Aug 2009 12:31:25 +0300
+
 libmafw (0.1.2009.32-1) unstable; urgency=low
 
   * MAFW, pre-release 0.1.2009.32-1
