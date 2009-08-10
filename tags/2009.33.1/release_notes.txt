@@ -11,25 +11,24 @@ Maintainer veitikka6@gmail.com
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 4
 
-libmafw              0.1.2009.33-1
-mafw-shared          0.1.2009.33-1
-mafw-gst-renderer    0.1.2009.33-1
-mafw-tracker-source  0.1.2009.33-1
+libmafw              0.1.2009.33-2
+mafw-shared          0.1.2009.33-2
+mafw-gst-renderer    0.1.2009.33-2
+mafw-tracker-source  0.1.2009.33-2
 
 
 Change logs: 
 
-libmafw (0.1.2009.33-1) unstable; urgency=low
+libmafw (0.1.2009.33-2) unstable; urgency=low
   * Version increased for pre-release, making sure there are no ABI breaks.
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:34 +0300
-mafw-shared (0.1.2009.33-1) unstable; urgency=low
+mafw-shared (0.1.2009.33-2) unstable; urgency=low
   * Version increased for pre-release, making sure there are no ABI breaks.
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:39 +0300
-mafw-gst-renderer (0.1.2009.33-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.33-1
+mafw-gst-renderer (0.1.2009.33-2) unstable; urgency=low
+  * Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:43 +0300
-mafw-tracker-source (0.1.2009.33-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.34-1
+mafw-tracker-source (0.1.2009.33-2) unstable; urgency=low
   * Partially fixes NB#119318: Fixes filters by URI.
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:51 +0300
 
