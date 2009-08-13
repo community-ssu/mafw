@@ -1,8 +1,11 @@
 mafw-gst-renderer (0.1.2009.33-3) unstable; urgency=low
 
-  * Version increased.
+  * Fixes: NB#131655 - UPnP: Playback starts from the first instead of playing from where we paused if left the device idle
+  * Fixes: NB#131609 - Mafw-dbus-wrapper crashes. Audio cannot be heard from device's loudspeaker.
+  * Replaced assertion with critical in volume manager for unsuccessful
+  * setting volume in pulse operations.
 
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 23:01:01 +0300
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 13 Aug 2009 17:03:10 +0300
 
 mafw-gst-renderer (0.1.2009.33-2) unstable; urgency=low
 

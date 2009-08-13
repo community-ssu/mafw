@@ -4,36 +4,35 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.33-1
-Date       2009.08.10
+Version    0.2009.34-2
+Date       2009.08.13
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 4
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
 
-libmafw              0.1.2009.33-2
-mafw-shared          0.1.2009.33-2
-mafw-gst-renderer    0.1.2009.33-2
-mafw-tracker-source  0.1.2009.33-2
+mafw-gst-renderer    0.1.2009.33-3
+mafw-tracker-source  0.1.2009.33-3
 
 
 Change logs: 
 
-libmafw (0.1.2009.33-2) unstable; urgency=low
-  * Version increased for pre-release, making sure there are no ABI breaks.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:34 +0300
-mafw-shared (0.1.2009.33-2) unstable; urgency=low
-  * Version increased for pre-release, making sure there are no ABI breaks.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:39 +0300
-mafw-gst-renderer (0.1.2009.33-2) unstable; urgency=low
-  * Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:43 +0300
-mafw-tracker-source (0.1.2009.33-2) unstable; urgency=low
-  * Partially fixes NB#119318: Fixes filters by URI.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:51 +0300
+mafw-gst-renderer (0.1.2009.33-3) unstable; urgency=low
+  * Replaced assertion with critical in volume manager for unsuccessful
+  * setting volume in pulse operations.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 13 Aug 2009 17:03:10 +0300
+mafw-tracker-source (0.1.2009.33-3) unstable; urgency=low
+  * Reverting wrong key-mapping type 
+    (Tracker does manipulate Playlist:ValidDuration as an
+    integer even though MAFW handles it as a boolean).
+  * Properly handle Playlist:ValidDuration (type boolean). This helps
+    with improving performance of playlist queries (duration).
+  * Patch By Antía Puentes Felpeto.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 13 Aug 2009 17:14:50 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 1
-* Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
+From changelog: 2
+* Fixes: NB#131655 - UPnP: Playback starts from the first instead of playing from where we paused if left the device idle
+* Fixes: NB#131609 - Mafw-dbus-wrapper crashes. Audio cannot be heard from device's loudspeaker.
