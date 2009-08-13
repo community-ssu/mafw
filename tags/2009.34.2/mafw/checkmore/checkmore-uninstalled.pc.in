@@ -1,0 +1,6 @@
+Name: checkmore
+Description: Enhancements to check, a unit test framework for C
+Version: 0.1
+Libs: ${pcfiledir}/libcheckmore.la
+Cflags: -I${pcfiledir}
+Requires: check, gobject-2.0
