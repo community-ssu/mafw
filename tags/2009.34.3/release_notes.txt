@@ -4,36 +4,44 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.33-1
-Date       2009.08.10
+Version    0.2009.34-3
+Date       2009.08.17
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 4
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
 
-libmafw              0.1.2009.33-2
-mafw-shared          0.1.2009.33-2
-mafw-gst-renderer    0.1.2009.33-2
-mafw-tracker-source  0.1.2009.33-2
+mafw-gst-renderer    0.1.2009.34-3
+mafw-tracker-source  0.1.2009.34-3
 
 
 Change logs: 
 
-libmafw (0.1.2009.33-2) unstable; urgency=low
-  * Version increased for pre-release, making sure there are no ABI breaks.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:34 +0300
-mafw-shared (0.1.2009.33-2) unstable; urgency=low
-  * Version increased for pre-release, making sure there are no ABI breaks.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:39 +0300
-mafw-gst-renderer (0.1.2009.33-2) unstable; urgency=low
-  * Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:43 +0300
-mafw-tracker-source (0.1.2009.33-2) unstable; urgency=low
-  * Partially fixes NB#119318: Fixes filters by URI.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 10 Aug 2009 12:27:51 +0300
+mafw-gst-renderer (0.1.2009.34-3) unstable; urgency=low
+  * MAFW gst renderer, pre-release 0.2009.34-3
+  * Check if we get a different duration that the source one and update it
+    if needed in renderer
+  * Added function mafw_gst_renderer_update_source_duration
+  * Reworked mafw_gst_renderer_increase_playcount to use _get_source function
+  * Reworked mafw_gst_renderer_get_metadata to use _get_source function
+  * Created _get_source function in renderer
+  * Reworked _check_duration condition into two different ifs and extracted
+    duration in seconds calculation
+  * Added duration to the source metadata request and kept it in the
+    renderer metadata structure.
+  * Duration in renderer converted in gint instead of guint to hold
+    negative values
+  * flag GST_SEEK_FLAG_KEY_UNIT.
+  * Patch provided by Rene Stadler.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 17 Aug 2009 22:06:17 +0300
+mafw-tracker-source (0.1.2009.34-3) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.34-3
+  * Tracker duration metadata key made writable
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 17 Aug 2009 22:24:11 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 1
-* Fixes: NB#128110 - Playback neither stopped nor internal mmc is mounted onto pc when connected in mass storage mode
+From changelog: 2
+* Fixes: NB#128812 - Duration Mismatch for the attached mp3 clip in library view and now playing view
+* Fixes: NB#132950 - Video seeking is slow most of the time
