@@ -5,14 +5,15 @@ All rights reserved.
 RELEASE NOTES
 Project    MAFW
 Version    0.2009.34-3
-Date       2009.08.17
+Date       2009.08.18
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 3
 
 mafw-gst-renderer    0.1.2009.34-3
 mafw-tracker-source  0.1.2009.34-3
+mafw-test-gui        0.1.2009.34-3
 
 
 Change logs: 
@@ -38,10 +39,15 @@ mafw-tracker-source (0.1.2009.34-3) unstable; urgency=low
   * MAFW tracker source, pre-release 0.2009.34-3
   * Tracker duration metadata key made writable
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 17 Aug 2009 22:24:11 +0300
+mafw-test-gui (0.1.2009.34-3) unstable; urgency=low
+  * MAFW Test GUI, pre-release 0.2009.34-3
+  * Get rid of unavailable icons.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 18 Aug 2009 14:39:11 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 2
+From changelog: 3
 * Fixes: NB#128812 - Duration Mismatch for the attached mp3 clip in library view and now playing view
 * Fixes: NB#132950 - Video seeking is slow most of the time
+* Fixes: NB#133329 - MTG is looking improper, functional keys shrinked
