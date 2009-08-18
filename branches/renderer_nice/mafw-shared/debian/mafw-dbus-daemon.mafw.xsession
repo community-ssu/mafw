@@ -6,11 +6,6 @@ if test -x /usr/sbin/dsmetool; then
 		# basename without '.so'.
 		plugin="${plugin##*/}";
 		plugin="${plugin%.so}";
-                nice="";
-                if test "x$plugin" = "xmafw-gst-renderer"; then
-                    # Run the renderer with a nice value
-                    nice="-7";
-                fi
-		sudo /usr/bin/mafw.sh start "$plugin" $nice &
-        done
+		/usr/bin/mafw.sh start "$plugin" &
+	done
 fi
