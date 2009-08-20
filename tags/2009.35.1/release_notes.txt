@@ -4,50 +4,34 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.34-3
-Date       2009.08.18
+Version    0.2009.35-1
+Date       2009.08.20
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 3
 
-mafw-gst-renderer    0.1.2009.34-3
-mafw-tracker-source  0.1.2009.34-3
-mafw-test-gui        0.1.2009.34-3
+mafw-shared          0.1.2009.35-1
+mafw-gst-renderer    0.1.2009.35-1
+mafw-tracker-source  0.1.2009.35-1
 
 
 Change logs: 
 
-mafw-gst-renderer (0.1.2009.34-3) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.34-3
-  * Check if we get a different duration that the source one and update it
-    if needed in renderer
-  * Added function mafw_gst_renderer_update_source_duration
-  * Reworked mafw_gst_renderer_increase_playcount to use _get_source function
-  * Reworked mafw_gst_renderer_get_metadata to use _get_source function
-  * Created _get_source function in renderer
-  * Reworked _check_duration condition into two different ifs and extracted
-    duration in seconds calculation
-  * Added duration to the source metadata request and kept it in the
-    renderer metadata structure.
-  * Duration in renderer converted in gint instead of guint to hold
-    negative values
-  * flag GST_SEEK_FLAG_KEY_UNIT.
-  * Patch provided by Rene Stadler.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 17 Aug 2009 22:06:17 +0300
-mafw-tracker-source (0.1.2009.34-3) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.34-3
-  * Tracker duration metadata key made writable
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 17 Aug 2009 22:24:11 +0300
-mafw-test-gui (0.1.2009.34-3) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.34-3
-  * Get rid of unavailable icons.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 18 Aug 2009 14:39:11 +0300
-
+mafw-shared (0.1.2009.35-1) unstable; urgency=low
+  * MAFW Shared, pre-release 0.2009.35-1
+  * Increased the priority of the mafw-gst-renderer.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 20 Aug 2009 17:45:04 +0300
+mafw-gst-renderer (0.1.2009.35-1) unstable; urgency=low
+  * Increased the priority of the mafw-gst-renderer.
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 20 Aug 2009 17:34:03 +0300
+mafw-tracker-source (0.1.2009.35-1) unstable; urgency=low
+  * MAFW tracker source, pre-release 0.2009.35-1
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 20 Aug 2009 17:50:14 +0300
 
 BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 3
-* Fixes: NB#128812 - Duration Mismatch for the attached mp3 clip in library view and now playing view
-* Fixes: NB#132950 - Video seeking is slow most of the time
-* Fixes: NB#133329 - MTG is looking improper, functional keys shrinked
+* Fixes: NB#129912 - Audio playback jarring while receiving a SMS while multiple browser/applications are open.
+* Fixes: NB#128812 - Duration Mismatch for the attached mp3 clip in library view and now playing 
+* Fixes: NB#134084 - RESOURCE_LEAK from libmafw-tracker-source
