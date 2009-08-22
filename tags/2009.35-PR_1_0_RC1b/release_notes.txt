@@ -4,8 +4,8 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.35-2, MAFW Sales RC
-Date       2009.08.21
+Version    0.2009.35-2, MAFW Sales RC1b
+Date       2009.08.22
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
@@ -43,6 +43,12 @@ mafw-tracker-source (0.1.2009.35-2) unstable; urgency=low
 mafw-upnp-source (0.1.2009.35-2) unstable; urgency=low
   * First MAFW Sales RC.
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:46:12 +0300
+
+NOTE: This RC will be build with already released FMP, to find out more about bugs:
+* https://projects.maemo.org/bugzilla/show_bug.cgi?id=134585
+* https://projects.maemo.org/bugzilla/show_bug.cgi?id=129912
+* https://projects.maemo.org/bugzilla/show_bug.cgi?id=133708
+
 
 
 BUGS RESOLVED IN THIS RELEASE
