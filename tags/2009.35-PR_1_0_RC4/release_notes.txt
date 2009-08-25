@@ -49,5 +49,3 @@ BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 
 * Fixes: NB#129912 - Audio playback jarring while receiving a SMS while multiple browser/applications are open.
-* Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
-* Fixes: NB#134084 - <coverity> RESOURCE_LEAK from libmafw-tracker-source 
