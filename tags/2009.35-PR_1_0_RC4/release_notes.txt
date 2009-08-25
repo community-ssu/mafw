@@ -4,48 +4,50 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.35-2, MAFW Sales RC
-Date       2009.08.21
+Version    0.2009.35-3, MAFW Sales RC
+Date       2009.08.25
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw              0.1.2009.35-2
-mafw-gst-renderer    0.1.2009.35-2
-mafw-iradio-source   0.1.2009.35-2
-mafw-shared          0.1.2009.35-2
-mafw-test-gui        0.1.2009.35-2
-mafw-tracker-source  0.1.2009.35-2
-mafw-upnp-source     0.1.2009.35-2
+libmafw              0.1.2009.35-3
+mafw-gst-renderer    0.1.2009.35-3
+mafw-iradio-source   0.1.2009.35-3
+mafw-shared          0.1.2009.35-3
+mafw-test-gui        0.1.2009.35-3
+mafw-tracker-source  0.1.2009.35-3
+mafw-upnp-source     0.1.2009.35-3
 
 
 Change logs: 
 
-libmafw (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:23:55 +0300
-mafw-gst-renderer (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:38:27 +0300
-mafw-iradio-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:40:42 +0300
-mafw-shared (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:42:42 +0300
-mafw-test-gui (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:43:26 +0300
-mafw-tracker-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:44:32 +0300
-mafw-upnp-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:46:12 +0300
+libmafw (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-gst-renderer (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-iradio-source (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-shared (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-test-gui (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-tracker-source (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
+mafw-upnp-source (0.1.2009.35-3) unstable; urgency=low
+  * MAFW Sales RC4.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 
+* Fixes: NB#129912 - Audio playback jarring while receiving a SMS while multiple browser/applications are open.
 * Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
+* Fixes: NB#134084 - <coverity> RESOURCE_LEAK from libmafw-tracker-source 
