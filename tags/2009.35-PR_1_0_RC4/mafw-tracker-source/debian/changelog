@@ -13,7 +13,6 @@ mafw-tracker-source (0.1.2009.35-2) unstable; urgency=low
 mafw-tracker-source (0.1.2009.35-1) unstable; urgency=low
 
   * MAFW tracker source, pre-release 0.2009.35-1
-  * Fixes: NB#134084 - RESOURCE_LEAK from libmafw-tracker-source
 
  -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Thu, 20 Aug 2009 17:50:14 +0300
 
