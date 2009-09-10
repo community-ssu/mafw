@@ -1211,6 +1211,22 @@ static void _emit_metadatas(MafwGstRendererWorker *worker)
 	}
 }
 
+static void _reset_volume_and_mute_to_pipeline(MafwGstRendererWorker *worker)
+{
+#ifdef MAFW_GST_RENDERER_DISABLE_PULSE_VOLUME
+	g_debug("resetting volume and mute to pipeline");
+
+	if (worker->pipeline != NULL) {
+		g_object_set(
+			G_OBJECT(worker->pipeline), "volume",
+			mafw_gst_renderer_worker_volume_get(worker->wvolume),
+			"mute",
+			mafw_gst_renderer_worker_volume_is_muted(worker->wvolume),
+			NULL);
+	}
+#endif
+}
+
 static void _handle_buffering(MafwGstRendererWorker *worker, GstMessage *msg)
 {
 	gint percent;
@@ -1278,6 +1294,8 @@ static void _handle_buffering(MafwGstRendererWorker *worker, GstMessage *msg)
 					   state changes) */
 					g_debug("buffering concluded, setting "
 						"pipeline to PLAYING again");
+					_reset_volume_and_mute_to_pipeline(
+						worker);
 					gst_element_set_state(
 						worker->pipeline,
 						GST_STATE_PLAYING);
@@ -1556,6 +1574,8 @@ static void _volume_cb(MafwGstRendererWorkerVolume *wvolume, gdouble volume,
 	MafwGstRendererWorker *worker = data;
 	GValue value = {0, };
 
+	_reset_volume_and_mute_to_pipeline(worker);
+
 	g_value_init(&value, G_TYPE_UINT);
 	g_value_set_uint(&value, (guint) (volume * 100.0));
 	mafw_extension_emit_property_changed(MAFW_EXTENSION(worker->owner),
@@ -1568,6 +1588,8 @@ static void _mute_cb(MafwGstRendererWorkerVolume *wvolume, gboolean mute,
 {
 	MafwGstRendererWorker *worker = data;
 	GValue value = {0, };
+
+	_reset_volume_and_mute_to_pipeline(worker);
 
 	g_value_init(&value, G_TYPE_BOOLEAN);
 	g_value_set_boolean(&value, mute);
@@ -2051,6 +2073,7 @@ static void _do_play(MafwGstRendererWorker *worker)
 					      GST_STATE_PAUSED);
 			g_debug("setting pipeline to PAUSED");
 		} else {
+			_reset_volume_and_mute_to_pipeline(worker);
 			gst_element_set_state(worker->pipeline,
 					      GST_STATE_PLAYING);
 			g_debug("setting pipeline to PLAYING");
