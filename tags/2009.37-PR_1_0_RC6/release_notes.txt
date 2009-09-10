@@ -4,48 +4,57 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.35-2, MAFW Sales RC
-Date       2009.08.21
+Version    0.2009.37-1, MAFW Sales RC
+Date       2009.09.10
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw              0.1.2009.35-2
-mafw-gst-renderer    0.1.2009.35-2
-mafw-iradio-source   0.1.2009.35-2
-mafw-shared          0.1.2009.35-2
-mafw-test-gui        0.1.2009.35-2
-mafw-tracker-source  0.1.2009.35-2
-mafw-upnp-source     0.1.2009.35-2
+libmafw              0.1.2009.37-1
+mafw-gst-renderer    0.1.2009.37-1
+mafw-iradio-source   0.1.2009.37-1
+mafw-shared          0.1.2009.37-1
+mafw-test-gui        0.1.2009.37-1
+mafw-tracker-source  0.1.2009.37-1
+mafw-upnp-source     0.1.2009.37-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:23:55 +0300
-mafw-gst-renderer (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:38:27 +0300
-mafw-iradio-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:40:42 +0300
-mafw-shared (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:42:42 +0300
-mafw-test-gui (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:43:26 +0300
-mafw-tracker-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:44:32 +0300
-mafw-upnp-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:46:12 +0300
+libmafw (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-gst-renderer (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+  * Added function to reset volume to pulse pipeline in case pulse volume
+    management is disabled
+  * Added fake volume manager and disabled normal handling with pulse when
+    pulse volume is disabled in compilation.
+  * We avoid setting audiosink to the pipeline and native flags when pulse
+    volume is disabled.
+  * Moved checking for pulse dependency to its conditional compilation
+  * Added support for conditional compilation regarding to volume in
+    renderer
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-iradio-source (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-shared (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-test-gui (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-tracker-source (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+mafw-upnp-source (0.1.2009.37-1) unstable; urgency=low
+  * MAFW Sales RC6.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 
-* Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
+* Fixes: NB#136114 - mafw-gst-renderer does not load on debian lenny

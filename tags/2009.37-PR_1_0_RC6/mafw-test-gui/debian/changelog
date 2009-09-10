@@ -1,8 +1,14 @@
+mafw-test-gui (0.1.2009.37-1) unstable; urgency=low
+
+  * MAFW Sales RC6.
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+
 mafw-test-gui (0.1.2009.35-3) unstable; urgency=low
 
-  * Version increased.
+  * MAFW Sales RC4.
 
- -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Fri, 21 Aug 2009 20:33:20 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Tue, 25 Aug 2009 14:15:34 +0300
 
 mafw-test-gui (0.1.2009.35-2) unstable; urgency=low
 
