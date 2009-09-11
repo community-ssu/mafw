@@ -6,7 +6,7 @@
 # Copyright (C) 2007, 2008, 2009 Nokia. All rights reserved.
 
 AC_PREREQ([2.53])
-AC_INIT([mafw], [0.1.2009.35-2])
+AC_INIT([mafw], [0.1.2009.37-2])
 
 AC_CONFIG_SRCDIR([libmafw/mafw.h])
 AC_CONFIG_HEADERS([config.h])
@@ -75,7 +75,7 @@ else
 fi
 
 dnl Tests.
-ENABLED_BY_DEFAULT([tests], [disable unit tests])
+#ENABLED_BY_DEFAULT([tests], [disable unit tests])
 if test "x${SBOX_DPKG_INST_ARCH}" = "xarmel"; then
    AC_MSG_WARN([Tests are disabled for compilation in armel])
    enable_tests="no"
