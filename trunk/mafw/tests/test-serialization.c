@@ -74,22 +74,17 @@ static void compare_gvals(GValue *val1, GValue *val2)
 static void compare_cb(const gchar *key, gpointer val1, GHashTable *md2)
 {
 	gpointer val2;
+	guint nvalues, i;
 
 	val2 = g_hash_table_lookup(md2, key);
 	fail_unless(val2 != NULL);
 
-	if (G_IS_VALUE(val1)) {
-		fail_unless(G_IS_VALUE(val2));
-		compare_gvals(val1, val2);
-	} else {
-		guint nvalues, i;
-
-		fail_unless(!G_IS_VALUE(val2));
-		nvalues = ((GValueArray *)val1)->n_values;
-		fail_unless(((GValueArray *)val1)->n_values == nvalues);
-		for (i = 0; i < nvalues; i++)
-			compare_gvals(g_value_array_get_nth(val1, i),
-				      g_value_array_get_nth(val2, i));
+	nvalues = ((GValueArray *)val1)->n_values;
+	fail_unless(((GValueArray *)val1)->n_values == nvalues);
+	for (i = 0; i < nvalues; i++)
+	{
+		compare_gvals(g_value_array_get_nth(val1, i),
+			      g_value_array_get_nth(val2, i));
 	}
 }
 

@@ -38,11 +38,8 @@
  *
  * Metadata of objects in the framework are represented in #GHashTable:s
  * called mafw metadata hash tables as tag-value pairs.  Tags (keys of
- * the hash table) are strings, while values are either #GValue:s or
- * #GValueArray:s.  The C type of the hash table values depends on the
- * multiplicity: values of tags having exactly one value are #GValue:s,
- * otherwise they are stored in #GValueArray:s.  In a mafw metadata hash
- * table Every tag has at least one one.
+ * the hash table) are strings, while values are #GValueArray:s. In a mafw
+ * metadata hash table Every tag has at least one one.
  *
  * Use mafw_metadata_new() to create a mafw metadata hash table.
  * You can use mafw_metadata_release() when you don't need it
@@ -68,20 +65,6 @@
  */
 
 /* Private functions */
-/*
- * Destructs a value of a mafw metadata hash table allocated with
- * mafw_metadata_new().  In the hash table the values can either
- * be #GValue:s or #GValueArray:s.  This function deals with both
- * cases.
- */
-static void value_dtor(gpointer value)
-{
-	if (G_IS_VALUE(value)) {
-		g_value_unset(value);
-		g_free(value);
-	} else
-		g_value_array_free(value);
-}
 
 /*
  * Checks whether $type is allowed for a metadata value.  We can't afford
@@ -214,9 +197,7 @@ static gint eval_filter(GHashTable *md, const MafwFilter *filter,
 		memset(&rhs_str, 0, sizeof(rhs_str));
 		g_value_init(&rhs_str, G_TYPE_STRING);
 		g_value_set_static_string(&rhs_str, filter->value);
-		vtype = G_IS_VALUE(lhs)
-		       	? G_VALUE_TYPE(lhs)
-			: G_VALUE_TYPE(g_value_array_get_nth(lhs, 0));
+		vtype = G_VALUE_TYPE(g_value_array_get_nth(lhs, 0));
 		if (vtype != G_TYPE_STRING) {
 			memset(&rhs_natural, 0, sizeof(rhs_natural));
 			g_value_init(&rhs_natural, vtype);
@@ -225,12 +206,6 @@ static gint eval_filter(GHashTable *md, const MafwFilter *filter,
 			rhs = &rhs_natural;
 		} else
 			rhs = &rhs_str;
-
-		/* Single-valued tag ==> ask $funcomp() directly. */
-		if (G_IS_VALUE(lhs)) {
-			ret = funcomp(filter->type, filter->key, lhs, rhs);
-			goto finish;
-		}
 
 		/* Multi-valued tag, return whether at least one
 		 * of the values holds against the relation. */
@@ -242,7 +217,6 @@ static gint eval_filter(GHashTable *md, const MafwFilter *filter,
 				break;
 		}
 
-finish:
 		/* Free $rhs_natural if we used it. */
 		if (rhs == &rhs_natural)
 			g_value_unset(&rhs_natural);
@@ -284,7 +258,7 @@ static gint compare_mvals(const GValue *lhs, const GValue *rhs,
 GHashTable *mafw_metadata_new(void)
 {
 	return g_hash_table_new_full(g_str_hash, g_str_equal,
-		g_free, value_dtor);
+		g_free, (GDestroyNotify)g_value_array_free);
 }
 
 /**
@@ -317,6 +291,8 @@ void mafw_metadata_add_something(GHashTable *md, const gchar *key,
 {
 	va_list argvals;
 	gpointer mdvals;
+	GValue newval;
+	GType mdvtype;
 
 	/* Anything to do? */
 	if (!nvalues)
@@ -324,81 +300,46 @@ void mafw_metadata_add_something(GHashTable *md, const gchar *key,
 
 	/* Are we dealing with multiple-valued metadata tags? */
 	va_start(argvals, nvalues);
-	if ((mdvals = g_hash_table_lookup(md, key)) != NULL || nvalues > 1) {
-		GValue newval;
-		GType mdvtype;
+	if ((mdvals = g_hash_table_lookup(md, key)) == NULL)
+	{
+		mdvals = g_value_array_new(nvalues);
+		mdvtype = G_TYPE_INVALID;
+		g_hash_table_insert(md, g_strdup(key), mdvals);
+	}
+	else
+	{
+		mdvtype = G_VALUE_TYPE(g_value_array_get_nth(mdvals, 0));
+	}
 
-		/* Yes.  The value of the hash table entry will be
-		 * a GValueArray. */
-		if (!mdvals || G_IS_VALUE(mdvals)) {
-			if (mdvals != NULL) {
-				GValue *mdval;
-
-				/* $key has exactly 1 value for the moment. */
-				mdval = mdvals;
-				mdvals = g_value_array_new(1+nvalues);
-				mdvtype = G_VALUE_TYPE(mdval);
-
-				/* g_value_array_append() appends a *copy*
-				 * of $mdval.  $mdval is free()d by
-				 * g_hash_table_insert(). */
-				g_value_array_append(mdvals, mdval);
-			} else {
-				/* $key doesn't exist yet, create $mdvals. */
-				mdvals = g_value_array_new(nvalues);
-				mdvtype = G_TYPE_INVALID;
-			}
-			g_hash_table_insert(md, g_strdup(key), mdvals);
-		} else	/* All the values must have the same $argvtype. */
-			mdvtype = G_VALUE_TYPE(g_value_array_get_nth(mdvals,
-								     0));
-
-		/* Append $argvals:s one by one.  First they are temporarily
-		 * placed into $newval, which g_value_array_append() will
-		 * pick up and copy. */
-		memset(&newval, 0, sizeof(newval));
-		do {
-			if (argvtype == G_TYPE_VALUE) {
-				GValue *argval;
-
-				argval = va_arg(argvals, GValue *);
-				g_assert(G_IS_VALUE(argval));
-				if (mdvtype != G_TYPE_INVALID)
-					g_assert(G_VALUE_HOLDS(argval,
-							       mdvtype));
-				else
-					mdvtype = check_mdvtype(
-						     G_VALUE_TYPE(argval));
-				g_value_array_append(mdvals, argval);
-			} else {
-				if (mdvtype != G_TYPE_INVALID)
-					g_assert(argvtype == mdvtype);
-				else
-					mdvtype = argvtype;
-				mafw_callbas_argv2gval(&newval,
-							argvtype, &argvals);
-				g_value_array_append(mdvals, &newval);
-				g_value_unset(&newval);
-			}
-		} while (--nvalues > 0);
-	} else {
-		GValue *newval;
-
-		/* This is the first occurrance of $key in $md. */
-		newval = g_new0(GValue, 1);
+	/* Append $argvals:s one by one.  First they are temporarily
+	 * placed into $newval, which g_value_array_append() will
+	 * pick up and copy. */
+	memset(&newval, 0, sizeof(newval));
+	do {
 		if (argvtype == G_TYPE_VALUE) {
 			GValue *argval;
 
 			argval = va_arg(argvals, GValue *);
 			g_assert(G_IS_VALUE(argval));
-			g_value_init(newval,
-				     check_mdvtype(G_VALUE_TYPE(argval)));
-			g_value_copy(argval, newval);
-		} else
-			mafw_callbas_argv2gval(newval, argvtype, &argvals);
+			if (mdvtype != G_TYPE_INVALID)
+				g_assert(G_VALUE_HOLDS(argval,
+						       mdvtype));
+			else
+				mdvtype = check_mdvtype(
+					     G_VALUE_TYPE(argval));
+			g_value_array_append(mdvals, argval);
+		} else {
+			if (mdvtype != G_TYPE_INVALID)
+				g_assert(argvtype == mdvtype);
+			else
+				mdvtype = argvtype;
+			mafw_callbas_argv2gval(&newval,
+						argvtype, &argvals);
+			g_value_array_append(mdvals, &newval);
+			g_value_unset(&newval);
+		}
+	} while (--nvalues > 0);
 
-		g_hash_table_insert(md, g_strdup(key), newval);
-	}
 	va_end(argvals);
 }
 
@@ -417,12 +358,10 @@ void mafw_metadata_add_something(GHashTable *md, const gchar *key,
  */
 guint mafw_metadata_nvalues(gconstpointer value)
 {
-	if (!value)
-		return 0;
-	else if (G_IS_VALUE(value))
-		return 1;
-	else
-		return ((GValueArray *)value)->n_values;
+       if (!value)
+               return 0;
+       else
+               return ((GValueArray *)value)->n_values;
 }
 
 /**
@@ -442,10 +381,8 @@ GValue *mafw_metadata_first(GHashTable *md, const gchar *key)
 	value = g_hash_table_lookup(md, key);
 	if (!value)
 		return NULL;
-	else if (G_IS_VALUE(value))
-		return value;
 	else {
-		g_assert(((GValueArray *)value)->n_values > 1);
+		g_assert(((GValueArray *)value)->n_values >= 1);
 		return g_value_array_get_nth(value, 0);
 	}
 }
@@ -463,11 +400,15 @@ void mafw_metadata_print_one(const gchar *key, gpointer val,
 			     const gchar *domain)
 {
 	GValue strval;
+	GValueArray *values;
+
+	values = val;
 
 	memset(&strval, 0, sizeof(strval));
-	if (G_IS_VALUE(val)) {
+	if (values->n_values == 1) {
 		g_value_init(&strval, G_TYPE_STRING);
-		g_value_transform(val, &strval);
+		g_value_transform(g_value_array_get_nth(values, 0),
+					  &strval);
 
 		if (domain) {
 			g_log(domain, G_LOG_LEVEL_DEBUG, "\t%s: `%s'",
@@ -480,11 +421,9 @@ void mafw_metadata_print_one(const gchar *key, gpointer val,
 	} else {
 		guint i;
 		GString *str;
-		GValueArray *values;
 
 		str = g_string_new(NULL);
 
-		values = val;
 		for (i = 0; i < values->n_values; i++) {
 			g_value_init(&strval, G_TYPE_STRING);
 			g_value_transform(g_value_array_get_nth(values, i),
@@ -862,54 +801,30 @@ gint mafw_metadata_compare(GHashTable *md1, GHashTable *md2,
 		else if (!lhs && !rhs)
 			continue;
 
-		/* Comparison depends on whether $lhs or $rhs
-		 * is multi-valued. */
-		if	( G_IS_VALUE(lhs) &&  G_IS_VALUE(rhs)) {
-			/* Both are single, just compare them and
-			 * if they are not equal, end of story.
-			 * Otherwise try with another $key. */
-			cmp = compare_mvals(lhs, rhs, key, funcomp) * dir;
+		guint o, nl, nr;
+
+		/*
+		 * Compare $lhs[$i] with $rhs[$i] until
+		 * we find inequality or run out of values
+		 * on one of the sides.
+		 */
+		nl = ((GValueArray *)lhs)->n_values;
+		nr = ((GValueArray *)rhs)->n_values;
+		for (o = 0; o < nl && o < nr; o++) {
+			cmp=compare_mvals(g_value_array_get_nth(lhs,o),
+					  g_value_array_get_nth(rhs,o),
+				     key, funcomp) * dir;
 			if (cmp != 0)
 				return cmp;
-		} else if ( G_IS_VALUE(lhs) && !G_IS_VALUE(rhs)) {
-			/* $lhs is single, $rhs is multi.  Compare $lhs
-			 * with $rhs[0].  If they are found equal, sort
-			 * the multi-valued side downwards. */
-			cmp = compare_mvals(lhs, g_value_array_get_nth(rhs, i),
-				     key, funcomp) * dir;
-			return cmp != 0 ? cmp : -1*dir;
-		} else if (!G_IS_VALUE(lhs) &&  G_IS_VALUE(rhs)) {
-			/* Likewise, but this case $lhs is multi-valued. */
-			cmp = compare_mvals(g_value_array_get_nth(lhs, i), rhs,
-				     key, funcomp) * dir;
-			return cmp != 0 ? cmp : +1*dir;
-		} else {
-			guint o, nl, nr;
-
-			/*
-			 * Both $lhs and $rhs are multi-valued.
-			 * Compare $lhs[$i] with $rhs[$i] until
-			 * we find inequality or run out of values
-			 * on one of the sides.
-			 */
-			nl = ((GValueArray *)lhs)->n_values;
-			nr = ((GValueArray *)rhs)->n_values;
-			for (o = 0; o < nl && o < nr; o++) {
-				cmp=compare_mvals(g_value_array_get_nth(lhs,o),
-						  g_value_array_get_nth(rhs,o),
-					     key, funcomp) * dir;
-				if (cmp != 0)
-					return cmp;
-			}
-
-			/* All examined values seems equal.  Sort the one
-			 * with less keys upwards.  If both sides had the
-			 * same number of values, try with another $key. */
-			if	(nl < nr)
-				return -1*dir;
-			else if (nl > nr)
-				return +1*dir;
 		}
+
+		/* All examined values seems equal.  Sort the one
+		 * with less keys upwards.  If both sides had the
+		 * same number of values, try with another $key. */
+		if	(nl < nr)
+			return -1*dir;
+		else if (nl > nr)
+			return +1*dir;
 	}
 
 	/* Can't believe, $md1 and $md2 are equal wrt. to $terms. */

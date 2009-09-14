@@ -98,17 +98,12 @@ static void gval2bary(GByteArray *bary, GValue *value)
  */
 void mafw_metadata_val_freeze_bary(GByteArray *bary, gpointer val)
 {
-	if (G_IS_VALUE(val)) {
-		int2bary(bary, 1);
-		gval2bary(bary, val);
-	} else {
-		guint nvalues, i;
+	guint nvalues, i;
 
-		nvalues = ((GValueArray *)val)->n_values;
-		int2bary(bary, nvalues);
-		for (i = 0; i < nvalues; i++)
-			gval2bary(bary, g_value_array_get_nth(val, i));
-	}
+	nvalues = ((GValueArray *)val)->n_values;
+	int2bary(bary, nvalues);
+	for (i = 0; i < nvalues; i++)
+		gval2bary(bary, g_value_array_get_nth(val, i));
 }
 
 /* Encodes a mafw metadata hash table entry. */
@@ -246,19 +241,14 @@ gpointer mafw_metadata_val_thaw_bary(GByteArray *bary, gsize *i)
 	nvalues = bary2int(bary, i);
 	g_assert(nvalues > 0);
 
-	if (nvalues > 1) {
-		GValue value;
-		memset(&value, 0, sizeof(value));
-		val = g_value_array_new(nvalues);
-		do {
-			bary2gval(&value, bary, i);
-			g_value_array_append(val, &value);
-			g_value_unset(&value);
-		} while (--nvalues > 0);
-	} else {
-		val = g_new0(GValue, 1);
-		bary2gval(val, bary, i);
-	}
+	GValue value;
+	memset(&value, 0, sizeof(value));
+	val = g_value_array_new(nvalues);
+	do {
+		bary2gval(&value, bary, i);
+		g_value_array_append(val, &value);
+		g_value_unset(&value);
+	} while (--nvalues > 0);
 
 	return val;
 

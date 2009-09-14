@@ -65,11 +65,13 @@ do {							\
 static GValue *check_single(GHashTable *md, const gchar *key)
 {
 	GValue *value;
+	GValueArray *values;
 
+	values = g_hash_table_lookup(md, key);
 	value = mafw_metadata_first(md, key);
-	fail_unless(g_hash_table_lookup(md, key) == value);
-	fail_unless(mafw_metadata_nvalues(value) == 1);
-	fail_unless(G_IS_VALUE(value));
+	fail_unless(value ==
+		    g_value_array_get_nth(values, 0));
+
 	return value;
 }
 
@@ -80,8 +82,8 @@ static GValueArray *check_multi(GHashTable *md, const gchar *key,
 	GValueArray *values;
 
 	values = g_hash_table_lookup(md, key);
-	fail_unless(!G_IS_VALUE(values));
-	fail_unless(mafw_metadata_nvalues(values) == nexpected);
+	fail_unless(values->n_values == nexpected, "nvals: %d, exp: %d",
+				values->n_values, nexpected);
 	fail_unless(mafw_metadata_first(md, key) ==
 		    g_value_array_get_nth(values, 0));
 	return values;
@@ -140,12 +142,13 @@ static void check_strs(GHashTable *md, const gchar *key, guint nexpected, ...)
 	va_start(expected, nexpected);
 	for (i = 0; i < nexpected; i++) {
 		GValue *value;
+		const gchar *expstr = va_arg(expected, const gchar *);
 
 		value = g_value_array_get_nth(values, i);
 		fail_unless(G_IS_VALUE(value));
 		fail_unless(G_VALUE_HOLDS_STRING(value));
 		fail_unless(!strcmp(g_value_get_string(value),
-				    va_arg(expected, const gchar *)));
+				    expstr));
 	}
 	va_end(expected);
 }
@@ -206,6 +209,10 @@ START_TEST(test_metadata)
 	mafw_metadata_add_str(md, "FUD",      "uncertainty");
 	mafw_metadata_add_str(md, "FUD",      "doubt");
 	mafw_metadata_add_str(md, "miff",     "meff", "maff", "muff");
+	mafw_metadata_add_str(md, "miff",     "meff", "maff", "muff");
+	mafw_metadata_add_str(md, "miff",     "meff", "maff", "muff");
+	mafw_metadata_add_str(md, "miff",     "meff", "maff", "muff");
+	mafw_metadata_add_str(md, "miff",     "meff", "maff", "muff");
 
 	/* Strings in GValue:s {{{ */
 	g_value_init(&v1, G_TYPE_STRING);
@@ -249,17 +256,18 @@ START_TEST(test_metadata)
 	check_str(md,  "trash",       "metal");
 	check_str(md,  "terror",      "news");
 	check_strs(md, "FUD", 3,      "fear", "uncertainty", "doubt");
-	check_strs(md, "miff", 3,     "meff", "maff", "muff");
+	check_strs(md, "miff", 15,     "meff", "maff", "muff",
+					"meff", "maff", "muff",
+					"meff", "maff", "muff",
+					"meff", "maff", "muff",
+					"meff", "maff", "muff");
 
 	check_str(md, "durva",        ":)");
 	check_str(md, "kurva" ,       ":-)");
 	check_strs(md, "furja", 3,    ":--)", "8--)", "8--}");
 	check_strs(md, "pulyka", 3,   "8--}~", "8--X", "X--{");
 
-	/* See if mafw_metadata_nvalues() and mafw_metadata_first()
-	 * work as expected with non-existent keys. */
-	fail_unless(mafw_metadata_nvalues(
-		 g_hash_table_lookup(md, "ganxta"))  == 0);
+	fail_unless(g_hash_table_lookup(md, "ganxta")  == NULL);
 	fail_unless(mafw_metadata_first(md, "zolee") == NULL);
 
 	/*
@@ -686,9 +694,9 @@ int main(void)
 	Suite *suite;
 
 	suite = suite_create("metadata accessories");
-	checkmore_add_tcase(suite, "set and get metadata", test_metadata);
+if (1)	checkmore_add_tcase(suite, "set and get metadata", test_metadata);
 
-	tc = tcase_create("multivalued metadata");
+if (1){	tc = tcase_create("multivalued metadata");
 	tcase_add_test(tc,		test_multikey_int_int);
 	tcase_add_test(tc,		test_multikey_int_gvint);
 	checkmore_add_aborting_test(tc,	test_multikey_int_str);
@@ -708,11 +716,11 @@ int main(void)
 	checkmore_add_aborting_test(tc,	test_multikey_gvstr_gvint);
 	tcase_add_test(tc,		test_multikey_gvstr_str);
 	tcase_add_test(tc,		test_multikey_gvstr_gvstr);
-	suite_add_tcase(suite, tc);
+	suite_add_tcase(suite, tc);}
 
-	checkmore_add_tcase(suite, "getting relevant keys", test_relevant_keys);
-	checkmore_add_tcase(suite, "filter by metadata",   test_filter);
-	checkmore_add_tcase(suite, "sort by metadata",     test_compare);
+if (1)	checkmore_add_tcase(suite, "getting relevant keys", test_relevant_keys);
+if (1)	checkmore_add_tcase(suite, "filter by metadata",   test_filter);
+if (1)	checkmore_add_tcase(suite, "sort by metadata",     test_compare);
 
 	return checkmore_run(srunner_create(suite), FALSE);
 } /* }}} */
