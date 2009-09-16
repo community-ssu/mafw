@@ -4,48 +4,57 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.35-2, MAFW Sales RC
-Date       2009.08.21
+Version    0.2009.37-2, MAFW Sales RC
+Date       2009.09.11
 Maintainer veitikka6@gmail.com
            mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw              0.1.2009.35-2
-mafw-gst-renderer    0.1.2009.35-2
-mafw-iradio-source   0.1.2009.35-2
-mafw-shared          0.1.2009.35-2
-mafw-test-gui        0.1.2009.35-2
-mafw-tracker-source  0.1.2009.35-2
-mafw-upnp-source     0.1.2009.35-2
+libmafw              0.1.2009.37-2
+mafw-gst-renderer    0.1.2009.37-2
+mafw-iradio-source   0.1.2009.37-2
+mafw-shared          0.1.2009.37-2
+mafw-test-gui        0.1.2009.37-2
+mafw-tracker-source  0.1.2009.37-2
+mafw-upnp-source     0.1.2009.37-2
 
 
 Change logs: 
 
-libmafw (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:23:55 +0300
-mafw-gst-renderer (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:38:27 +0300
-mafw-iradio-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:40:42 +0300
-mafw-shared (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:42:42 +0300
-mafw-test-gui (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:43:26 +0300
-mafw-tracker-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:44:32 +0300
-mafw-upnp-source (0.1.2009.35-2) unstable; urgency=low
-  * First MAFW Sales RC.
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 21 Aug 2009 16:46:12 +0300
+libmafw (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-gst-renderer (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-iradio-source (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-shared (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-test-gui (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-tracker-source (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+  * Fixed crash when computing a playlist file
+    duration for the first time. Patch provided by Sandor Pinter.
+  * If track number is not known use title when sorting
+    album songs.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
+mafw-upnp-source (0.1.2009.37-2) unstable; urgency=low
+  * MAFW Sales RC8.
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
 
 
 BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 
-* Fixes: NB#117860 - Inability to handle multiple resource of UPnP items
+* Fixes: NB#137386 - [PR1.1 proposal] dbus wrapper crashes observed
+* Fixes: NB#135873 - [PR1.1 proposal] Volume muted under certain scenarios
+* Fixes: NB#137248 - [PR1.1 proposal] Media Player Crashed when saved playlist is deleted while its content is being added to Now playing list
+* Fixes: NB#135596 - [PR1.1 proposal] MTG crashes when opening out renderer metadata view and no renderer is selected
+* Fixes: NB#134715 - [PR1.1 proposal] mafw-upnp-source shouldn't make a coredump when dbus isn't available
+* Fixes: NB#135457 - Attached songs are not showing in alphabitical order in album,artist,playlist library view
