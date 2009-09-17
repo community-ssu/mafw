@@ -1,3 +1,12 @@
+mafw-gst-renderer (0.1.2009.38-1) unstable; urgency=low
+
+  * MAFW Sales RC11.
+  * Fixes: NB#138871 - mafw-gst-renderer subscribes to HAL D-Bus signals too broadly, thus wakes up unnecessarily
+  * Fixes: NB#121136 - [Power Management]Device never goto power saving mode when video playback is connected to TV out
+  * Check for changes only in device having the video-out property.
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 16 Sep 2009 12:14:07 +0300
+
 mafw-gst-renderer (0.1.2009.37-2) unstable; urgency=low
 
   * MAFW Sales RC8.

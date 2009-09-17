@@ -1,3 +1,11 @@
+mafw-upnp-source (0.1.2009.38-1) unstable; urgency=low
+
+  * MAFW Sales RC11.
+  * Fixes: NB#137980 - Media player don't show videos in one DLNA test case
+  * Do not filter out all the URIs
+
+ -- Juha Kellokoski <veitikka6@gmail.com>  Wed, 16 Sep 2009 12:14:07 +0300
+
 mafw-upnp-source (0.1.2009.37-2) unstable; urgency=low
 
   * MAFW Sales RC8.
