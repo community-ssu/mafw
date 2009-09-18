@@ -1,26 +1,8 @@
-libmafw (0.1.2009.39-1) unstable; urgency=low
-
-  * Version increased.
-
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
-
-libmafw (0.1.2009.37-2) unstable; urgency=low
-
-  * MAFW Sales RC8.
-  * Fixes: NB#137386 - [PR1.1 proposal] dbus wrapper crashes observed
-  * Fixes: NB#135873 - [PR1.1 proposal] Volume muted under certain scenarios
-  * Fixes: NB#137248 - [PR1.1 proposal] Media Player Crashed when saved playlist is deleted while its content is being added to Now playing list
-  * Fixes: NB#135596 - [PR1.1 proposal] MTG crashes when opening out renderer metadata view and no renderer is selected
-  * Fixes: NB#134715 - [PR1.1 proposal] mafw-upnp-source shouldn't make a coredump when dbus isn't available
-  * Fixes: NB#135457 - Attached songs are not showing in alphabitical order in album,artist,playlist library view
-
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 11 Sep 2009 14:00:00 +0300
-
 libmafw (0.1.2009.37-1) unstable; urgency=low
 
-  * MAFW Sales RC6.
+  * MAFW, pre-release 0.1.2009.37-1
 
- -- Juha Kellokoski <veitikka6@gmail.com>  Thu, 10 Sep 2009 12:30:00 +0300
+ -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 04 Sep 2009 12:00:00 +0300
 
 libmafw (0.1.2009.35-3) unstable; urgency=low
 
