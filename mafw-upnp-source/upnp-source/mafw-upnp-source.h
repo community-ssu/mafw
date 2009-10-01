@@ -29,6 +29,23 @@
 
 G_BEGIN_DECLS
 
+#define MAFW_UPNP_CONTROL_SOURCE(o)					\
+	(G_TYPE_CHECK_INSTANCE_CAST((o),				\
+				    mafw_upnp_control_source_get_type(), \
+				    MafwUpnpControlSource))
+
+typedef struct {
+	MafwSourceClass parent;
+} MafwUpnpControlSourceClass;
+
+typedef struct {
+	MafwSource parent;
+	gboolean activate;
+} MafwUpnpControlSource;
+
+GType mafw_upnp_control_source_get_type(void);
+GObject* mafw_upnp_control_source_new(void);
+
 #define MAFW_UPNP_SOURCE_NAME "upnp_source_name"
 #define MAFW_UPNP_SOURCE_UUID "upnp_source_uuid"
 
