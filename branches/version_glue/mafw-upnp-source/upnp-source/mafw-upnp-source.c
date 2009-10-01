@@ -34,7 +34,6 @@
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #endif /* MAEMO */
-
 #include <libmafw/mafw.h>
 #include <libgupnp/gupnp.h>
 #include <libgupnp-av/gupnp-av.h>
@@ -45,6 +44,87 @@
 #include "mafw-upnp-source-util.h"
 
 #define MAFW_UPNP_SOURCE_PLUGIN_NAME "MAFW-UPnP-Source"
+
+static void mafw_upnp_source_plugin_gupnp_down(void);
+static void mafw_upnp_source_plugin_gupnp_up(void);
+static gboolean network_up;
+
+G_DEFINE_TYPE(MafwUpnpControlSource, mafw_upnp_control_source, MAFW_TYPE_SOURCE);
+
+#define ACTIVATE_PROP_NAME "activate"
+#define SHUTDOWN_TIMEOUT	60
+
+static guint shutdown_timeout_id;
+
+static gboolean _shutdown_gssdp(MafwUpnpControlSource *controlsrc)
+{
+	mafw_upnp_source_plugin_gupnp_down();
+	shutdown_timeout_id = 0;
+	return FALSE;
+}
+
+static void mafw_upnp_control_source_set_property(MafwExtension *self,
+					 const gchar *key,
+					 const GValue *value)
+{
+	MafwUpnpControlSource *controlsrc = MAFW_UPNP_CONTROL_SOURCE(self);
+
+	g_return_if_fail(key != NULL);
+
+	if (!strcmp(key, ACTIVATE_PROP_NAME)) {
+		gboolean activate = g_value_get_boolean(value);
+		
+		if (activate == controlsrc->activate)
+			return;
+
+		if (activate)
+		{
+			if (shutdown_timeout_id)
+			{
+				g_source_remove(shutdown_timeout_id);
+				shutdown_timeout_id = 0;
+			}
+			else
+			{
+				if (network_up)
+					mafw_upnp_source_plugin_gupnp_up();
+			}
+		}
+		else
+		{
+			shutdown_timeout_id = g_timeout_add(SHUTDOWN_TIMEOUT,
+							(GSourceFunc)_shutdown_gssdp,
+							self);
+		}
+		
+		controlsrc->activate = activate;
+		mafw_extension_emit_property_changed(self, ACTIVATE_PROP_NAME,
+							value);
+	}
+}
+
+static void mafw_upnp_control_source_class_init(MafwUpnpControlSourceClass *klass)
+{
+	MAFW_EXTENSION_CLASS(klass)->set_extension_property =
+		(gpointer) mafw_upnp_control_source_set_property;
+}
+
+static void mafw_upnp_control_source_init(MafwUpnpControlSource *source)
+{
+	mafw_extension_add_property(MAFW_EXTENSION(source), ACTIVATE_PROP_NAME,
+					G_TYPE_BOOLEAN);
+}
+
+GObject* mafw_upnp_control_source_new()
+{
+	GObject* object;
+	object = g_object_new(mafw_upnp_control_source_get_type(),
+			      "plugin", MAFW_UPNP_SOURCE_PLUGIN_NAME,
+			      "uuid", "mafwupnpcontrolsource",
+			      "name", "MAFW-UPnP-Control-Source",
+			      NULL);
+	return object;
+}
 
 /** Maximum number of items requested at a time */
 #define DEFAULT_REQUESTED_COUNT 500
@@ -70,6 +150,7 @@
 typedef struct _BrowseArgs BrowseArgs;
 
 static GUPnPDIDLLiteParser* parser;
+
 /*----------------------------------------------------------------------------
   Static prototypes
   ----------------------------------------------------------------------------*/
@@ -181,7 +262,7 @@ typedef struct _MafwUPnPSourcePlugin {
 
 /** THE mafw plugin */
 static MafwUPnPSourcePlugin* _plugin = NULL;
-
+static MafwSource *control_src;
 /**
  * mafw_upnp_source_plugin_gupnp_up:
  *
@@ -263,9 +344,10 @@ static void mafw_upnp_source_plugin_conic_event(ConIcConnection* connection,
 			case CON_IC_STATUS_CONNECTED:
 				/* Create GUPnP stuff only for WLAN connections. This prevents
 		   		UPnP traffic in a GSM network. */
-				
+				network_up = TRUE;
 				g_debug("WLAN connection is up.");
-				mafw_upnp_source_plugin_gupnp_up();
+				if (MAFW_UPNP_CONTROL_SOURCE(control_src)->activate)
+					mafw_upnp_source_plugin_gupnp_up();
 				break;
 
 			case CON_IC_STATUS_DISCONNECTED:
@@ -273,6 +355,7 @@ static void mafw_upnp_source_plugin_conic_event(ConIcConnection* connection,
 				   it shouldn't be necessary to check the bearer type here.
 				   If a GSM network was up, this does nothing. Otherwise all
 				   GUPnP stuff is destroyed as it should be. */
+				network_up = FALSE;
 				mafw_upnp_source_plugin_gupnp_down();
 				break;
 	
@@ -310,11 +393,15 @@ void mafw_upnp_source_plugin_initialize(MafwRegistry* registry)
 	if (g_thread_supported() == FALSE)
 		g_thread_init(NULL);
 
+	/* Creating the control source */
+	control_src = MAFW_SOURCE(mafw_upnp_control_source_new());
+
 	/* Reset next browse id */
 	_plugin->next_browse_id = 0;
 
 #ifdef HAVE_CONIC /* MAEMO */
-
+	
+	mafw_registry_add_extension(registry, MAFW_EXTENSION(control_src));
 	/* Initialize the system bus so libconic can receive ICD messages. */
 	_plugin->dbus_system = dbus_bus_get(DBUS_BUS_SYSTEM, NULL);
 	dbus_connection_setup_with_g_main(_plugin->dbus_system, NULL);
@@ -331,6 +418,8 @@ void mafw_upnp_source_plugin_initialize(MafwRegistry* registry)
 	g_object_set(_plugin->conic, "automatic-connection-events", TRUE, NULL);
 
 	g_debug("Waiting for ConIC to tell, whether network is up.");
+	
+	
 
 #else
 
