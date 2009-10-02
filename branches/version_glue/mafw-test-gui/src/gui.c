@@ -749,13 +749,13 @@ on_show_playing_order(GtkMenuItem* item, gpointer user_data)
 static void
 on_activate(GtkMenuItem* item, gpointer user_data)
 {
-	activate_all();
+	activate_all(TRUE);
 }
 
 static void
 on_deactivate(GtkMenuItem* item, gpointer user_data)
 {
-	deactivate_all();
+	activate_all(FALSE);
 }
 
 static void

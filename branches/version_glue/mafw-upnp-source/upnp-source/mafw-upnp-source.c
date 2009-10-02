@@ -118,7 +118,7 @@ GObject* mafw_upnp_control_source_new()
 	GObject* object;
 	object = g_object_new(mafw_upnp_control_source_get_type(),
 			      "plugin", MAFW_UPNP_SOURCE_PLUGIN_NAME,
-			      "uuid", "mafwupnpcontrolsource",
+			      "uuid", "upnpcontrolsource",
 			      "name", "MAFW-UPnP-Control-Source",
 			      NULL);
 	return object;

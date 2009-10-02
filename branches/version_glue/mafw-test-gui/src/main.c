@@ -42,30 +42,17 @@
 static MafwRegistry *registry = NULL;
 
 
-void activate_all(void)
+void activate_all(gboolean make_active)
 {
 	GList *sources = mafw_registry_get_sources(registry);
 
 	while(sources)
 	{
 		mafw_extension_set_property_boolean(MAFW_EXTENSION(sources->data),
-						"activate", TRUE);
+						MAFW_PROPERTY_EXTENSION_ACTIVATE, make_active);
 		sources = g_list_next(sources);
 	}
 }
-
-void deactivate_all(void)
-{
-	GList *sources = mafw_registry_get_sources(registry);
-
-	while(sources)
-	{
-		mafw_extension_set_property_boolean(MAFW_EXTENSION(sources->data),
-						"activate", FALSE);
-		sources = g_list_next(sources);
-	}
-}
-
 
 void mtg_print_signal_gen (const gchar* origin, const gchar* signal,
 			   const gchar* format, ...)
