@@ -293,5 +293,7 @@ void wrapper_init(void)
 	g_signal_connect(mafw_registry_get_instance(), "renderer-removed",
 			 G_CALLBACK(registry_action),
 			 GUINT_TO_POINTER(EXTENSION_REMOVED));
+	
+	extension_init(Session_bus);
 }
 /* vi: set noexpandtab ts=8 sw=8 cino=t0,(0: */
