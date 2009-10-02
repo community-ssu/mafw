@@ -51,7 +51,6 @@ static gboolean network_up;
 
 G_DEFINE_TYPE(MafwUpnpControlSource, mafw_upnp_control_source, MAFW_TYPE_SOURCE);
 
-#define ACTIVATE_PROP_NAME "activate"
 #define SHUTDOWN_TIMEOUT	3
 
 static guint shutdown_timeout_id;
@@ -71,7 +70,7 @@ static void mafw_upnp_control_source_set_property(MafwExtension *self,
 
 	g_return_if_fail(key != NULL);
 
-	if (!strcmp(key, ACTIVATE_PROP_NAME)) {
+	if (!strcmp(key, MAFW_PROPERTY_EXTENSION_ACTIVATE)) {
 		gboolean activate = g_value_get_boolean(value);
 		
 		if (activate == controlsrc->activate)
@@ -98,7 +97,7 @@ static void mafw_upnp_control_source_set_property(MafwExtension *self,
 		}
 		
 		controlsrc->activate = activate;
-		mafw_extension_emit_property_changed(self, ACTIVATE_PROP_NAME,
+		mafw_extension_emit_property_changed(self, MAFW_PROPERTY_EXTENSION_ACTIVATE,
 							value);
 	}
 }
@@ -111,8 +110,7 @@ static void mafw_upnp_control_source_class_init(MafwUpnpControlSourceClass *klas
 
 static void mafw_upnp_control_source_init(MafwUpnpControlSource *source)
 {
-	mafw_extension_add_property(MAFW_EXTENSION(source), ACTIVATE_PROP_NAME,
-					G_TYPE_BOOLEAN);
+	MAFW_EXTENSION_SUPPORTS_ACTIVATE(MAFW_EXTENSION(source));
 }
 
 GObject* mafw_upnp_control_source_new()
