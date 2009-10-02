@@ -34,6 +34,187 @@
 #define MAFW_DBUS_PATH MAFW_OBJECT
 #define MAFW_DBUS_INTERFACE MAFW_EXTENSION_INTERFACE
 
+static GHashTable *source_activators;
+
+#define SOURCE_REFDATA_NAME "mafw-refcount"
+
+static void _increase_mafwcount(gpointer object)
+{
+	gint count = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(object),
+					SOURCE_REFDATA_NAME));
+
+	count++;
+	g_object_set_data(G_OBJECT(object), SOURCE_REFDATA_NAME,
+				GINT_TO_POINTER(count));
+}
+
+static void _decrease_mafwcount(gpointer object)
+{
+	gint count = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(object),
+					SOURCE_REFDATA_NAME));
+
+	if (count)
+	{
+		count--;
+		g_object_set_data(G_OBJECT(object), SOURCE_REFDATA_NAME,
+				GINT_TO_POINTER(count));
+	
+		if (count == 0)
+		{
+			mafw_extension_set_property_boolean(MAFW_EXTENSION(object),
+						"activate", FALSE);
+			
+		}
+		
+	}
+	
+}
+
+static gboolean _unregister_client(DBusConnection *conn, gpointer object,
+					const gchar *name);
+
+#define MATCH_STR "type='signal',interface='org.freedesktop.DBus'," \
+			"member='NameOwnerChanged',arg0='%s',arg2=''"
+
+static DBusHandlerResult
+_handle_client_exits(DBusConnection *conn,
+                                     DBusMessage *msg,
+                                     gpointer data)
+{
+	gchar *name, *oldname, *newname;
+
+	if (!source_activators || g_hash_table_size(source_activators) == 0)
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	if (!dbus_message_is_signal(msg, DBUS_INTERFACE_DBUS,
+				   "NameOwnerChanged"))
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	
+
+	name = oldname = newname = NULL;
+	mafw_dbus_parse(msg,
+			 DBUS_TYPE_STRING, &name,
+			 DBUS_TYPE_STRING, &oldname,
+			 DBUS_TYPE_STRING, &newname);
+	if (*newname && *oldname)
+	{
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	}
+
+	if (*newname) {
+		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+	} else if (*oldname) {
+		GList *object_list = g_hash_table_lookup(source_activators,
+								name);		
+		while(object_list)
+		{
+			gpointer object = object_list->data;
+			if (_unregister_client(conn, object, name))
+			{
+				_decrease_mafwcount(object);
+			}
+			object_list = g_hash_table_lookup(source_activators,
+								name);
+		}
+	}
+	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+}
+
+
+static void _register_watch(DBusConnection *connection, const gchar *name)
+{
+	gchar *match_str = g_strdup_printf(MATCH_STR, name);
+	DBusError err;
+
+	dbus_error_init(&err);
+		
+	dbus_bus_add_match(connection, match_str, &err);
+	if (dbus_error_is_set(&err))
+	{
+               	g_critical("Unable to add match: %s", match_str);
+		dbus_error_free(&err);
+	}
+	g_free(match_str);
+}
+
+static void _deregister_watch(DBusConnection *conn, const gchar *name)
+{
+	gchar *matchstr = NULL;
+
+	matchstr = g_strdup_printf(MATCH_STR, name);
+	dbus_bus_remove_match(conn, matchstr, NULL);
+}
+
+static gboolean _register_client(DBusConnection *conn, gpointer object,
+					const gchar *name)
+{
+	GList *object_list;
+
+	if (!source_activators)
+	{
+		source_activators = g_hash_table_new_full(g_str_hash,
+						g_str_equal,
+						g_free,
+						NULL);
+	}
+	object_list = g_hash_table_lookup(source_activators, name);
+	
+	if (!object_list)
+	{
+		_register_watch(conn, name);
+	}
+	else
+	{
+		if (g_list_find(object_list, object))
+		{// this UI already requested activity
+			return FALSE;
+		}
+	}
+	
+	object_list = g_list_prepend(object_list, object);
+	g_hash_table_insert(source_activators, g_strdup(name), object_list);
+
+	return TRUE;
+}
+
+static gboolean _unregister_client(DBusConnection *conn, gpointer object,
+					const gchar *name)
+{
+	GList *object_list;
+	
+	if (!source_activators || g_hash_table_size(source_activators) == 0)
+	{
+		return FALSE;
+	}
+	object_list = g_hash_table_lookup(source_activators, name);
+
+	if (!object_list)
+	{
+		return FALSE;
+	}
+	else
+	{
+		if (!g_list_find(object_list, object))
+		{// this UI never requested activity
+			return FALSE;
+		}
+		
+		object_list = g_list_remove(object_list, object);
+		
+		if (!object_list)
+		{// There isn't any source, what should be active because of this UI
+			g_hash_table_remove(source_activators, name);
+			
+			_deregister_watch(conn, name);
+		}
+		else
+		{
+			g_hash_table_insert(source_activators, g_strdup(name),
+						object_list);
+		}
+	}
+	return TRUE;
+}
+
 static DBusHandlerResult handle_set_property(DBusConnection *conn,
 					     DBusMessage *msg,
 					     ExportedComponent *ecomp)
@@ -43,7 +224,34 @@ static DBusHandlerResult handle_set_property(DBusConnection *conn,
 
 	mafw_dbus_parse(msg, DBUS_TYPE_STRING, &prop,
 			MAFW_DBUS_TYPE_GVALUE, &val);
-	mafw_extension_set_property(MAFW_EXTENSION(ecomp->comp), prop, &val);
+	
+	if (G_VALUE_TYPE(&val) == G_TYPE_BOOLEAN && !strcmp(prop, "activate"))
+	{/* Activate handling */
+		if (g_value_get_boolean(&val))
+		{/* activating */
+			if (mafw_extension_set_property(MAFW_EXTENSION(ecomp->comp), prop, &val))
+			{
+				const gchar *client_id = dbus_message_get_sender(msg);
+				
+				if (_register_client(conn, ecomp->comp, client_id))
+					_increase_mafwcount(ecomp->comp);
+				
+			}
+		}
+		else
+		{/* deactivating */
+			const gchar *client_id = dbus_message_get_sender(msg);			
+			if (_unregister_client(conn, ecomp->comp, client_id))
+			{
+				_decrease_mafwcount(ecomp->comp);
+			}
+		}
+	}
+	else
+	{
+		mafw_extension_set_property(MAFW_EXTENSION(ecomp->comp), prop, &val);
+	}
+
 	g_value_unset(&val);
 	return DBUS_HANDLER_RESULT_HANDLED;
 }
@@ -201,5 +409,13 @@ void connect_to_extension_signals(gpointer ecomp)
 	connect_signal(ecomp, "notify::name", name_changed);
 	connect_signal(ecomp, "error", error);
 	connect_signal(ecomp, "property-changed", prop_changed);
+}
+
+void extension_init(DBusConnection *connection)
+{
+	if (!dbus_connection_add_filter(connection,
+                                        _handle_client_exits,
+                                        NULL, NULL))
+		g_assert_not_reached();
 }
 /* vi: set noexpandtab ts=8 sw=8 cino=t0,(0: */
