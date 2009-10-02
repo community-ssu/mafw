@@ -52,7 +52,7 @@ static gboolean network_up;
 G_DEFINE_TYPE(MafwUpnpControlSource, mafw_upnp_control_source, MAFW_TYPE_SOURCE);
 
 #define ACTIVATE_PROP_NAME "activate"
-#define SHUTDOWN_TIMEOUT	60
+#define SHUTDOWN_TIMEOUT	3
 
 static guint shutdown_timeout_id;
 
@@ -92,7 +92,7 @@ static void mafw_upnp_control_source_set_property(MafwExtension *self,
 		}
 		else
 		{
-			shutdown_timeout_id = g_timeout_add(SHUTDOWN_TIMEOUT,
+			shutdown_timeout_id = g_timeout_add_seconds(SHUTDOWN_TIMEOUT,
 							(GSourceFunc)_shutdown_gssdp,
 							self);
 		}
