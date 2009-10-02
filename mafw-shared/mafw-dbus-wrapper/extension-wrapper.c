@@ -62,7 +62,8 @@ static void _decrease_mafwcount(gpointer object)
 		if (count == 0)
 		{
 			mafw_extension_set_property_boolean(MAFW_EXTENSION(object),
-						"activate", FALSE);
+						MAFW_PROPERTY_EXTENSION_ACTIVATE,
+						FALSE);
 			
 		}
 		
@@ -225,7 +226,8 @@ static DBusHandlerResult handle_set_property(DBusConnection *conn,
 	mafw_dbus_parse(msg, DBUS_TYPE_STRING, &prop,
 			MAFW_DBUS_TYPE_GVALUE, &val);
 	
-	if (G_VALUE_TYPE(&val) == G_TYPE_BOOLEAN && !strcmp(prop, "activate"))
+	if (G_VALUE_TYPE(&val) == G_TYPE_BOOLEAN &&
+				!strcmp(prop, MAFW_PROPERTY_EXTENSION_ACTIVATE))
 	{/* Activate handling */
 		if (g_value_get_boolean(&val))
 		{/* activating */
