@@ -1,3 +1,11 @@
+libmafw (0.1.2009.40-1) unstable; urgency=low
+
+  * Version and changelog updated for pre-release 0.2009.40-1
+  * PR_1_1_baseline copied from trunk.
+  * Fixes: NB#139371 - User-defined (imported) playlists not sorted by the alphabet
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Sun, 04 Oct 2009 15:44:00 +0300
+
 libmafw (0.1.2009.39-1) unstable; urgency=low
 
   * MAFW, pre-release 0.1.2009.39-1

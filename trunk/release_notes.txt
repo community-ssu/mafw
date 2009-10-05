@@ -4,75 +4,29 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.39-1
-Date       2009.09.18
-Maintainer veitikka6@gmail.com
-           mika.tapojarvi@sse.fi
+Version    0.2009.40-1
+Date       2009.10.04
+Maintainer mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
 
-libmafw              0.1.2009.39-1
-mafw-gst-renderer    0.1.2009.39-1
-mafw-iradio-source   0.1.2009.39-1
-mafw-shared          0.1.2009.39-1
-mafw-test-gui        0.1.2009.39-1
-mafw-tracker-source  0.1.2009.39-1
-mafw-upnp-source     0.1.2009.39-1
+libmafw              0.1.2009.40-1
+mafw-gst-renderer    0.1.2009.40-1
+mafw-iradio-source   0.1.2009.40-1
+mafw-shared          0.1.2009.40-1
+mafw-test-gui        0.1.2009.40-1
+mafw-tracker-source  0.1.2009.40-1
+mafw-upnp-source     0.1.2009.40-1
 
 
 Change logs: 
 
-libmafw (0.1.2009.39-1) unstable; urgency=low
-  * MAFW, pre-release 0.1.2009.39-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-gst-renderer (0.1.2009.39-1) unstable; urgency=low
-  * MAFW gst renderer, pre-release 0.2009.39-1
-  * Check for changes only in device having the video-out property.
-  * Disabled test of pulse reconnection as it is not needed with fake volume
-    manager to fix volume test
-  * Changed default fake volume initialization to 0.485 instead of 1 to fix 
-    volume tests
-  * Added return of initialized fake volume manager in an idle call to fix
-    volume tests
-  * Added function to reset volume to pulse pipeline in case pulse volume
-    management is disabled
-  * Added fake volume manager and disabled normal handling with pulse when
-    pulse volume is disabled in compilation.
-  * We avoid setting audiosink to the pipeline and native flags when pulse
-    volume is disabled.
-  * Moved checking for pulse dependency to its conditional compilation
-  * Added support for conditional compilation regarding to volume in
-    renderer
-  * Adds a macro to round values when converting from nanoseconds to seconds.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-iradio-source (0.1.2009.39-1) unstable; urgency=low
-  * MAFW iradio source, pre-release 0.2009.39-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-shared (0.1.2009.39-1) unstable; urgency=low
-  * MAFW Shared, pre-release 0.2009.39-1
-  * Fixed small memory leaks.
-    * Patch by Juan Suárez Romero.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-test-gui (0.1.2009.39-1) unstable; urgency=low
-  * MAFW Test GUI, pre-release 0.2009.39-1
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-tracker-source (0.1.2009.39-1) unstable; urgency=low
-  * MAFW tracker source, pre-release 0.2009.39-1
-  * Emitted the metadata results when an error happens.
-  * Fixed crash when computing a playlist file
-    duration for the first time. Patch provided by Sandor Pinter.
-  * If track number is not known use title when sorting album songs.
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-mafw-upnp-source (0.1.2009.39-1) unstable; urgency=low
-  * MAFW uPnP source, pre-release 0.2009.39-1
-  * Do not filter out all the URIs
-  * Fixing failing tests
- -- Juha Kellokoski <veitikka6@gmail.com>  Fri, 18 Sep 2009 14:21:32 +0300
-
+* This is a bug fix tag and a baseline for next production release.
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 
+From changelog (in two separate entries): 13
+* Fixes: NB#139371 - User-defined (imported) playlists not sorted by the alphabet
 * Fixes: NB#137530 - Adding several metadata values with the same key, ends into a crash 
 * Fixes: NB#128909 - Redundant error message displayed at the end of playback
 * Fixes: NB#137371 - MAFW crashed when trying to access Automatic playlists
