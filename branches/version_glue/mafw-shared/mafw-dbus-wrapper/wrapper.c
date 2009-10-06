@@ -243,6 +243,7 @@ static void wrapper_unexport(gpointer comp)
 	g_free(ecomp->uuid);
 	g_free(ecomp);
 	Exports = g_list_delete_link(Exports, node);
+	extension_deregister(comp);
 }
 
 /* Common handler for all {source,renderer}-{added,removed} signals. */

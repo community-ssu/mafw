@@ -35,6 +35,7 @@
 #define MAFW_DBUS_INTERFACE MAFW_EXTENSION_INTERFACE
 
 static GHashTable *source_activators;
+static DBusConnection *conn;
 
 #define SOURCE_REFDATA_NAME "mafw-refcount"
 
@@ -71,14 +72,13 @@ static void _decrease_mafwcount(gpointer object)
 	
 }
 
-static gboolean _unregister_client(DBusConnection *conn, gpointer object,
-					const gchar *name);
+static void _unregister_client(gpointer object, const gchar *name);
 
 #define MATCH_STR "type='signal',interface='org.freedesktop.DBus'," \
 			"member='NameOwnerChanged',arg0='%s',arg2=''"
 
 static DBusHandlerResult
-_handle_client_exits(DBusConnection *conn,
+_handle_client_exits(DBusConnection *connection,
                                      DBusMessage *msg,
                                      gpointer data)
 {
@@ -105,14 +105,11 @@ _handle_client_exits(DBusConnection *conn,
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	} else if (*oldname) {
 		GList *object_list = g_hash_table_lookup(source_activators,
-								name);		
+								name);
 		while(object_list)
 		{
 			gpointer object = object_list->data;
-			if (_unregister_client(conn, object, name))
-			{
-				_decrease_mafwcount(object);
-			}
+			_unregister_client(object, name);
 			object_list = g_hash_table_lookup(source_activators,
 								name);
 		}
@@ -120,15 +117,17 @@ _handle_client_exits(DBusConnection *conn,
 	return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 }
 
-
-static void _register_watch(DBusConnection *connection, const gchar *name)
+/**
+ * Registers a watch for a client, to get the crash/exit signals
+ */
+static void _register_watch(const gchar *name)
 {
 	gchar *match_str = g_strdup_printf(MATCH_STR, name);
 	DBusError err;
 
 	dbus_error_init(&err);
-		
-	dbus_bus_add_match(connection, match_str, &err);
+
+	dbus_bus_add_match(conn, match_str, &err);
 	if (dbus_error_is_set(&err))
 	{
                	g_critical("Unable to add match: %s", match_str);
@@ -137,16 +136,22 @@ static void _register_watch(DBusConnection *connection, const gchar *name)
 	g_free(match_str);
 }
 
-static void _deregister_watch(DBusConnection *conn, const gchar *name)
+/**
+ * Deregisters a watch on dbus, for the given name
+ */
+static void _deregister_watch(const gchar *name)
 {
 	gchar *matchstr = NULL;
-
 	matchstr = g_strdup_printf(MATCH_STR, name);
 	dbus_bus_remove_match(conn, matchstr, NULL);
+	g_free(matchstr);
 }
 
-static gboolean _register_client(DBusConnection *conn, gpointer object,
-					const gchar *name)
+/**
+ * Registers a client. Registers a watch if needed, and stores the request for
+ * the given object if needed.
+ */
+static gboolean _register_client(gpointer object, const gchar *name)
 {
 	GList *object_list;
 
@@ -161,7 +166,7 @@ static gboolean _register_client(DBusConnection *conn, gpointer object,
 	
 	if (!object_list)
 	{
-		_register_watch(conn, name);
+		_register_watch(name);
 	}
 	else
 	{
@@ -177,43 +182,53 @@ static gboolean _register_client(DBusConnection *conn, gpointer object,
 	return TRUE;
 }
 
-static gboolean _unregister_client(DBusConnection *conn, gpointer object,
-					const gchar *name)
+/**
+ * Removes an object from the given list. If needed, deregisters the watch for
+ * the client. It removes or updates only the new list for the client
+ */
+static void _remove_object_from_list(GList *object_list,
+					gpointer object, const gchar *name)
+{
+	object_list = g_list_remove(object_list, object);
+	if (!object_list)
+	{// There isn't any source, what should be active because of this UI
+		_deregister_watch(name);
+		g_hash_table_remove(source_activators, name);
+	}
+	else
+	{
+		g_hash_table_insert(source_activators, g_strdup(name),
+					object_list);
+	}
+}
+
+/**
+ * Unregisters a client for the object.
+ */ 
+static void _unregister_client(gpointer object, const gchar *name)
 {
 	GList *object_list;
-	
+
 	if (!source_activators || g_hash_table_size(source_activators) == 0)
 	{
-		return FALSE;
+		return;
 	}
 	object_list = g_hash_table_lookup(source_activators, name);
 
 	if (!object_list)
 	{
-		return FALSE;
+		return;
 	}
 	else
 	{
 		if (!g_list_find(object_list, object))
 		{// this UI never requested activity
-			return FALSE;
+			return;
 		}
 		
-		object_list = g_list_remove(object_list, object);
-		
-		if (!object_list)
-		{// There isn't any source, what should be active because of this UI
-			g_hash_table_remove(source_activators, name);
-			
-			_deregister_watch(conn, name);
-		}
-		else
-		{
-			g_hash_table_insert(source_activators, g_strdup(name),
-						object_list);
-		}
+		_remove_object_from_list(object_list, object, name);
 	}
-	return TRUE;
+	_decrease_mafwcount(object);
 }
 
 static DBusHandlerResult handle_set_property(DBusConnection *conn,
@@ -234,19 +249,18 @@ static DBusHandlerResult handle_set_property(DBusConnection *conn,
 			if (mafw_extension_set_property(MAFW_EXTENSION(ecomp->comp), prop, &val))
 			{
 				const gchar *client_id = dbus_message_get_sender(msg);
-				
-				if (_register_client(conn, ecomp->comp, client_id))
+
+				if (_register_client(ecomp->comp, client_id))
+				{
 					_increase_mafwcount(ecomp->comp);
+				}
 				
 			}
 		}
 		else
 		{/* deactivating */
-			const gchar *client_id = dbus_message_get_sender(msg);			
-			if (_unregister_client(conn, ecomp->comp, client_id))
-			{
-				_decrease_mafwcount(ecomp->comp);
-			}
+			const gchar *client_id = dbus_message_get_sender(msg);
+			_unregister_client(ecomp->comp, client_id);
 		}
 	}
 	else
@@ -256,6 +270,53 @@ static DBusHandlerResult handle_set_property(DBusConnection *conn,
 
 	g_value_unset(&val);
 	return DBUS_HANDLER_RESULT_HANDLED;
+}
+
+struct _oblist_finder_data {
+	gpointer extension;
+	GPtrArray *ui_ids;
+};
+
+/**
+ * Collects the UIs, which has requested activity from the given extension
+ */
+static void _find_ext(const gchar *ui_id, GList *ext_list,
+			struct _oblist_finder_data *obl_finder_data)
+{
+	if (g_list_find(ext_list, obl_finder_data->extension))
+	{
+		g_ptr_array_add(obl_finder_data->ui_ids, (gpointer)ui_id);
+		
+	}
+}
+
+/**
+ * Removes the given extension, reffed by the given UI
+ */
+static void _ext_remover(const gchar *ui_id, gpointer comp)
+{
+	GList *ext_list = g_hash_table_lookup(source_activators, ui_id);
+	_remove_object_from_list(ext_list, comp, ui_id);
+}
+
+/**
+ * Called if the extension has removed from the registry
+ */
+void extension_deregister(gpointer comp)
+{
+	struct _oblist_finder_data obl_finder_data = {0};
+	
+	obl_finder_data.extension = comp;
+	obl_finder_data.ui_ids = g_ptr_array_new();
+
+	if (source_activators)
+	{
+		g_hash_table_foreach(source_activators, (GHFunc)_find_ext,
+						&obl_finder_data);
+		g_ptr_array_foreach(obl_finder_data.ui_ids, (GFunc)_ext_remover,
+					comp);
+	}
+	g_ptr_array_free(obl_finder_data.ui_ids, TRUE);
 }
 
 static void get_property_reply(MafwExtension *self, const gchar *prop,
@@ -415,6 +476,7 @@ void connect_to_extension_signals(gpointer ecomp)
 
 void extension_init(DBusConnection *connection)
 {
+	conn = connection;
 	if (!dbus_connection_add_filter(connection,
                                         _handle_client_exits,
                                         NULL, NULL))

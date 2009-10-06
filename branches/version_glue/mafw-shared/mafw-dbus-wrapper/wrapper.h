@@ -50,6 +50,7 @@ typedef struct {
 /* wrapper.c */
 extern void wrapper_init(void);
 extern void extension_init(DBusConnection *conn);
+extern void extension_deregister(gpointer comp);
 extern void connect_signal(ExportedComponent *ecomp, const gchar *signal,
 			   gpointer handler);
 
