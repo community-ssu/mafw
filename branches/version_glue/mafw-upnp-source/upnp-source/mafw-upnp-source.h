@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+/* Control source */
+#define MAFW_UPNP_CONTROL_SOURCE_UUID "upnpcontrolsource"
+
 #define MAFW_UPNP_CONTROL_SOURCE(o)					\
 	(G_TYPE_CHECK_INSTANCE_CAST((o),				\
 				    mafw_upnp_control_source_get_type(), \
