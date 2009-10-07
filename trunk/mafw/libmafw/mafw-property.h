@@ -155,6 +155,22 @@ G_BEGIN_DECLS
 				    MAFW_PROPERTY_RENDERER_TRANSPORT_ACTIONS,	\
 				    G_TYPE_STRING)
 
+/**
+ * MAFW_PROPERTY_EXTENSION_ACTIVATE:
+ *
+ * Write-only property to indicate to the extension, that it should turn off
+ * it's activity to keep resources, or the activity from the source is needed.
+ * For example by default upnp-source-plugin does not monitors the upnp-servers'
+ * discovery signals, but this can be enabled through the upnp-control-source
+ * extension.
+ * Type: #G_TYPE_BOOLEAN
+ */
+#define MAFW_PROPERTY_EXTENSION_ACTIVATE "activate"
+#define MAFW_EXTENSION_SUPPORTS_ACTIVATE(self)			\
+	mafw_extension_add_property(MAFW_EXTENSION(self),		\
+				    MAFW_PROPERTY_EXTENSION_ACTIVATE,	\
+				    G_TYPE_BOOLEAN)
+
 G_END_DECLS
 
 #endif
