@@ -571,6 +571,22 @@ const gchar **mafw_metadata_relevant_keys(const gchar *const *keys,
 	}
 }
 
+static gint _compare_utf_str(const gchar *lval, const gchar *rval)
+{
+	gchar *lvalk, *rvalk;
+	gint compval;
+
+	lvalk = g_utf8_collate_key(lval, -1);
+	rvalk = g_utf8_collate_key(rval, -1);
+	
+	compval = strcasecmp(lvalk, rvalk);
+	
+	g_free(lvalk);
+	g_free(rvalk);
+	
+	return compval;
+}
+
 /**
  * mafw_metadata_ordered:
  * @rel: filter type
@@ -606,7 +622,7 @@ gboolean mafw_metadata_ordered(MafwFilterType rel, const gchar *key,
 		/* TODO We're totally UTF-8-unaware. */
 		switch (rel) {
 		case mafw_f_eq:
-			return !strcasecmp(lhs, rhs);
+			return !_compare_utf_str(lhs, rhs);
 		case mafw_f_approx:
 			/*
 			 * Wwwwarninghhh, FNM_CASEFOLD is a glibc extension!
@@ -618,9 +634,9 @@ gboolean mafw_metadata_ordered(MafwFilterType rel, const gchar *key,
 			 */
 			return fnmatch(rhs, lhs, FNM_CASEFOLD) == 0;
 		case mafw_f_lt:
-			return strcasecmp(lhs, rhs) < 0;
+			return _compare_utf_str(lhs, rhs) < 0;
 		case mafw_f_gt:
-			return strcasecmp(lhs, rhs) > 0;
+			return _compare_utf_str(lhs, rhs) > 0;
 		default:
 			g_assert_not_reached();
 		}
