@@ -26,7 +26,6 @@ libmafw (0.1.2009.39-1) unstable; urgency=low
   * Fixes: NB#134807 - <MemLeak> mafw-shared-0.1.2009.33/libmafw-shared/ mafw-proxy-renderer.c
   * Fixes: NB#134817 - <MemLeak> mafw-tracker-source-0.1.2009.34/libmafw-tracker-source/ tracker-iface.c
   * Fixes: NB#137363 - M4A audio codec clips arent played to full duration
-  * Fixes: NB#137609 - UPnP: playback pauses often when seek the attached content
   * Fixes: NB#134799 - <MemLeak> mafw-shared-0.1.2009.33/mafw-playlist-daemon playlist-wrapper.c
   * Fixes: NB#134495 - State changed signal does not come sometimes when stream is played 
 
