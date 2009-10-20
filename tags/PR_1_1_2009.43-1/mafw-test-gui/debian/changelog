@@ -1,3 +1,10 @@
+mafw-test-gui (0.1.2009.43-1) unstable; urgency=low
+
+  * Version and changelog updated for pre-release 0.2009.43-1
+  * Fixes: NB#140224 - Media player volume and master volume are not in sync when youtube is played at background
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 20 Oct 2009 22:23:08 +0300
+
 mafw-test-gui (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.

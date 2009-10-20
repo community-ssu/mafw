@@ -1,3 +1,10 @@
+mafw-tracker-source (0.1.2009.43-1) unstable; urgency=low
+
+  * Version and changelog updated for pre-release 0.2009.43-1
+  * Fixes: NB#142709 - mafw_playlist_get_items_md for multiple items fails with some clips
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 20 Oct 2009 22:23:56 +0300
+
 mafw-tracker-source (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.
