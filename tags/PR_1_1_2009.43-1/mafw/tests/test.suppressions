@@ -1,0 +1,86 @@
+{
+   <1>
+   Memcheck:Cond
+   fun:strlen
+   fun:_dl_init_paths
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
+{
+   <2>
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
+{
+   <3>
+   Memcheck:Leak
+   fun:calloc
+   fun:g_malloc0
+   obj:*
+   obj:*
+   fun:g_type_init_with_debug_flags
+   fun:g_type_init
+}
+{
+   <4>
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+{
+   <5>
+   Memcheck:Leak
+   fun:malloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+{
+   <6>
+   Memcheck:Leak
+   fun:malloc
+   obj:*
+   obj:*
+   fun:sqlite3Malloc
+   fun:sqlite3MallocZero
+   obj:*
+   fun:sqlite3_open
+   fun:mafw_db_get
+   fun:test_basic
+   fun:srunner_run_all
+   fun:checkmore_run
+   fun:main
+}
+{
+   <7>
+   Memcheck:Leak
+   fun:malloc
+   obj:*
+   obj:*
+   fun:sqlite3Malloc
+   fun:sqlite3MallocZero
+   obj:*
+   fun:sqlite3_open
+   fun:mafw_db_get
+   fun:mafw_db_prepare
+   fun:*
+   fun:srunner_run_all
+   fun:checkmore_run
+}
