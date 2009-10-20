@@ -1,3 +1,17 @@
+libmafw (0.1.2009.42-2) unstable; urgency=low
+
+  * Version increased.
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Tue, 20 Oct 2009 13:26:19 +0300
+
+libmafw (0.1.2009.42-1) unstable; urgency=low
+
+  * Version and changelog updated for pre-release 0.2009.42-1
+  * Fixes: NB#140927 - Media Player - Radio stations are not sorted correctly if bookmark starts with a special character
+  * Fixes: NB#139820 - Use-Time:mafw-dbus-wrapper wakes up after pausing the local audio playback.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 12 Oct 2009 17:22:01 +0300
+
 libmafw (0.1.2009.40-1) unstable; urgency=low
 
   * Version and changelog updated for pre-release 0.2009.40-1
@@ -18,7 +32,6 @@ libmafw (0.1.2009.39-1) unstable; urgency=low
   * Fixes: NB#134807 - <MemLeak> mafw-shared-0.1.2009.33/libmafw-shared/ mafw-proxy-renderer.c
   * Fixes: NB#134817 - <MemLeak> mafw-tracker-source-0.1.2009.34/libmafw-tracker-source/ tracker-iface.c
   * Fixes: NB#137363 - M4A audio codec clips arent played to full duration
-  * Fixes: NB#137609 - UPnP: playback pauses often when seek the attached content
   * Fixes: NB#134799 - <MemLeak> mafw-shared-0.1.2009.33/mafw-playlist-daemon playlist-wrapper.c
   * Fixes: NB#134495 - State changed signal does not come sometimes when stream is played 
 
