@@ -107,11 +107,6 @@ static void _post_error(MafwGstRendererWorker *worker, GError *err)
 }
 
 #ifdef HAVE_GDKPIXBUF
-typedef struct {
-	MafwGstRendererWorker *worker;
-	gchar *metadata_key;
-	GdkPixbuf *pixbuf;
-} SaveGraphicData;
 
 static gchar *_init_tmp_file(void)
 {
@@ -164,47 +159,15 @@ static const gchar *_get_tmp_file_from_pool(
 	return path;
 }
 
-static void _destroy_pixbuf (guchar *pixbuf, gpointer data)
+void mafw_gst_renderer_worker_pbuf_handler(GdkPixbuf *pixbuf,
+						const gchar *metadata_key)
 {
-	gst_buffer_unref(GST_BUFFER(data));
-}
-
-static void _emit_gst_buffer_as_graphic_file_cb(GstBuffer *new_buffer,
-						gpointer user_data)
-{
-	SaveGraphicData *sgd = user_data;
-	GdkPixbuf *pixbuf = NULL;
-
-	if (new_buffer != NULL) {
-		gint width, height;
-		GstStructure *structure;
-
-		structure =
-			gst_caps_get_structure(GST_BUFFER_CAPS(new_buffer), 0);
-
-		gst_structure_get_int(structure, "width", &width);
-		gst_structure_get_int(structure, "height", &height);
-
-		pixbuf = gdk_pixbuf_new_from_data(
-			GST_BUFFER_DATA(new_buffer), GDK_COLORSPACE_RGB,
-			FALSE, 8, width, height,
-			GST_ROUND_UP_4(3 * width), _destroy_pixbuf,
-			new_buffer);
-
-		if (sgd->pixbuf != NULL) {
-			g_object_unref(sgd->pixbuf);
-			sgd->pixbuf = NULL;
-		}
-	} else {
-		pixbuf = sgd->pixbuf;
-	}
-
 	if (pixbuf != NULL) {
 		gboolean save_ok;
 		GError *error = NULL;
 		const gchar *filename;
 
-		filename = _get_tmp_file_from_pool(sgd->worker);
+		filename = _get_tmp_file_from_pool(Global_worker);
 
 		save_ok = gdk_pixbuf_save (pixbuf, filename, "jpeg", &error,
 					   NULL);
@@ -213,13 +176,13 @@ static void _emit_gst_buffer_as_graphic_file_cb(GstBuffer *new_buffer,
 
 		if (save_ok) {
 			/* Add the info to the current metadata. */
-			_current_metadata_add(sgd->worker, sgd->metadata_key,
+			_current_metadata_add(Global_worker, metadata_key,
 					      G_TYPE_STRING,
 					      (gchar*)filename);
 
 			/* Emit the metadata. */
-			mafw_renderer_emit_metadata_string(sgd->worker->owner,
-							   sgd->metadata_key,
+			mafw_renderer_emit_metadata_string(Global_worker->owner,
+							   metadata_key,
 							   (gchar *) filename);
 		} else {
 			if (error != NULL) {
@@ -233,9 +196,6 @@ static void _emit_gst_buffer_as_graphic_file_cb(GstBuffer *new_buffer,
 	} else {
 		g_warning("Could not create pixbuf from GstBuffer");
 	}
-
-	g_free(sgd->metadata_key);
-	g_free(sgd);
 }
 
 static void _pixbuf_size_prepared_cb (GdkPixbufLoader *loader, 
@@ -276,7 +236,6 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 	if (g_str_has_prefix(mime, "video/x-raw")) {
 		gint framerate_d, framerate_n;
 		GstCaps *to_caps;
-		SaveGraphicData *sgd;
 
 		gst_structure_get_fraction (structure, "framerate",
 					    &framerate_n, &framerate_d);
@@ -298,14 +257,9 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 					       G_TYPE_INT, 0x0000ff,
 					       NULL);
 
-		sgd = g_new0(SaveGraphicData, 1);
-		sgd->worker = worker;
-		sgd->metadata_key = g_strdup(metadata_key);
-
 		g_debug("pixbuf: using bvw to convert image format");
 		bvw_frame_conv_convert (buffer, to_caps,
-					_emit_gst_buffer_as_graphic_file_cb,
-					sgd);
+					metadata_key);
 	} else {
 		GdkPixbuf *pixbuf = NULL;
 		loader = gdk_pixbuf_loader_new_with_mime_type(mime, &error);
@@ -333,17 +287,8 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 
 					g_object_unref(pixbuf);
 				} else {
-					SaveGraphicData *sgd;
-
-					sgd = g_new0(SaveGraphicData, 1);
-
-					sgd->worker = worker;
-					sgd->metadata_key =
-						g_strdup(metadata_key);
-					sgd->pixbuf = pixbuf;
-
-					_emit_gst_buffer_as_graphic_file_cb(
-						NULL, sgd);
+					mafw_gst_renderer_worker_pbuf_handler(
+						pixbuf, metadata_key);
 				}
 			}
 		}

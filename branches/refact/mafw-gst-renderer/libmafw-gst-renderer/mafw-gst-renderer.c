@@ -1902,11 +1902,6 @@ gboolean mafw_gst_renderer_assign_playlist(MafwRenderer *self,
 
 	/* Get rid of previously assigned playlist  */
 	if (renderer->playlist != NULL) {
-		g_signal_handlers_disconnect_matched(renderer->iterator,
-						     (GSignalMatchType) G_SIGNAL_MATCH_FUNC,
-						     0, 0, NULL,
-						     _playlist_changed_handler,
-						     NULL);
 		g_signal_handlers_disconnect_matched(renderer->playlist,
 					(GSignalMatchType) G_SIGNAL_MATCH_FUNC,
 					0, 0, NULL,
