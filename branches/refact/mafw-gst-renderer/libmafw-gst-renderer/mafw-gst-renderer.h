@@ -147,7 +147,7 @@ struct _MafwGstRendererClass {
 struct _MafwGstRenderer{
 	MafwRenderer parent;
 
-	MafwGstRendererMedia *media;
+	MafwGstRendererMedia media;
 	MafwGstRendererWorker *worker;
 	MafwRegistry *registry;
 	LibHalContext *hal_ctx;

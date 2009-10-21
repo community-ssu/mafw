@@ -356,7 +356,7 @@ static void _handle_pre_unmount(MafwGstRendererState *self,
 	gchar *mount_uri;
 
 	/* If not playing anything, bail out */
-	if (!self->renderer->media->uri) {
+	if (!self->renderer->media.uri) {
 		return;
 	}
 
@@ -368,7 +368,7 @@ static void _handle_pre_unmount(MafwGstRendererState *self,
 	}
 
 	/* Stop if playing from unmounted location */
-	if (g_str_has_prefix(self->renderer->media->uri, mount_uri)) {
+	if (g_str_has_prefix(self->renderer->media.uri, mount_uri)) {
                 g_debug("PAUSED-STATE: stopping to mount card");
 		mafw_gst_renderer_stop(MAFW_RENDERER(self->renderer),
 				       NULL,

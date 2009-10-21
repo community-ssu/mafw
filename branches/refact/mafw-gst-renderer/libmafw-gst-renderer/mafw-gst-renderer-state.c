@@ -449,10 +449,10 @@ void mafw_gst_renderer_state_do_play(MafwGstRendererState *self, GError **error)
 	}
 
 	/* Do we have any objectid to play? Otherwise we cannot do it */
-        if (renderer->media->object_id) {
+        if (renderer->media.object_id) {
 		/* If so, resolve URI for this objectid */
                 mafw_gst_renderer_get_metadata(renderer,
-					     renderer->media->object_id,
+					     renderer->media.object_id,
 					     &gm_error);
                 if (gm_error) {
 			MafwGstRendererErrorClosure *error_closure;
@@ -502,7 +502,7 @@ void  mafw_gst_renderer_state_do_play_object(MafwGstRendererState *self,
 
                 mafw_gst_renderer_set_object(renderer, object_id);
                 mafw_gst_renderer_get_metadata(renderer,
-					     renderer->media->object_id,
+					     renderer->media.object_id,
 					     &gm_error);
                 if (gm_error) {
 			MafwGstRendererErrorClosure *error_closure;

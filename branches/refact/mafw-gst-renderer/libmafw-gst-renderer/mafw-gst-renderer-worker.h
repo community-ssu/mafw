@@ -23,11 +23,17 @@
  */
 #ifndef MAFW_GST_RENDERER_WORKER_H
 #define MAFW_GST_RENDERER_WORKER_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <X11/Xdefs.h>
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "mafw-gst-renderer-worker-volume.h"
+#ifdef HAVE_GDKPIXBUF
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#endif
 
 #define MAFW_GST_RENDERER_MAX_TMP_FILES 5
 

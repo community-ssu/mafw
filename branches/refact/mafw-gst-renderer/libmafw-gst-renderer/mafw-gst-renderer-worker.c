@@ -609,7 +609,7 @@ static void _check_duration(MafwGstRendererWorker *worker, gint64 value)
 
 		/* We compare this duration we just got with the
 		 * source one and update it in the source if needed */
-		if (duration_seconds != renderer->media->duration) {
+		if (duration_seconds != renderer->media.duration) {
 			mafw_gst_renderer_update_source_duration(
 				renderer,
 				duration_seconds);
@@ -627,9 +627,9 @@ static void _check_seekability(MafwGstRendererWorker *worker)
 
 	if (worker->media.length_nanos != -1)
 	{
-		g_debug("source seekability %d", renderer->media->seekability);
+		g_debug("source seekability %d", renderer->media.seekability);
 
-		if (renderer->media->seekability != SEEKABILITY_NO_SEEKABLE) {
+		if (renderer->media.seekability != SEEKABILITY_NO_SEEKABLE) {
 			g_debug("Quering GStreamer for seekability");
 			GstQuery *seek_query;
 			GstFormat format = GST_FORMAT_TIME;
