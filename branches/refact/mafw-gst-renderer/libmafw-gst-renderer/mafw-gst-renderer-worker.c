@@ -2239,7 +2239,6 @@ static void _volume_init_cb(MafwGstRendererWorkerVolume *wvolume,
 MafwGstRendererWorker *mafw_gst_renderer_worker_new(gpointer owner)
 {
         MafwGstRendererWorker *worker;
-	GMainContext *main_context;
 
 	worker = g_new0(MafwGstRendererWorker, 1);
 	worker->mode = WORKER_MODE_SINGLE_PLAY;
@@ -2271,10 +2270,8 @@ MafwGstRendererWorker *mafw_gst_renderer_worker_new(gpointer owner)
 	worker->notify_eos_handler = NULL;
 	worker->notify_error_handler = NULL;
 	Global_worker = worker;
-	main_context = g_main_context_default();
 	worker->wvolume = NULL;
-	mafw_gst_renderer_worker_volume_init(main_context,
-					     _volume_init_cb, worker,
+	mafw_gst_renderer_worker_volume_init(_volume_init_cb, worker,
 					     _volume_cb, worker,
 #ifdef MAFW_GST_RENDERER_ENABLE_MUTE
 					     _mute_cb,
