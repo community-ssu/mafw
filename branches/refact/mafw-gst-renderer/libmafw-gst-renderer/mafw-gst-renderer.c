@@ -607,14 +607,11 @@ void mafw_gst_renderer_get_metadata(MafwGstRenderer* self,
 	else
 	{
 		/* This is a playback error: execute error policy */
-		MafwGstRendererErrorClosure *error_closure;
-		error_closure = g_new0(MafwGstRendererErrorClosure, 1);
-		error_closure->renderer = self;
-		g_set_error (&(error_closure->error),
+		g_set_error (&(self->error),
 			     MAFW_EXTENSION_ERROR,
 			     MAFW_EXTENSION_ERROR_EXTENSION_NOT_AVAILABLE,
 			     "Unable to find source for current object ID");
-		g_idle_add(mafw_gst_renderer_manage_error_idle, error_closure);
+		g_idle_add((GSourceFunc)mafw_gst_renderer_manage_error_idle, self);
 	}
 }
 
@@ -1185,14 +1182,15 @@ void mafw_gst_renderer_set_position(MafwRenderer *self, MafwRendererSeekMode mod
 		g_error_free(error);
 }
 
-gboolean mafw_gst_renderer_manage_error_idle(gpointer data)
+gboolean mafw_gst_renderer_manage_error_idle(MafwGstRenderer *renderer)
 {
-        MafwGstRendererErrorClosure *mec = (MafwGstRendererErrorClosure *) data;
+        mafw_gst_renderer_manage_error(renderer, renderer->error);
 
-        mafw_gst_renderer_manage_error(mec->renderer, mec->error);
-	if (mec->error)
-        	g_error_free(mec->error);
-        g_free(mec);
+	if (renderer->error)
+	{
+        	g_error_free(renderer->error);
+		renderer->error = NULL;
+	}
 
         return FALSE;
 }

@@ -165,6 +165,7 @@ struct _MafwGstRenderer{
 	gboolean resume_playlist;
  	MafwGstRendererState **states;
 	MafwRendererErrorPolicy error_policy;
+	GError *error;
         gboolean tv_connected;
 
 #ifdef HAVE_CONIC
@@ -173,11 +174,6 @@ struct _MafwGstRenderer{
 #endif
 	GConfClient *gconf_client;
 };
-
-typedef struct {
-        MafwGstRenderer *renderer;
-        GError *error;
-} MafwGstRendererErrorClosure;
 
 G_BEGIN_DECLS
 
@@ -273,7 +269,7 @@ void mafw_gst_renderer_get_current_metadata(MafwRenderer *self,
 
 void mafw_gst_renderer_set_state(MafwGstRenderer *self, MafwPlayState state);
 
-gboolean mafw_gst_renderer_manage_error_idle(gpointer data);
+gboolean mafw_gst_renderer_manage_error_idle(MafwGstRenderer *renderer);
 
 void mafw_gst_renderer_manage_error(MafwGstRenderer *self, const GError *error);
 
