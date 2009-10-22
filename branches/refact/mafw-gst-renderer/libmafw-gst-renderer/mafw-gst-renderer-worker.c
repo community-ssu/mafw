@@ -159,7 +159,8 @@ static const gchar *_get_tmp_file_from_pool(
 	return path;
 }
 
-void mafw_gst_renderer_worker_pbuf_handler(GdkPixbuf *pixbuf,
+void mafw_gst_renderer_worker_pbuf_handler(MafwGstRendererWorker *worker,
+						GdkPixbuf *pixbuf,
 						const gchar *metadata_key)
 {
 	if (pixbuf != NULL) {
@@ -167,7 +168,7 @@ void mafw_gst_renderer_worker_pbuf_handler(GdkPixbuf *pixbuf,
 		GError *error = NULL;
 		const gchar *filename;
 
-		filename = _get_tmp_file_from_pool(Global_worker);
+		filename = _get_tmp_file_from_pool(worker);
 
 		save_ok = gdk_pixbuf_save (pixbuf, filename, "jpeg", &error,
 					   NULL);
@@ -176,12 +177,12 @@ void mafw_gst_renderer_worker_pbuf_handler(GdkPixbuf *pixbuf,
 
 		if (save_ok) {
 			/* Add the info to the current metadata. */
-			_current_metadata_add(Global_worker, metadata_key,
+			_current_metadata_add(worker, metadata_key,
 					      G_TYPE_STRING,
 					      (gchar*)filename);
 
 			/* Emit the metadata. */
-			mafw_renderer_emit_metadata_string(Global_worker->owner,
+			mafw_renderer_emit_metadata_string(worker->owner,
 							   metadata_key,
 							   (gchar *) filename);
 		} else {
@@ -258,7 +259,7 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 					       NULL);
 
 		g_debug("pixbuf: using bvw to convert image format");
-		bvw_frame_conv_convert (buffer, to_caps,
+		bvw_frame_conv_convert (worker, buffer, to_caps,
 					metadata_key);
 	} else {
 		GdkPixbuf *pixbuf = NULL;
@@ -288,7 +289,7 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 					g_object_unref(pixbuf);
 				} else {
 					mafw_gst_renderer_worker_pbuf_handler(
-						pixbuf, metadata_key);
+						worker, pixbuf, metadata_key);
 				}
 			}
 		}

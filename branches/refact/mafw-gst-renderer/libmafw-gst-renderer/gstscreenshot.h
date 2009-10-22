@@ -24,10 +24,11 @@
 
 #include <gst/gst.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
-
+#include "mafw-gst-renderer-worker.h"
 G_BEGIN_DECLS
 
-gboolean bvw_frame_conv_convert (GstBuffer *buf, GstCaps *to,
+gboolean bvw_frame_conv_convert (MafwGstRendererWorker *worker,
+				 GstBuffer *buf, GstCaps *to,
 				 const gchar *mdata_key);
 
 G_END_DECLS

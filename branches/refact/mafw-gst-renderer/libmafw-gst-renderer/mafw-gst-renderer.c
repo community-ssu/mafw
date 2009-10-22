@@ -307,7 +307,7 @@ static void mafw_gst_renderer_init(MafwGstRenderer *self)
         renderer->worker->notify_eos_handler = _notify_eos;
 	renderer->worker->notify_buffer_status_handler = _notify_buffer_status;
 
-	renderer->states = g_new0 (MafwGstRendererState*, _LastMafwPlayState);
+	renderer->states = g_new (MafwGstRendererState*, _LastMafwPlayState);
 	renderer->states[Stopped] =
 		MAFW_GST_RENDERER_STATE(mafw_gst_renderer_state_stopped_new(self));
 	renderer->states[Transitioning] =

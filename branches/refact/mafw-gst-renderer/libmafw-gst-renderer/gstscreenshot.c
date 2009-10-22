@@ -34,6 +34,7 @@ static GstElement *src;
 static GstElement *sink;
 static GstElement *pipeline;
 static GstBuffer *result;
+static MafwGstRendererWorker *current_worker;
 static const gchar *metadata_key;
 
 /* GST_DEBUG_CATEGORY_EXTERN (_totem_gst_debug_cat); */
@@ -140,7 +141,7 @@ static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 		} else {
 			GST_WARNING("EOS but no result frame?!");
 		}
-		mafw_gst_renderer_worker_pbuf_handler(pbuf, metadata_key);
+		mafw_gst_renderer_worker_pbuf_handler(current_worker, pbuf, metadata_key);
 		keep_watch = finalize_process();
 		break;
 	}
@@ -161,7 +162,8 @@ static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 		}
 		g_free(dbg);
 		result = NULL;
-		mafw_gst_renderer_worker_pbuf_handler(NULL, metadata_key);
+		mafw_gst_renderer_worker_pbuf_handler(current_worker, NULL,
+							metadata_key);
 		keep_watch = finalize_process();
 		break;
 	}
@@ -173,7 +175,8 @@ static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 }
 
 /* takes ownership of the input buffer */
-gboolean bvw_frame_conv_convert(GstBuffer *buf, GstCaps *to_caps,
+gboolean bvw_frame_conv_convert(MafwGstRendererWorker *worker,
+				GstBuffer *buf, GstCaps *to_caps,
 				const gchar *mdata_key)
 {
 	static GstElement *filter1 = NULL, *filter2 = NULL;
@@ -183,6 +186,7 @@ gboolean bvw_frame_conv_convert(GstBuffer *buf, GstCaps *to_caps,
 
 	g_return_val_if_fail(GST_BUFFER_CAPS(buf) != NULL, FALSE);
 
+	current_worker = worker;
 	if (pipeline == NULL) {
 		GstElement *csp, *vscale;
 

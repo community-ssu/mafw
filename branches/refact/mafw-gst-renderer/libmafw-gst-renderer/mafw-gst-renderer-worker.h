@@ -211,7 +211,8 @@ void mafw_gst_renderer_worker_stop(MafwGstRendererWorker *worker);
 void mafw_gst_renderer_worker_pause(MafwGstRendererWorker *worker);
 void mafw_gst_renderer_worker_resume(MafwGstRendererWorker *worker);
 #ifdef HAVE_GDKPIXBUF
-void mafw_gst_renderer_worker_pbuf_handler(GdkPixbuf *pixbuf,
+void mafw_gst_renderer_worker_pbuf_handler(MafwGstRendererWorker *worker,
+						GdkPixbuf *pixbuf,
 						const gchar *metadata_key);
 #endif
 G_END_DECLS
