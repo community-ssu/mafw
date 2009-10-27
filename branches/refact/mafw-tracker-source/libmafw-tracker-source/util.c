@@ -46,11 +46,11 @@ const static gchar *_get_tracker_type(const gchar *mafw_key,
 
         key_type = keymap_get_tracker_type(mafw_key, service);
 
-        if (key_type == G_TYPE_INT) {
+        if (key_type == VALUE_TYPE_INT) {
                 return "Integer";
-        } else if (key_type == G_TYPE_DOUBLE) {
+        } else if (key_type == VALUE_TYPE_DOUBLE) {
                 return "Double";
-        } else if (key_type == G_TYPE_DATE) {
+        } else if (key_type == VALUE_TYPE_DATE) {
                 return "Date";
         } else {
                 return "String";
@@ -106,7 +106,7 @@ gchar *util_get_tracker_value_for_filter(const gchar *mafw_key,
 
         /* If the tracker's type is a date, convert the value from epoch to iso
          * 8601 */
-        if (tracker_key->value_type == G_TYPE_DATE) {
+        if (tracker_key->value_type == VALUE_TYPE_DATE) {
                 return util_epoch_to_iso8601(atol(value));
 	}
 

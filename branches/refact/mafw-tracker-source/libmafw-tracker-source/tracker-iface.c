@@ -1742,7 +1742,7 @@ ti_set_metadata(const gchar *uri, GHashTable *metadata, gboolean *updated)
                         tracker_key = keymap_get_tracker_info(mafw_key,
                                                               service);
                         if (tracker_key &&
-                            tracker_key->value_type == G_TYPE_DATE) {
+                            tracker_key->value_type == VALUE_TYPE_DATE) {
                                 value = mafw_metadata_first(metadata,
                                                              mafw_key);
                                 if (value && G_VALUE_HOLDS_LONG(value)) {

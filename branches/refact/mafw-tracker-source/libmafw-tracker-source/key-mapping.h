@@ -39,6 +39,14 @@ enum KeyType {
         THUMBNAIL_KEY
 };
 
+enum ValueType {
+	VALUE_TYPE_STRING,
+	VALUE_TYPE_INT,
+	VALUE_TYPE_DOUBLE,
+	VALUE_TYPE_DATE,
+	VALUE_TYPE_NONE
+};
+
 enum SpecialKey {
         NON_SPECIAL = 0,
         SPECIAL_KEY_CHILDCOUNT,
@@ -70,7 +78,7 @@ typedef struct TrackerKey {
         /* The name of the key */
         gchar *tracker_key;
         /* It's type */
-        GType value_type;
+        enum ValueType value_type;
 } TrackerKey;
 
 typedef struct InfoKeyTable {
@@ -99,7 +107,7 @@ InfoKeyTable *keymap_get_info_key_table(void);
 MetadataKey *keymap_get_metadata(const gchar *mafw_key);
 TrackerKey *keymap_get_tracker_info(const gchar *mafw_key,
                                     ServiceType service);
-GType keymap_get_tracker_type(const gchar *mafw_key,
+enum ValueType keymap_get_tracker_type(const gchar *mafw_key,
                               ServiceType service);
 
 #endif
