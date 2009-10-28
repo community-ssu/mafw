@@ -1,3 +1,9 @@
+mafw-shared (0.1.2009.44-1) unstable; urgency=low
+
+  * Version increased for rebuilding just to be sure.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 28 Oct 2009 23:50:04 +0200
+
 mafw-shared (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.

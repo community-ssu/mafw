@@ -1,3 +1,9 @@
+mafw-test-gui (0.1.2009.44-1) unstable; urgency=low
+
+  * Version increased for rebuild just to be sure.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 28 Oct 2009 23:52:26 +0200
+
 mafw-test-gui (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.
