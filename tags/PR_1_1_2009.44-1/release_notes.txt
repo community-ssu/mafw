@@ -4,25 +4,20 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.44-1
-Date       2009.10.28
+Version    0.2009.44-1, mafw-gst-renderer used for 45-1, other package were not integrated
+Date       2009.10.28, used on 2009.11.02 for 2009.45-1
 Maintainer mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
 
-libmafw              0.1.2009.44-1
-mafw-shared          0.1.2009.44-1
 mafw-gst-renderer    0.1.2009.44-1
-mafw-test-gui        0.1.2009.44-1
-mafw-tracker-source  0.1.2009.44-1
-mafw-upnp-source     0.1.2009.44-1
 
 
 Change logs: 
 
-* This is a support release for Media Player bug fix tag. Rebuilding everything
-  just to be sure.
+* A bug release.
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog (in three separate entries): 0
+From changelog (in three separate entries): 1
+* Fixes: NB#143299 - mafw_renderer_get_current_metadata don't give correct duration.
