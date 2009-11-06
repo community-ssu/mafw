@@ -174,7 +174,7 @@ InfoKeyTable *keymap_get_info_key_table(void)
         if (!table) {
 		gint i;
 
-                table = g_new0(InfoKeyTable, 1);
+                table = g_new(InfoKeyTable, 1);
                 table->music_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
                 table->videos_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
                 table->playlist_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
@@ -245,7 +245,7 @@ gchar **keymap_mafw_keys_to_tracker_keys(gchar **mafw_keys,
 	}
 
 	/* Allocate memory for the converted array (include trailing NULL) */
-	tracker_keys = g_new0(gchar *, count + 1);
+	tracker_keys = g_new(gchar *, count + 1);
 
 	/* Now, translate the keys supported in tracker */
 	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
@@ -256,6 +256,7 @@ gchar **keymap_mafw_keys_to_tracker_keys(gchar **mafw_keys,
                                                                service);
                 }
         }
+	tracker_keys[count] = NULL;
 
 	return tracker_keys;
 }
@@ -287,7 +288,7 @@ gchar **keymap_mafw_sort_keys_to_tracker_keys(gchar **mafw_keys,
 	}
 
 	/* Allocate memory for the converted array (include trailing NULL) */
-	tracker_keys = g_new0(gchar *, count + 1);
+	tracker_keys = g_new(gchar *, count + 1);
 
 	/* Now, translate the keys supported in tracker */
 	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
@@ -313,6 +314,7 @@ gchar **keymap_mafw_sort_keys_to_tracker_keys(gchar **mafw_keys,
                                         NULL);
                 }
         }
+	tracker_keys[count] = NULL;
 
 	return tracker_keys;
 }

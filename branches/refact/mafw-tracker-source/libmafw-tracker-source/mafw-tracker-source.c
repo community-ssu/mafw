@@ -224,7 +224,7 @@ static void _destroy_object_tracker_cb(MafwResult *clips, GError *error,
 		g_list_foreach(clips->ids,
 			       (GFunc) g_free, NULL);
 		g_list_free(clips->ids);
-		g_free(clips);
+		g_slice_free(MafwResult, clips);
 	} else {
 		/* Emit error */
 		GError *mafw_error;

@@ -269,7 +269,7 @@ static void _tracker_query_cb(GPtrArray *tracker_result,
 	mc = (struct _mafw_query_closure *) user_data;
 
 	if (error == NULL) {
-                mafw_result = g_new0(MafwResult, 1);
+                mafw_result = g_slice_new(MafwResult);
                 tracker_cache_values_add_results(mc->cache, tracker_result);
                 mafw_result->metadata_values =
                         tracker_cache_build_metadata(mc->cache, NULL);
@@ -297,7 +297,7 @@ static void _tracker_unique_values_cb(GPtrArray *tracker_result,
 	mc = (struct _mafw_query_closure *) user_data;
 
 	if (error == NULL) {
-                mafw_result = g_new0(MafwResult, 1);
+                mafw_result = g_slice_new(MafwResult);
                 tracker_cache_values_add_results(mc->cache, tracker_result);
                 mafw_result->metadata_values =
                         tracker_cache_build_metadata(mc->cache, NULL);

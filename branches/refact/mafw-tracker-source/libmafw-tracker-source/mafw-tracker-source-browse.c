@@ -207,7 +207,7 @@ static void _browse_closure_free(gpointer data)
 	_remove_pending_browse_operation(MAFW_TRACKER_SOURCE(bc->source), bc);
 
 	/* Free browse closure structure */
-	g_free(bc);
+	g_slice_free(struct _browse_closure, bc);
 }
 
 static void _emit_browse_results(struct _browse_closure *bc)
@@ -306,7 +306,7 @@ static void _browse_tracker_cb(MafwResult *clips,
                                                     clips->metadata_values);
 
 		/* Free MafwResult structure (not the info within though) */
-		g_free(clips);
+		g_slice_free(MafwResult, clips);
 
 		/* Emit results */
 		_emit_browse_results(bc);
@@ -446,7 +446,7 @@ static void _browse_playlists_tracker_cb(MafwResult *clips,
 			_emit_browse_results(playlists_bc);
 		}
 
-		g_free(clips);
+		g_slice_free(MafwResult, clips);
 	} else {
                 _emit_browse_error(playlists_bc, error);
 	}
@@ -524,7 +524,7 @@ static void _browse_enqueue_videos_cb(MafwResult *clips,
                 bc->count -= g_list_length(clips->ids);
 
 		/* Free MafwResult structure (not the info within though) */
-		g_free(clips);
+		g_slice_free(MafwResult, clips);
 
 
 		if (bc->count == 0) {
@@ -712,7 +712,7 @@ static void _browse_playlist_tracker_cb(MafwSource *self,
                            error->message);
 	}
 
-	clips = g_new0(MafwResult, 1);
+	clips = g_slice_new(MafwResult);
 
 	_construct_playlist_entries_result(bc, tracker_metadatas, clips);
 
@@ -721,7 +721,7 @@ static void _browse_playlist_tracker_cb(MafwSource *self,
 	bc->metadata_values = clips->metadata_values;
 
 	/* Free MafwResult structure (not the info within though) */
-	g_free(clips);
+	g_slice_free(MafwResult, clips);
 
 	/* Emit results */
 	_emit_browse_results(bc);
@@ -1248,7 +1248,7 @@ mafw_tracker_source_browse(MafwSource *self,
 	browse_id = _get_next_browse_id(MAFW_TRACKER_SOURCE(self));
 
 	/* Prepare browse operation */
-	bc = g_new0(struct _browse_closure, 1);
+	bc = g_slice_new0(struct _browse_closure);
 	bc->source = self;
 	bc->object_id = g_strdup(object_id);
 	bc->metadata_keys = g_strdupv((gchar **) meta_keys);
@@ -1413,7 +1413,7 @@ static void _get_playlist_duration_cb(MafwSource *self,
 
 		/* Frees. */
 		g_free(duration_bc->object_id);
-		g_free(duration_bc);
+		g_slice_free(struct _browse_closure, duration_bc);
 	}
 }
 
@@ -1430,7 +1430,7 @@ void mafw_tracker_source_get_playlist_duration(MafwSource *self,
 					  MAFW_METADATA_KEY_DURATION));
 
 	struct _browse_closure *pls_duration_bc =
-		g_new0(struct _browse_closure, 1);
+		g_slice_new0(struct _browse_closure);
 
 	pls_duration_bc->object_id = g_strdup(object_id);
 	pls_duration_bc->pls_duration = 0;
