@@ -168,7 +168,7 @@ static void _insert_key(TrackerCache *cache,
 {
         TrackerCacheValue *cached_value;
 
-        cached_value = g_new0(TrackerCacheValue, 1);
+        cached_value = g_slice_new0(TrackerCacheValue);
         cached_value->user_key = user_key;
         cached_value->key_type = type;
         if (type == TRACKER_CACHE_KEY_TYPE_TRACKER) {
@@ -320,7 +320,7 @@ static void _tracker_cache_value_free(gpointer data)
                 } else if (value->key_type == TRACKER_CACHE_KEY_TYPE_DERIVED) {
                         g_free(value->key_derived_from);
                 }
-                g_free(value);
+                g_slice_free(TrackerCacheValue, value);
         }
 }
 
@@ -342,7 +342,7 @@ tracker_cache_new(ServiceType service,
 
         TrackerCache *cache;
 
-        cache = g_new0(TrackerCache, 1);
+        cache = g_slice_new0(TrackerCache);
         cache->service = service;
         cache->result_type = result_type;
         cache->cache = g_hash_table_new_full(g_str_hash,
@@ -373,7 +373,7 @@ tracker_cache_free(TrackerCache *cache)
         g_hash_table_unref(cache->cache);
 
         /* Free the cache itself */
-        g_free(cache);
+        g_slice_free(TrackerCache, cache);
 }
 
 /*
@@ -397,7 +397,7 @@ tracker_cache_key_add_precomputed(TrackerCache *cache,
         /* Look if the key already exists */
         if (!g_hash_table_lookup(cache->cache, key)) {
                 /* Create the value to be cached */
-                cached_value = g_new0(TrackerCacheValue, 1);
+                cached_value = g_slice_new(TrackerCacheValue);
                 cached_value->key_type = TRACKER_CACHE_KEY_TYPE_COMPUTED;
                 cached_value->user_key = user_key;
                 g_value_init(&cached_value->value, G_VALUE_TYPE(value));
@@ -477,7 +477,7 @@ tracker_cache_key_add_derived(TrackerCache *cache,
         /* Look if the key already exists */
         if (!g_hash_table_lookup(cache->cache, key)) {
                 /* Create the value to be cached */
-                cached_value = g_new0(TrackerCacheValue, 1);
+                cached_value = g_slice_new(TrackerCacheValue);
                 cached_value->key_type = TRACKER_CACHE_KEY_TYPE_DERIVED;
                 cached_value->user_key = user_key;
                 cached_value->key_derived_from = g_strdup(source_key);

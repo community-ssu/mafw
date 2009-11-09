@@ -108,7 +108,7 @@ static void _metadatas_closure_free(gpointer data)
         }
 
         /* Free common structure */
-        g_free(mcc);
+        g_slice_free(struct _metadatas_common_closure, mcc);
 }
 
 static gboolean _emit_metadatas_results_idle(gpointer data)
@@ -162,7 +162,7 @@ static void _get_metadata_tracker_cb(GHashTable *result,
         }
 
         /* Free closure */
-        g_free(mc);
+        g_slice_free(struct _metadatas_closure, mc);
 }
 
 static void _get_metadatas_tracker_cb(GList *results,
@@ -208,7 +208,7 @@ static void _get_metadatas_tracker_cb(GList *results,
 
         /* Free closure */
         g_list_free(mc->object_ids);
-        g_free(mc);
+        g_slice_free(struct _metadatas_closure, mc);
 }
 
 static gboolean _calculate_duration_is_needed(GHashTable *metadata,
@@ -352,7 +352,7 @@ static void _get_metadatas_tracker_from_playlist_cb(GList *results,
 		/* Free closure */
 		g_list_foreach(mc->object_ids, (GFunc) g_free, NULL);
 		g_list_free(mc->object_ids);
-		g_free(mc);
+		g_slice_free(struct _metadatas_closure, mc);
 
 		return;
         }
@@ -367,7 +367,7 @@ static void _get_metadatas_tracker_from_playlist_cb(GList *results,
                                                   mc->common->metadata_keys,
                                                   current_obj->data)) {
                         /* Create a new closure to store data */
-                        nmc = g_new0(struct _metadatas_closure, 1);
+                        nmc = g_slice_new(struct _metadatas_closure);
                         nmc->object_id = current_obj->data;
                         nmc->metadata_value = g_hash_table_ref(current_result->data);
                         nmc->common = mc->common;
@@ -402,7 +402,7 @@ static void _get_metadatas_tracker_from_playlist_cb(GList *results,
 	/* The elements of the object_ids list were added to the metadatas
 	   results and will be released when freeing the common closure. */
         g_list_free(mc->object_ids);
-        g_free(mc);
+        g_slice_free(struct _metadatas_closure, mc);
 }
 
 static void _get_metadata_tracker_from_music_cb(GHashTable *result,
@@ -502,7 +502,7 @@ static void _get_metadata_cb(MafwSource *source,
 
         /* Free closure */
         g_free(mc->object_id);
-        g_free(mc);
+        g_slice_free(struct _metadata_closure, mc);
 }
 
 static gchar ** _get_keys(GHashTable *metadata)
@@ -570,7 +570,7 @@ static gboolean _update_metadata_idle(gpointer data)
         g_hash_table_unref(umc->metadata);
         g_free(umc->object_id);
         g_free(umc->clip);
-        g_free(umc);
+        g_slice_free(struct _update_metadata_closure, umc);
         g_strfreev(non_updated_keys);
 
         return FALSE;
@@ -588,7 +588,7 @@ mafw_tracker_source_get_metadata(MafwSource *self,
 
         g_return_if_fail(MAFW_IS_TRACKER_SOURCE(self));
 
-        mc = g_new0(struct _metadata_closure, 1);
+        mc = g_slice_new(struct _metadata_closure);
         mc->object_id = g_strdup(object_id);
         mc->cb = metadata_cb;
         mc->user_data = user_data;
@@ -639,7 +639,7 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
 	}
 
 	/* Prepare common structure operation */
-        mcc = g_new0(struct _metadatas_common_closure, 1);
+        mcc = g_slice_new(struct _metadatas_common_closure);
 	mcc->source = self;
         mcc->metadata_keys = g_strdupv((gchar **) meta_keys);
 	mcc->callback = metadatas_cb;
@@ -650,6 +650,7 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                       g_str_equal,
                                       (GDestroyNotify) g_free,
                                       (GDestroyNotify) mafw_metadata_release);
+	mcc->error = NULL;
 
 	if (!object_ids || !object_ids[0]) {
 		mcc->error = g_error_new(MAFW_SOURCE_ERROR,
@@ -672,7 +673,7 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                                       &album, &clip);
 
                 if (category == CATEGORY_ERROR) {
-                        mc = g_new0(struct _metadatas_closure, 1);
+                        mc = g_slice_new0(struct _metadatas_closure);
                         mc->object_id = g_strdup(object_ids[i]);
                         mc->common = mcc;
 
@@ -686,8 +687,8 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                         switch (category) {
                         case CATEGORY_VIDEO:
                                 if (!video_mc) {
-                                        video_mc = g_new0(
-                                                struct _metadatas_closure, 1);
+                                        video_mc = g_slice_new0(
+                                                struct _metadatas_closure);
                                         video_mc->common = mcc;
                                 }
                                 video_mc->object_ids =
@@ -698,8 +699,8 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         case CATEGORY_MUSIC_PLAYLISTS:
                                 if (!playlist_mc) {
-                                        playlist_mc = g_new0(
-                                                struct _metadatas_closure, 1);
+                                        playlist_mc = g_slice_new0(
+                                                struct _metadatas_closure);
                                         playlist_mc->common = mcc;
 
                                         /* If duration is required, then we need
@@ -724,8 +725,8 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         default:
                                 if (!audio_mc) {
-                                        audio_mc = g_new0(
-                                                struct _metadatas_closure, 1);
+                                        audio_mc = g_slice_new0(
+                                                struct _metadatas_closure);
                                         audio_mc->common = mcc;
                                 }
                                 audio_mc->object_ids =
@@ -736,7 +737,7 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         }
                 } else {
-                        mc = g_new0(struct _metadatas_closure, 1);
+                        mc = g_slice_new0(struct _metadatas_closure);
                         mc->object_id = g_strdup(object_ids[i]);
                         mc->common = mcc;
 
@@ -912,7 +913,7 @@ mafw_tracker_source_set_metadata(MafwSource *self,
                                               NULL, NULL, &clip);
         if ((clip) && (category != CATEGORY_MUSIC_PLAYLISTS)) {
                 _update_metadata_data =
-                        g_new0(struct _update_metadata_closure, 1);
+                        g_slice_new(struct _update_metadata_closure);
                 _update_metadata_data->source = self;
                 _update_metadata_data->object_id = g_strdup(object_id);
                 _update_metadata_data->metadata = metadata;

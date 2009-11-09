@@ -140,7 +140,7 @@ static void _destroy_object_closure_free(gpointer data)
 	if (dc->error) {
 		g_error_free(dc->error);
 	}
-	g_free(dc);
+	g_slice_free(struct _destroy_object_closure, dc);
 }
 
 gchar* mafw_tracker_source_escape_string(const gchar* original)
@@ -335,7 +335,7 @@ void mafw_tracker_source_destroy_object(MafwSource *self,
 
 	/* Prepare destroy operation */
 	struct _destroy_object_closure *dc =
-		g_new0(struct _destroy_object_closure, 1);
+		g_slice_new(struct _destroy_object_closure);
  	dc->source = self;
 	dc->object_id = g_strdup(object_id);
 	dc->callback = cb;

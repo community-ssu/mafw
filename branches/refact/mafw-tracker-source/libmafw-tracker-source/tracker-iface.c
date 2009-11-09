@@ -61,10 +61,7 @@ struct _mafw_query_closure {
 
 struct _mafw_metadata_closure {
         /* Mafw callback */
-        union {
-                MafwTrackerMetadataResultCB callback;
-                MafwTrackerMetadatasResultCB mult_callback;
-        };
+	gpointer callback;
         /* Callback's user data */
         gpointer user_data;
         /* If the childcount key must be counted instead of aggregated
@@ -284,7 +281,7 @@ static void _tracker_query_cb(GPtrArray *tracker_result,
         }
 
         tracker_cache_free(mc->cache);
-        g_free(mc);
+        g_slice_free(struct _mafw_query_closure, mc);
 }
 
 static void _tracker_unique_values_cb(GPtrArray *tracker_result,
@@ -311,7 +308,7 @@ static void _tracker_unique_values_cb(GPtrArray *tracker_result,
         }
 
         tracker_cache_free(mc->cache);
-        g_free(mc);
+        g_slice_free(struct _mafw_query_closure, mc);
 }
 
 static void _do_tracker_get_unique_values(gchar **keys,
@@ -358,18 +355,18 @@ static void _tracker_metadata_cb(GPtrArray *results,
                 tracker_cache_values_add_results(mc->cache, results);
                 metadata_list = tracker_cache_build_metadata(mc->cache,
 					(const gchar**)mc->path_list);
-                mc->mult_callback(metadata_list, NULL, mc->user_data);
+                ((MafwTrackerMetadatasResultCB)mc->callback)(metadata_list, NULL, mc->user_data);
                 g_list_foreach(metadata_list, (GFunc) g_hash_table_unref, NULL);
                 g_list_free(metadata_list);
         } else {
                 g_warning("Error while getting metadata: %s\n",
                           error->message);
-                mc->mult_callback(NULL, error, mc->user_data);
+                ((MafwTrackerMetadatasResultCB)mc->callback)(NULL, error, mc->user_data);
         }
 
         tracker_cache_free(mc->cache);
 	g_strfreev(mc->path_list);
-	g_free(mc);
+	g_slice_free(struct _mafw_metadata_closure, mc);
 }
 
 static gchar **_uris_to_filenames(gchar **uris)
@@ -414,8 +411,8 @@ static void _do_tracker_get_metadata(gchar **uris,
 	}
 
         /* Save required information */
-        mc = g_new0(struct _mafw_metadata_closure, 1);
-        mc->mult_callback = callback;
+        mc = g_slice_new0(struct _mafw_metadata_closure);
+        mc->callback = callback;
         mc->user_data = user_data;
         mc->cache = tracker_cache_new(service_type,
                                       TRACKER_CACHE_RESULT_TYPE_GET_METADATA);
@@ -599,7 +596,7 @@ void ti_get_videos(gchar **keys,
 	}
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
 	mc->user_data = user_data;
         mc->cache = tracker_cache_new(SERVICE_VIDEOS,
@@ -682,7 +679,7 @@ void ti_get_songs(const gchar *genre,
         }
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
 	mc->user_data = user_data;
         mc->cache = tracker_cache_new(SERVICE_MUSIC,
@@ -777,7 +774,7 @@ void ti_get_artists(const gchar *genre,
         MetadataKey *metadata_key;
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
 	mc->user_data = user_data;
         mc->cache =
@@ -891,7 +888,7 @@ void ti_get_genres(gchar **keys,
         MetadataKey *metadata_key;
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
 	mc->user_data = user_data;
         mc->cache =
@@ -995,7 +992,7 @@ void ti_get_playlists(gchar **keys,
         }
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
 	mc->user_data = user_data;
         mc->cache = tracker_cache_new(SERVICE_PLAYLISTS,
@@ -1062,7 +1059,7 @@ void ti_get_albums(const gchar *genre,
         struct _mafw_query_closure *mc;
 
 	/* Prepare mafw closure struct */
-	mc = g_new0(struct _mafw_query_closure, 1);
+	mc = g_slice_new(struct _mafw_query_closure);
 	mc->callback = callback;
  	mc->user_data = user_data;
 
@@ -1186,13 +1183,13 @@ static void _tracker_metadata_from_container_cb(GPtrArray *tracker_result,
                         tracker_cache_build_metadata_aggregated(
                                 mc->cache,
                                 mc->count_childcount);
-                mc->callback(metadata, NULL, mc->user_data);
+                ((MafwTrackerMetadataResultCB)mc->callback)(metadata, NULL, mc->user_data);
         } else {
-                mc->callback(NULL, error, mc->user_data);
+                ((MafwTrackerMetadataResultCB)mc->callback)(NULL, error, mc->user_data);
         }
 
         tracker_cache_free(mc->cache);
-        g_free(mc);
+        g_slice_free(struct _mafw_metadata_closure, mc);
 }
 
 static void _get_stats_cb(GPtrArray *result, GError *error, gpointer user_data)
@@ -1233,12 +1230,12 @@ static void _get_stats_cb(GPtrArray *result, GError *error, gpointer user_data)
                                 i++;
                         }
                 }
-                mc->callback(metadata, NULL, mc->user_data);
+                ((MafwTrackerMetadataResultCB)mc->callback)(metadata, NULL, mc->user_data);
         } else {
-                mc->callback(NULL, error, mc->user_data);
+                ((MafwTrackerMetadataResultCB)mc->callback)(NULL, error, mc->user_data);
         }
 
-        g_free(mc);
+        g_slice_free(struct _mafw_metadata_closure, mc);
 }
 
 static gboolean _run_tracker_metadata_from_container_cb(gpointer data)
@@ -1267,7 +1264,7 @@ static void _do_tracker_get_metadata_from_service(
         gint i;
         struct _mafw_metadata_closure *mc = NULL;
 
-        mc = g_new0(struct _mafw_metadata_closure, 1);
+        mc = g_slice_new0(struct _mafw_metadata_closure);
         mc->callback = callback;
         mc->user_data = user_data;
         mc->tracker_type = tracker_type;
@@ -1413,7 +1410,7 @@ void ti_get_metadata_from_category(const gchar *genre,
         gint level;
         gint start_to_look;
 
-        mc = g_new0(struct _mafw_metadata_closure, 1);
+        mc = g_slice_new0(struct _mafw_metadata_closure);
         mc->callback = callback;
         mc->user_data = user_data;
 
