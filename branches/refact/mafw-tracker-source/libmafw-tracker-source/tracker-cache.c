@@ -400,6 +400,7 @@ tracker_cache_key_add_precomputed(TrackerCache *cache,
                 cached_value = g_slice_new(TrackerCacheValue);
                 cached_value->key_type = TRACKER_CACHE_KEY_TYPE_COMPUTED;
                 cached_value->user_key = user_key;
+		memset(&cached_value->value, 0, sizeof(cached_value->value));
                 g_value_init(&cached_value->value, G_VALUE_TYPE(value));
                 g_value_copy(value, &cached_value->value);
 
@@ -481,6 +482,7 @@ tracker_cache_key_add_derived(TrackerCache *cache,
                 cached_value->key_type = TRACKER_CACHE_KEY_TYPE_DERIVED;
                 cached_value->user_key = user_key;
                 cached_value->key_derived_from = g_strdup(source_key);
+		memset(&cached_value->value, 0, sizeof(cached_value->value));
 
                 /* Add to cache */
                 g_hash_table_insert(cache->cache, g_strdup(key), cached_value);
