@@ -342,13 +342,16 @@ tracker_cache_new(ServiceType service,
 
         TrackerCache *cache;
 
-        cache = g_slice_new0(TrackerCache);
+        cache = g_slice_new(TrackerCache);
         cache->service = service;
         cache->result_type = result_type;
         cache->cache = g_hash_table_new_full(g_str_hash,
                                              g_str_equal,
                                              g_free,
                                              _tracker_cache_value_free);
+	cache->last_tracker_index = 0;
+	cache->tracker_results = NULL;
+	
         return cache;
 }
 
@@ -482,7 +485,6 @@ tracker_cache_key_add_derived(TrackerCache *cache,
                 cached_value->key_type = TRACKER_CACHE_KEY_TYPE_DERIVED;
                 cached_value->user_key = user_key;
                 cached_value->key_derived_from = g_strdup(source_key);
-		memset(&cached_value->value, 0, sizeof(cached_value->value));
 
                 /* Add to cache */
                 g_hash_table_insert(cache->cache, g_strdup(key), cached_value);

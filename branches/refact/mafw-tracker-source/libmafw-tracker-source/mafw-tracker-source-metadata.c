@@ -673,9 +673,10 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                                       &album, &clip);
 
                 if (category == CATEGORY_ERROR) {
-                        mc = g_slice_new0(struct _metadatas_closure);
+                        mc = g_slice_new(struct _metadatas_closure);
                         mc->object_id = g_strdup(object_ids[i]);
                         mc->common = mcc;
+			mc->metadata_value = NULL;
 
                         error = g_error_new(MAFW_SOURCE_ERROR,
                                             MAFW_SOURCE_ERROR_INVALID_OBJECT_ID,
@@ -687,9 +688,10 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                         switch (category) {
                         case CATEGORY_VIDEO:
                                 if (!video_mc) {
-                                        video_mc = g_slice_new0(
+                                        video_mc = g_slice_new(
                                                 struct _metadatas_closure);
                                         video_mc->common = mcc;
+					video_mc->metadata_value = NULL;
                                 }
                                 video_mc->object_ids =
                                         g_list_prepend(video_mc->object_ids,
@@ -699,9 +701,10 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         case CATEGORY_MUSIC_PLAYLISTS:
                                 if (!playlist_mc) {
-                                        playlist_mc = g_slice_new0(
+                                        playlist_mc = g_slice_new(
                                                 struct _metadatas_closure);
                                         playlist_mc->common = mcc;
+					playlist_mc->metadata_value = NULL;
 
                                         /* If duration is required, then we need
                                          * to add a new key in order to check if
@@ -725,9 +728,10 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         default:
                                 if (!audio_mc) {
-                                        audio_mc = g_slice_new0(
+                                        audio_mc = g_slice_new(
                                                 struct _metadatas_closure);
                                         audio_mc->common = mcc;
+					audio_mc->metadata_value = NULL;
                                 }
                                 audio_mc->object_ids =
                                         g_list_prepend(audio_mc->object_ids,
@@ -737,9 +741,10 @@ mafw_tracker_source_get_metadatas(MafwSource *self,
                                 break;
                         }
                 } else {
-                        mc = g_slice_new0(struct _metadatas_closure);
+                        mc = g_slice_new(struct _metadatas_closure);
                         mc->object_id = g_strdup(object_ids[i]);
                         mc->common = mcc;
+			mc->metadata_value = NULL;
 
                         switch (category) {
                         case CATEGORY_ROOT:

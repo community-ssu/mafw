@@ -411,11 +411,14 @@ static void _do_tracker_get_metadata(gchar **uris,
 	}
 
         /* Save required information */
-        mc = g_slice_new0(struct _mafw_metadata_closure);
+        mc = g_slice_new(struct _mafw_metadata_closure);
         mc->callback = callback;
         mc->user_data = user_data;
         mc->cache = tracker_cache_new(service_type,
                                       TRACKER_CACHE_RESULT_TYPE_GET_METADATA);
+	mc->count_childcount = FALSE;
+	mc->tracker_type = 0;
+	mc->path_list = NULL;
 
         /* If we have only a URI, add it as a predefined value */
         if (!uris[1]) {
@@ -1264,10 +1267,11 @@ static void _do_tracker_get_metadata_from_service(
         gint i;
         struct _mafw_metadata_closure *mc = NULL;
 
-        mc = g_slice_new0(struct _mafw_metadata_closure);
+        mc = g_slice_new(struct _mafw_metadata_closure);
         mc->callback = callback;
         mc->user_data = user_data;
         mc->tracker_type = tracker_type;
+	mc->path_list = NULL;
 
         /* If user has only requested CHILDCOUNT, then use a special tracker API
          * to speed up the request */
@@ -1410,7 +1414,7 @@ void ti_get_metadata_from_category(const gchar *genre,
         gint level;
         gint start_to_look;
 
-        mc = g_slice_new0(struct _mafw_metadata_closure);
+        mc = g_slice_new(struct _mafw_metadata_closure);
         mc->callback = callback;
         mc->user_data = user_data;
 
@@ -1418,6 +1422,8 @@ void ti_get_metadata_from_category(const gchar *genre,
         mc->cache =
                 tracker_cache_new(SERVICE_MUSIC,
                                   TRACKER_CACHE_RESULT_TYPE_UNIQUE);
+	mc->tracker_type = 0;
+	mc->path_list = NULL;
 
         /* Preset metadata that we know already */
         if (genre) {
