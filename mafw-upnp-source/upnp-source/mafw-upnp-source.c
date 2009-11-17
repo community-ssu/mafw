@@ -262,7 +262,7 @@ static void mafw_upnp_source_get_metadata(MafwSource *source,
 
 /* Common utilities */
 static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
-						     xmlNode* didl_node,
+						     GUPnPDIDLLiteObject* didlobject,
 						     const gchar* didl);
 
 /* Search criteria parsing */
@@ -797,6 +797,10 @@ static void mafw_upnp_source_device_proxy_unavailable(
 /*----------------------------------------------------------------------------
   Common utilities
   ----------------------------------------------------------------------------*/
+static void _call_unref(GObject *obj, gpointer udat)
+{
+	g_object_unref(obj);
+}
 
 /**
  * mafw_upnp_source_compile_metadata:
@@ -811,29 +815,31 @@ static void mafw_upnp_source_device_proxy_unavailable(
  * Returns: A #GHashTable containing key-value pairs. Must be freed after use.
  */
 static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
-						     xmlNode *didl_node,
+						     GUPnPDIDLLiteObject* didlobject,
 						     const gchar* didl)
 {
 	GHashTable* metadata;
 	const gchar* name;
 	gchar* value;
 	gint number;
-	GList *properties;
-	gboolean is_audio = FALSE, is_container = FALSE, is_supported = TRUE;
+	GList *resources;
+	gboolean is_audio = FALSE, is_supported = TRUE, is_container;
 	gint type = G_TYPE_INVALID;
 	gint id = 0;
-	xmlNode *first_xmlnode = NULL;
+	GUPnPDIDLLiteResource* first_res = NULL;
 
 	/* Requested metadata keys */
 	metadata = mafw_metadata_new();
 
-	is_container = gupnp_didl_lite_object_is_container(didl_node);
-
+	if (GUPNP_IS_DIDL_LITE_CONTAINER(didlobject))
+		is_container = TRUE;
+	else
+		is_container = FALSE;
 	if (is_container && (keys & MUPnPSrc_MKey_Childcount) == MUPnPSrc_MKey_Childcount)
 	{
-		number = didl_get_childcount(didl_node);
-		if (number >= 0)
-			mafw_metadata_add_int(metadata,
+		number = (gint)gupnp_didl_lite_container_get_child_count(
+					GUPNP_DIDL_LITE_CONTAINER(didlobject));
+		mafw_metadata_add_int(metadata,
 				MAFW_METADATA_KEY_CHILDCOUNT_1, number);
 	}
 	keys &= ~MUPnPSrc_MKey_Childcount;
@@ -843,17 +849,16 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 				(keys & MUPnPSrc_MKey_Thumbnail_URI) ==
 					MUPnPSrc_MKey_Thumbnail_URI))
 	{
-		is_audio = didl_check_filetype(didl_node, &is_supported);
+		is_audio = didl_check_filetype(didlobject, &is_supported);
 		
 	}
 	
 	if (is_audio && (keys & MUPnPSrc_MKey_Thumbnail_URI) == MUPnPSrc_MKey_Thumbnail_URI)
 	{
-		value = didl_get_album_art_uri(didl_node);
-		if (value != NULL && strlen(value) > 0)
+		const gchar *albumarturi = gupnp_didl_lite_object_get_album_art(didlobject);
+		if (albumarturi != NULL && albumarturi[0] != '\0')
 			mafw_metadata_add_str(metadata,
-					MAFW_METADATA_KEY_THUMBNAIL_URI, value);
-		g_free(value);
+					MAFW_METADATA_KEY_THUMBNAIL_URI, albumarturi);
 	}
 	keys &= ~MUPnPSrc_MKey_Thumbnail_URI;
 
@@ -865,23 +870,21 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	}
 	keys &= ~MUPnPSrc_MKey_DIDL;
 
-	properties = didl_get_supported_resources(didl_node);
-	
-
-	if (properties)
-		first_xmlnode = properties->data;
+	resources = didl_get_supported_resources(didlobject);
+	if (resources)
+		first_res = resources->data;
 	
 	if ((is_container || (!is_container && is_supported)) &&
 			((keys & MUPnPSrc_MKey_MimeType)
 				== MUPnPSrc_MKey_MimeType))
 	{
-		didl_get_mimetype(metadata, is_container, is_audio, properties);
+		didl_get_mimetype(metadata, is_container, is_audio, resources);
 	}
 	keys &= ~MUPnPSrc_MKey_MimeType;
 	
-	if ((keys & MUPnPSrc_MKey_Duration) == MUPnPSrc_MKey_Duration)
+	if (first_res && (keys & MUPnPSrc_MKey_Duration) == MUPnPSrc_MKey_Duration)
 	{
-		number = didl_get_duration(first_xmlnode);
+		number = (gint)gupnp_didl_lite_resource_get_duration(first_res);
 		if (number >= 0)
 			mafw_metadata_add_int(metadata,
 						MAFW_METADATA_KEY_DURATION,
@@ -891,20 +894,49 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	
 	if ((keys & MUPnPSrc_MKey_URI) == MUPnPSrc_MKey_URI)
 	{
-		didl_get_http_res_uri(metadata, properties, is_audio);
+		didl_get_http_res_uri(metadata, resources, is_audio);
 	}
 	keys &= ~MUPnPSrc_MKey_URI;
-	
-	if (!is_container &&
-		((keys & MUPnPSrc_MKey_Is_Seekable) ==
-			MUPnPSrc_MKey_Is_Seekable) && first_xmlnode)
-	{
-		gint8 seekability;
 
-		seekability = didl_get_seekability((xmlNode*)first_xmlnode);
-		if (seekability != -1) {
+	if (first_res && !is_container &&
+		((keys & MUPnPSrc_MKey_Is_Seekable) ==
+			MUPnPSrc_MKey_Is_Seekable))
+	{
+		if (gupnp_protocol_info_get_dlna_operation(
+			gupnp_didl_lite_resource_get_protocol_info(first_res))
+				!= GUPNP_DLNA_OPERATION_NONE)
+		{
 			mafw_metadata_add_boolean(metadata, MAFW_METADATA_KEY_IS_SEEKABLE,
-						  seekability);
+						  	TRUE);
+		}
+		else
+		{
+			value = didl_fallback(didlobject, first_res,
+					8, &type);
+			
+			if (value)
+			{
+				gchar** array;
+				/* Split the protocol info field into 4 fields:
+	   			0:protocol, 1:network, 2:mime-type and 3:additional info. */
+				array = g_strsplit(value, ":", 4);
+				
+				if (strstr(array[3], "DLNA.") != NULL)
+					mafw_metadata_add_boolean(metadata, 
+						MAFW_METADATA_KEY_IS_SEEKABLE,
+						  	FALSE);
+				g_strfreev(array);
+				if ((keys & MUPnPSrc_MKey_Protocol_Info) ==
+					MUPnPSrc_MKey_Protocol_Info)
+				{
+					mafw_metadata_add_str(metadata, 
+						MAFW_METADATA_KEY_PROTOCOL_INFO,
+							      value);
+					keys &= ~MUPnPSrc_MKey_Protocol_Info;
+				}
+				g_free(value);
+			}
+			
 		}
 	}
 	keys &= ~MUPnPSrc_MKey_Is_Seekable;
@@ -914,14 +946,16 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	{
 		if ((keys & 1) == 1)
 		{
-			value = didl_fallback(didl_node,
-					first_xmlnode, id, &type);
+			value = didl_fallback(didlobject, first_res,
+					id, &type);
 			if (value != NULL && value[0] != '\0')
 			{
 				name = util_get_metadatakey_from_id(id);
 				if (!name)
 				{
 					g_free(value);
+					keys >>= 1;
+					id++;
 					continue;
 				}
 				if (type == G_TYPE_INT)
@@ -941,7 +975,8 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 		id++;
 	}
 
-	g_list_free(properties);
+	g_list_foreach(resources, (GFunc)_call_unref, NULL);
+	g_list_free(resources);
 
 	return metadata;
 }
@@ -1375,15 +1410,13 @@ static void browse_args_unref(BrowseArgs* args, GError *err)
  * whole set in one go using the user-given callback function.
  */
 static void mafw_upnp_source_browse_result(GUPnPDIDLLiteParser* parser,
-					    xmlNode* didl_node,
-					    gpointer user_data)
+					   GUPnPDIDLLiteObject* didlobject,
+					   BrowseArgs* args)
 {
 	GHashTable* metadata;
-	BrowseArgs* args;
 	gchar* objectid;
 	gint current;
 
-	args = (BrowseArgs*) user_data;
 	g_assert(args != NULL);
 	g_assert(args->callback != NULL);
 	g_return_if_fail(args->remaining_count > 0);
@@ -1391,7 +1424,7 @@ static void mafw_upnp_source_browse_result(GUPnPDIDLLiteParser* parser,
 	/* Create a MAFW-style object ID for this item node. If an
 	   ID cannot be found, this node might be a <desc> node, which
 	   can be skipped with good conscience. */
-	objectid = util_create_objectid(args->source, didl_node);
+	objectid = util_create_objectid(args->source, didlobject);
 
 	/* If there was no object ID, this node might be a <desc> node
 	   which must not be exposed to the user and thus not counted
@@ -1403,7 +1436,8 @@ static void mafw_upnp_source_browse_result(GUPnPDIDLLiteParser* parser,
 
 	/* Gather requested metadata information from DIDL-Lite */
 	metadata = mafw_upnp_source_compile_metadata(args->mdata_keys,
-						      didl_node, NULL);
+						     didlobject,
+						     NULL);
 
 	/* Calculate remaining count and current item's index. */
 	current = args->current++;
@@ -1507,30 +1541,45 @@ static void mafw_upnp_source_browse_cb(GUPnPServiceProxy* service,
 	}
 	else
 	{
+		gboolean parser_return;
+		guint object_signal_id;
+		
+		object_signal_id = g_signal_connect(parser, "object-available",
+					(GCallback)mafw_upnp_source_browse_result,
+					args);
 		/* Parse the DIDL-Lite into an xmlNode tree and parse them
 		   one by one, using mafw_upnp_source_browse_result() */
-		gupnp_didl_lite_parser_parse_didl(
+		parser_return = gupnp_didl_lite_parser_parse_didl(
 			parser,
 			didl,
-			mafw_upnp_source_browse_result,
-			args,
 			&gupnp_error);
-		if (gupnp_error != NULL)
+		g_signal_handler_disconnect(parser, object_signal_id);
+		if (!parser_return || gupnp_error != NULL)
 		{
 			/* DIDL-Lite parsing failed */
 
 			GError* error = NULL;
-			g_set_error(&error,
+			if (gupnp_error)
+				g_set_error(&error,
 				    MAFW_SOURCE_ERROR,
 				    MAFW_SOURCE_ERROR_BROWSE_RESULT_FAILED,
 				    "DIDL-Lite parsing failed: %s", gupnp_error->message);
+			else
+				g_set_error(&error,
+				    MAFW_SOURCE_ERROR,
+				    MAFW_SOURCE_ERROR_BROWSE_RESULT_FAILED,
+				    "DIDL-Lite parsing failed");
 			/* Call the callback function with invalid values and
 			   an error. */
 			if (args->remaining_count > 0)
 			{
-				g_warning("DIDL-Lite parsing failed: %s."
+				if (gupnp_error)
+					g_warning("DIDL-Lite parsing failed: %s."
 					  "Terminating browse session.",
 					  gupnp_error->message);
+				else
+					g_warning("DIDL-Lite parsing failed."
+					  "Terminating browse session.");
 
 				args->callback(MAFW_SOURCE(args->source),
 					       args->browse_id, 0, 0, NULL, NULL,
@@ -1539,7 +1588,8 @@ static void mafw_upnp_source_browse_cb(GUPnPServiceProxy* service,
 			}
 
 			g_error_free(error);
-			g_error_free(gupnp_error);
+			if (gupnp_error)
+				g_error_free(gupnp_error);
 		}
 		/* Continue incremental browse only, if:
 		 * 1. There are items left in the server to browse
@@ -1949,7 +1999,7 @@ typedef struct _MetadataArgs
  * practically always contain just one item (also rarely a container).
  */
 static void mafw_upnp_source_metadata_result(GUPnPDIDLLiteParser* parser,
-					      xmlNode* didl_node,
+					      GUPnPDIDLLiteObject* didlobject,
 					      gpointer user_data)
 {
 	MafwUPnPSourcePrivate* priv = NULL;
@@ -1963,15 +2013,15 @@ static void mafw_upnp_source_metadata_result(GUPnPDIDLLiteParser* parser,
 	g_assert(priv != NULL);
 
 	/* If the XML node is not a DIDL item or container, skip it */
-	if (gupnp_didl_lite_object_is_item(didl_node) == TRUE ||
-	    gupnp_didl_lite_object_is_container(didl_node) == TRUE)
+	if (GUPNP_IS_DIDL_LITE_ITEM(didlobject) == TRUE ||
+	    GUPNP_IS_DIDL_LITE_CONTAINER(didlobject) == TRUE)
 	{
 		GHashTable* metadata;
 		gchar* objectid;
 
-		objectid = util_create_objectid(args->source, didl_node);
+		objectid = util_create_objectid(args->source, didlobject);
 		metadata = mafw_upnp_source_compile_metadata(args->mdata_keys,
-							      didl_node,
+							      didlobject,
 							      args->didl);
 
 		args->callback(MAFW_SOURCE(args->source), objectid, metadata,
@@ -2029,25 +2079,32 @@ static void mafw_upnp_source_metadata_cb(GUPnPServiceProxy* service,
 	}
 	else
 	{
-		gupnp_didl_lite_parser_parse_didl(
+		gboolean parser_return;
+		guint object_signal_id;
+		
+		object_signal_id = g_signal_connect(parser, "object-available",
+					(GCallback)mafw_upnp_source_metadata_result,
+					args);
+		parser_return = gupnp_didl_lite_parser_parse_didl(
 			parser,
 			args->didl,
-			mafw_upnp_source_metadata_result,
-			args,
 			&gupnp_error);
+		g_signal_handler_disconnect(parser, object_signal_id);
 
-		if (gupnp_error != NULL)
+		if (!parser_return || gupnp_error != NULL)
 		{
 			GError* error = NULL;
 
 			/* DIDL-Lite parsing failed */
 			g_warning("Metadata DIDL-Lite parsing failed: %s",
-					gupnp_error->message);
+					gupnp_error ? gupnp_error->message :
+					"Reason unknown");
 			g_set_error(&error,
 				    MAFW_SOURCE_ERROR,
 				    MAFW_SOURCE_ERROR_GET_METADATA_RESULT_FAILED,
 				    "Metadata DIDL-Lite parsing failed: %s",
-						gupnp_error->message);
+						gupnp_error ? gupnp_error->message :
+						"Reason unknown");
 
 			/* Call the callback with invalid values and an error */
 			args->callback(MAFW_SOURCE(args->source),
