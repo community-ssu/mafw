@@ -29,11 +29,6 @@
 #include <string.h>
 #include <gmodule.h>
 
-#ifdef HAVE_CONIC /* MAEMO */
-#include <conic.h>
-#include <dbus/dbus.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#endif /* MAEMO */
 #include <libmafw/mafw.h>
 #include <libgupnp/gupnp.h>
 #include <libgupnp-av/gupnp-av.h>
@@ -47,7 +42,6 @@
 
 static void mafw_upnp_source_plugin_gupnp_down(void);
 static void mafw_upnp_source_plugin_gupnp_up(void);
-static gboolean network_up;
 
 G_DEFINE_TYPE(MafwUpnpControlSource, mafw_upnp_control_source, MAFW_TYPE_SOURCE);
 
@@ -142,8 +136,7 @@ static void mafw_upnp_control_source_set_property(MafwExtension *self,
 			}
 			else
 			{
-				if (network_up)
-					mafw_upnp_source_plugin_gupnp_up();
+				mafw_upnp_source_plugin_gupnp_up();
 			}
 		}
 		else
@@ -307,20 +300,34 @@ static void mafw_upnp_source_deinitialize(GError **error)
 
 typedef struct _MafwUPnPSourcePlugin {
 
-#ifdef HAVE_CONIC /* MAEMO */
-	ConIcConnection* conic;
-	DBusConnection* dbus_system;
-#endif /* MAEMO */
-
+	GUPnPContextManager *contextmanager;
 	MafwRegistry* registry;
-	GUPnPContext* context;
-	GUPnPControlPoint* cp;
 	guint next_browse_id;
 } MafwUPnPSourcePlugin;
 
 /** THE mafw plugin */
 static MafwUPnPSourcePlugin* _plugin = NULL;
 static MafwSource *control_src;
+
+static void
+_on_context_available (GUPnPContextManager *context_manager,
+                      GUPnPContext        *context,
+                      gpointer            *user_data)
+{
+	GUPnPControlPoint* cp = gupnp_control_point_new(context, "ssdp:all");
+	
+	gupnp_context_manager_manage_control_point(context_manager, cp);
+        g_debug("%s %s", G_STRFUNC, gupnp_context_get_host_ip(context));
+	g_signal_connect(cp, "device-proxy-available",
+			 G_CALLBACK(mafw_upnp_source_device_proxy_available),
+			 _plugin);
+	g_signal_connect(cp, "device-proxy-unavailable",
+			 G_CALLBACK(mafw_upnp_source_device_proxy_unavailable),
+			 _plugin);
+	gssdp_resource_browser_set_active(
+				GSSDP_RESOURCE_BROWSER(cp), TRUE);
+}
+
 /**
  * mafw_upnp_source_plugin_gupnp_up:
  *
@@ -328,35 +335,16 @@ static MafwSource *control_src;
  */
 static void mafw_upnp_source_plugin_gupnp_up(void)
 {
-	GError* error = NULL;
+	_plugin->contextmanager = gupnp_context_manager_new(NULL, 0);
 
-	if (_plugin->context != NULL)
-		return;
-
-	_plugin->context = gupnp_context_new(NULL, NULL, 0, &error);
-	if (error != NULL)
+	if (_plugin->contextmanager == NULL)
 	{
-		g_warning("Unable to create GUPnP context: %s. UPnP servers "
-			  "will not be available.", error->message);
-		g_error_free(error);
+		g_warning("Unable to create GUPnP contextmanager");
 		return;
 	}
 
-	/* Create a control point object with MediaServer search target */
-	_plugin->cp = gupnp_control_point_new(_plugin->context, "ssdp:all");
-	g_assert(_plugin->cp != NULL);
-
-	/* Listen to device alive/byebye messages */
-	g_signal_connect(_plugin->cp, "device-proxy-available",
-			 G_CALLBACK(mafw_upnp_source_device_proxy_available),
-			 _plugin);
-	g_signal_connect(_plugin->cp, "device-proxy-unavailable",
-			 G_CALLBACK(mafw_upnp_source_device_proxy_unavailable),
-			 _plugin);
-
-	/* Switch the control point on */
-        gssdp_resource_browser_set_active(
-				GSSDP_RESOURCE_BROWSER(_plugin->cp), TRUE);
+	g_signal_connect(_plugin->contextmanager, "context-available",
+			 G_CALLBACK(_on_context_available), NULL);
 }
 
 /**
@@ -366,74 +354,12 @@ static void mafw_upnp_source_plugin_gupnp_up(void)
  */
 static void mafw_upnp_source_plugin_gupnp_down(void)
 {
-	if (_plugin->cp != NULL)
+	if (_plugin->contextmanager != NULL)
 	{
-	        gssdp_resource_browser_set_active(
-				GSSDP_RESOURCE_BROWSER(_plugin->cp), FALSE);
-		g_object_unref(_plugin->cp);
-		_plugin->cp = NULL;
+		g_object_unref(_plugin->contextmanager);
+		_plugin->contextmanager = NULL;
 	}
-
-	/* Destroy context, because it is bound to a nonexisting network
-	   interface if we came here from conic message handler. */
-	if (_plugin->context != NULL)
-		g_object_unref(_plugin->context);
-	_plugin->context = NULL;
 }
-
-#ifdef HAVE_CONIC /* MAEMO */
-
-static void mafw_upnp_source_plugin_conic_event(ConIcConnection* connection,
-						 ConIcConnectionEvent* event,
-						 gpointer user_data)
-{
-	ConIcConnectionStatus status;
-	const gchar* bearer;
-
-	status = con_ic_connection_event_get_status(event);
-
-	bearer = con_ic_event_get_bearer_type(CON_IC_EVENT(event));
-	if (bearer != NULL &&
-		    (strcmp(bearer, CON_IC_BEARER_WLAN_INFRA) == 0 ||
-		     strcmp(bearer, CON_IC_BEARER_WLAN_ADHOC) == 0))
-	{
-		switch (status)
-		{
-			case CON_IC_STATUS_CONNECTED:
-				/* Create GUPnP stuff only for WLAN connections. This prevents
-		   		UPnP traffic in a GSM network. */
-				network_up = TRUE;
-				g_debug("WLAN connection is up.");
-				if (MAFW_UPNP_CONTROL_SOURCE(control_src)->activate)
-					mafw_upnp_source_plugin_gupnp_up();
-				break;
-
-			case CON_IC_STATUS_DISCONNECTED:
-				/* Since only one connection can be up at a time (thru conic)
-				   it shouldn't be necessary to check the bearer type here.
-				   If a GSM network was up, this does nothing. Otherwise all
-				   GUPnP stuff is destroyed as it should be. */
-				network_up = FALSE;
-				mafw_upnp_source_plugin_gupnp_down();
-				break;
-
-			case CON_IC_STATUS_DISCONNECTING:
-				/* NOP */
-				break;
-
-			default:
-				g_warning("Unknown network status: %d", status);
-				break;
-		}
-	}
-	else
-	{
-		g_debug("Non-WLAN connection has changed. Ignoring event.");
-	}
-
-}
-
-#endif /* MAEMO */
 
 void mafw_upnp_source_plugin_initialize(MafwRegistry* registry)
 {
@@ -456,34 +382,6 @@ void mafw_upnp_source_plugin_initialize(MafwRegistry* registry)
 	mafw_registry_add_extension(registry, MAFW_EXTENSION(control_src));
 	/* Reset next browse id */
 	_plugin->next_browse_id = 0;
-
-#ifdef HAVE_CONIC /* MAEMO */
-	
-	/* Initialize the system bus so libconic can receive ICD messages. */
-	_plugin->dbus_system = dbus_bus_get(DBUS_BUS_SYSTEM, NULL);
-	dbus_connection_setup_with_g_main(_plugin->dbus_system, NULL);
-
-	/* Create an Internet Connectivity object and start listening
-	   to connection events */
-	_plugin->conic = con_ic_connection_new();
-	g_assert(_plugin->conic != NULL);
-
-	/* Set conic to send events from all events and start receiving them */
-	g_signal_connect(_plugin->conic, "connection-event",
-			 G_CALLBACK(mafw_upnp_source_plugin_conic_event),
-			 NULL);
-	g_object_set(_plugin->conic, "automatic-connection-events", TRUE, NULL);
-
-	g_debug("Waiting for ConIC to tell, whether network is up.");
-	
-	
-
-#else
-	/* We're operating on a non-armel (non-maemo) environment. Assume
-	   network is up and running. */
-	network_up = TRUE;
-
-#endif /* MAEMO */
 }
 
 void mafw_upnp_source_plugin_deinitialize(void)
@@ -491,14 +389,6 @@ void mafw_upnp_source_plugin_deinitialize(void)
 	g_assert(_plugin != NULL);
 
 	mafw_upnp_source_plugin_gupnp_down();
-
-#ifdef HAVE_CONIC /* MAEMO */
-	if (_plugin->conic != NULL)
-		g_object_unref(_plugin->conic);
-	_plugin->conic = NULL;
-
-	dbus_connection_unref(_plugin->dbus_system);
-#endif /* MAEMO */
 
 	mafw_registry_remove_extension(_plugin->registry,
 					   MAFW_EXTENSION(control_src));
