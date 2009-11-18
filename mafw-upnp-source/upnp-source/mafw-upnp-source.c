@@ -721,6 +721,16 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	/* Requested metadata keys */
 	metadata = mafw_metadata_new();
 
+	if ((keys & MUPnPSrc_MKey_Title) ==  MUPnPSrc_MKey_Title)
+	{
+		name = gupnp_didl_lite_object_get_title(didlobject);
+		if (name)
+		{
+			mafw_metadata_add_str(metadata, MAFW_METADATA_KEY_TITLE, name);
+		}
+	}
+	keys &= ~MUPnPSrc_MKey_Title;
+
 	if (GUPNP_IS_DIDL_LITE_CONTAINER(didlobject))
 		is_container = TRUE;
 	else
@@ -782,6 +792,50 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	}
 	keys &= ~MUPnPSrc_MKey_Duration;
 	
+	if (first_res && !resources->next &&
+		(keys & MUPnPSrc_MKey_FileSize) == MUPnPSrc_MKey_FileSize)
+	{
+		number = (gint)gupnp_didl_lite_resource_get_size(first_res);
+		if (number >= 0)
+			mafw_metadata_add_int(metadata,
+						MAFW_METADATA_KEY_FILESIZE,
+						number);
+	}
+	keys &= ~MUPnPSrc_MKey_FileSize;
+
+	if (first_res && !resources->next &&
+		(keys & MUPnPSrc_MKey_Bitrate) == MUPnPSrc_MKey_Bitrate)
+	{
+		number = (gint)gupnp_didl_lite_resource_get_bitrate(first_res);
+		if (number > 0)
+			mafw_metadata_add_int(metadata,
+						MAFW_METADATA_KEY_BITRATE,
+						number);
+	}
+	keys &= ~MUPnPSrc_MKey_Bitrate;
+	
+	if (first_res && !resources->next &&
+		(keys & MUPnPSrc_MKey_Res_X) == MUPnPSrc_MKey_Res_X)
+	{
+		number = (gint)gupnp_didl_lite_resource_get_width(first_res);
+		if (number > 0)
+			mafw_metadata_add_int(metadata,
+						MAFW_METADATA_KEY_RES_X,
+						number);
+	}
+	keys &= ~MUPnPSrc_MKey_Res_X;
+
+	if (first_res && !resources->next &&
+		(keys & MUPnPSrc_MKey_Res_Y) == MUPnPSrc_MKey_Res_Y)
+	{
+		number = (gint)gupnp_didl_lite_resource_get_height(first_res);
+		if (number > 0)
+			mafw_metadata_add_int(metadata,
+						MAFW_METADATA_KEY_RES_Y,
+						number);
+	}
+	keys &= ~MUPnPSrc_MKey_Res_Y;
+
 	if ((keys & MUPnPSrc_MKey_URI) == MUPnPSrc_MKey_URI)
 	{
 		didl_get_http_res_uri(metadata, resources, is_audio);
