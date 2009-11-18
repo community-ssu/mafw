@@ -50,8 +50,8 @@ PKG_CHECK_MODULES(DEPS,
 		gobject-2.0  >= 2.12
 		gthread-2.0
 		mafw 	     >= 0.1
-		gupnp-1.0    >= 0.6
-		gupnp-av-1.0 >= 0.1
+		gupnp-1.0    >= 0.13
+		gupnp-av-1.0 >= 0.5
 	]
 )
 
