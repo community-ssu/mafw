@@ -709,13 +709,12 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 						     const gchar* didl)
 {
 	GHashTable* metadata;
-	const gchar* name;
+	const gchar* constval;
 	gchar* value;
 	gint number;
 	GList *resources;
-	gboolean is_audio = FALSE, is_supported = TRUE, is_container;
 	gint type = G_TYPE_INVALID;
-	gint id = 0;
+	gboolean is_audio = FALSE, is_supported = TRUE, is_container;
 	GUPnPDIDLLiteResource* first_res = NULL;
 
 	/* Requested metadata keys */
@@ -723,10 +722,10 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 
 	if ((keys & MUPnPSrc_MKey_Title) ==  MUPnPSrc_MKey_Title)
 	{
-		name = gupnp_didl_lite_object_get_title(didlobject);
-		if (name)
+		constval = gupnp_didl_lite_object_get_title(didlobject);
+		if (constval)
 		{
-			mafw_metadata_add_str(metadata, MAFW_METADATA_KEY_TITLE, name);
+			mafw_metadata_add_str(metadata, MAFW_METADATA_KEY_TITLE, constval);
 		}
 	}
 	keys &= ~MUPnPSrc_MKey_Title;
@@ -888,14 +887,15 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 	/* the rest */
 	while (keys)
 	{
+		gint id = 0;
 		if ((keys & 1) == 1)
-		{
+		{			
 			value = didl_fallback(didlobject, first_res,
 					id, &type);
 			if (value != NULL && value[0] != '\0')
 			{
-				name = util_get_metadatakey_from_id(id);
-				if (!name)
+				constval = util_get_metadatakey_from_id(id);
+				if (!constval)
 				{
 					g_free(value);
 					keys >>= 1;
@@ -904,12 +904,12 @@ static GHashTable *mafw_upnp_source_compile_metadata(guint64 keys,
 				}
 				if (type == G_TYPE_INT)
 				{
-					mafw_metadata_add_int(metadata, name,
+					mafw_metadata_add_int(metadata, constval,
 							      atoi(value));
 				}
 				else if (type == G_TYPE_STRING)
 				{
-					mafw_metadata_add_str(metadata, name,
+					mafw_metadata_add_str(metadata, constval,
 							      value);
 				}
 				g_free(value);
