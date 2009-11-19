@@ -472,17 +472,16 @@ static guint import_playlist(const gchar *pl, const gchar *base,
 	gchar *src_uuid;
 	guint import_id;
 	MafwSource *src;
-	struct plparse_data *pl_dat = g_slice_new(struct plparse_data);
+	struct plparse_data *pl_dat = g_slice_new0(struct plparse_data);
 
 	import_id = pl_dat->import_id = get_next_import_id();
 	pl_dat->oci = oci;
 	pl_dat->pl_uri = g_strdup(pl);
+
 	if (base && base[0])
 	{
 		pl_dat->base = g_strdup(base);
 	}
-	else
-		pl_dat->base = NULL;
 
 	/* Check whether pl is an object-id */
 	if (mafw_source_split_objectid(pl, &src_uuid, NULL))
