@@ -4,38 +4,20 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    0.2009.40-1
-Date       2009.10.04
+Version    0.2009.47-1
+Date       2009.11.20
 Maintainer mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
 
-libmafw              0.1.2009.40-1
-mafw-gst-renderer    0.1.2009.40-1
-mafw-iradio-source   0.1.2009.40-1
-mafw-shared          0.1.2009.40-1
-mafw-test-gui        0.1.2009.40-1
-mafw-tracker-source  0.1.2009.40-1
-mafw-upnp-source     0.1.2009.40-1
+mafw-gst-renderer    0.1.2009.41-1
 
 
 Change logs: 
 
-* This is a bug fix tag and a baseline for next production release.
+* This is a bug fix tag release.
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog (in two separate entries): 13
-* Fixes: NB#139371 - User-defined (imported) playlists not sorted by the alphabet
-* Fixes: NB#137530 - Adding several metadata values with the same key, ends into a crash 
-* Fixes: NB#128909 - Redundant error message displayed at the end of playback
-* Fixes: NB#137371 - MAFW crashed when trying to access Automatic playlists
-* Fixes: NB#134084 - <coverity> RESOURCE_LEAK from libmafw-tracker-source
-* Fixes: NB#134728 - <MemLeak> mafw-gst-renderer-worker.c
-* Fixes: NB#134730 - <MemLeak> mafw-gst-renderer.c
-* Fixes: NB#134807 - <MemLeak> mafw-shared-0.1.2009.33/libmafw-shared/ mafw-proxy-renderer.c
-* Fixes: NB#134817 - <MemLeak> mafw-tracker-source-0.1.2009.34/libmafw-tracker-source/ tracker-iface.c
-* Fixes: NB#137363 - M4A audio codec clips arent played to full duration
-* Fixes: NB#137609 - UPnP: playback pauses often when seek the attached content
-* Fixes: NB#134799 - <MemLeak> mafw-shared-0.1.2009.33/mafw-playlist-daemon playlist-wrapper.c
-* Fixes: NB#134495 - State changed signal does not come sometimes when stream is played 
+From changelog (in two separate entries): 1
+* Fixes: NB#141508 - Specific video file (mjpeg) makes Mediaplayer unusable
