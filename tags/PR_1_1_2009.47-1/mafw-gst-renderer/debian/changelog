@@ -1,8 +1,27 @@
-mafw-gst-renderer (0.1.2009.41-1) unstable; urgency=low
+mafw-gst-renderer (0.1.2009.47-1) unstable; urgency=low
 
   * Fixes: NB#141508 - Specific video file (mjpeg) makes Mediaplayer unusable
 
- -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 20 Nov 2009 04:05:24 +0200
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Fri, 20 Nov 2009 04:18:15 +0200
+
+mafw-gst-renderer (0.1.2009.44-1) unstable; urgency=low
+
+  * Fixes: NB#143299 - mafw_renderer_get_current_metadata don't give correct duration.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 28 Oct 2009 23:48:22 +0200
+
+mafw-gst-renderer (0.1.2009.42-2) unstable; urgency=low
+
+  * Version increased.
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Tue, 20 Oct 2009 13:26:36 +0300
+
+mafw-gst-renderer (0.1.2009.42-1) unstable; urgency=low
+
+  * Version and changelog updated for pre-release 0.2009.42-1
+  * Rebuild needed.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Mon, 12 Oct 2009 17:21:48 +0300
 
 mafw-gst-renderer (0.1.2009.40-1) unstable; urgency=low
 

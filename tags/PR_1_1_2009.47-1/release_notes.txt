@@ -10,7 +10,7 @@ Maintainer mika.tapojarvi@sse.fi
 
 PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
 
-mafw-gst-renderer    0.1.2009.41-1
+mafw-gst-renderer    0.1.2009.47-1
 
 
 Change logs: 
