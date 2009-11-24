@@ -712,7 +712,7 @@ static void _browse_playlist_tracker_cb(MafwSource *self,
                            error->message);
 	}
 
-	clips = g_slice_new(MafwResult);
+	clips = g_slice_new0(MafwResult);
 
 	_construct_playlist_entries_result(bc, tracker_metadatas, clips);
 

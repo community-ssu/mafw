@@ -427,7 +427,7 @@ DBusHandlerResult handle_source_msg(DBusConnection *conn,
 		guint item_count;
 		guint browse_id;
 		MafwFilter *filter = NULL;
-		struct browse_data *bdata = g_slice_new(struct browse_data);
+		struct browse_data *bdata = g_slice_new0(struct browse_data);
 
 		/* NOTE Though i didn't find it documented, but D-BUS
 		 * adds NULL-termination to $metadata_keys.  <relief> */
