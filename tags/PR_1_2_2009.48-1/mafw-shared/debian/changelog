@@ -1,3 +1,15 @@
+mafw-shared (0.2.2009.48-1) unstable; urgency=low
+
+  * Pre-release PR 1.2 2009.48-1 tag.
+
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Tue, 24 Nov 2009 22:03:31 +0200
+
+mafw-shared (0.1.2009.47-2) unstable; urgency=low
+
+  * Version increased.
+
+ -- Tuomas Kamarainen <tuomas.kamarainen@nokia.com>  Fri, 20 Nov 2009 13:26:19 +0300
+
 mafw-shared (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.
