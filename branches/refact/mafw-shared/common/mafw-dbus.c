@@ -1137,7 +1137,7 @@ MafwDBusOpCompletedInfo *mafw_dbus_oci_new(DBusConnection *con,
 {
 	MafwDBusOpCompletedInfo *oci;
 
-	oci = g_new0(MafwDBusOpCompletedInfo, 1);
+	oci = g_slice_new(MafwDBusOpCompletedInfo);
 	oci->con = dbus_connection_ref(con);
 	oci->msg = dbus_message_ref(msg);
 
@@ -1149,7 +1149,7 @@ void mafw_dbus_oci_free(MafwDBusOpCompletedInfo *oci)
 {
 	dbus_message_unref(oci->msg);
 	dbus_connection_unref(oci->con);
-	g_free(oci);
+	g_slice_free(MafwDBusOpCompletedInfo, oci);
 }
 
 /* Returns $error to $info->con and releases $info. */
