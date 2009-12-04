@@ -956,35 +956,35 @@ static void _emit_renderer_art(MafwGstRendererWorker *worker,
 
 static GHashTable* _build_tagmap(void)
 {
-	GHashTable *hash_table = NULL;
-
-	hash_table = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-					   g_free);
-
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_TITLE),
-			    g_strdup(MAFW_METADATA_KEY_TITLE));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_ARTIST),
-			    g_strdup(MAFW_METADATA_KEY_ARTIST));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_AUDIO_CODEC),
-			    g_strdup(MAFW_METADATA_KEY_AUDIO_CODEC));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_VIDEO_CODEC),
-			    g_strdup(MAFW_METADATA_KEY_VIDEO_CODEC));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_BITRATE),
-			    g_strdup(MAFW_METADATA_KEY_BITRATE));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_LANGUAGE_CODE),
-			    g_strdup(MAFW_METADATA_KEY_ENCODING));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_ALBUM),
-			    g_strdup(MAFW_METADATA_KEY_ALBUM));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_GENRE),
-			    g_strdup(MAFW_METADATA_KEY_GENRE));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_TRACK_NUMBER),
-			    g_strdup(MAFW_METADATA_KEY_TRACK));
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_ORGANIZATION),
-			    g_strdup(MAFW_METADATA_KEY_ORGANIZATION));
+	const gchar *tagmaparray[][2] = {
+		{GST_TAG_TITLE, MAFW_METADATA_KEY_TITLE},
+		{GST_TAG_ARTIST, MAFW_METADATA_KEY_ARTIST},
+		{GST_TAG_AUDIO_CODEC, MAFW_METADATA_KEY_AUDIO_CODEC},
+		{GST_TAG_VIDEO_CODEC, MAFW_METADATA_KEY_VIDEO_CODEC},
+		{GST_TAG_BITRATE, MAFW_METADATA_KEY_BITRATE},
+		{GST_TAG_LANGUAGE_CODE, MAFW_METADATA_KEY_ENCODING},
+		{GST_TAG_ALBUM, MAFW_METADATA_KEY_ALBUM},
+		{GST_TAG_GENRE, MAFW_METADATA_KEY_GENRE},
+		{GST_TAG_TRACK_NUMBER, MAFW_METADATA_KEY_TRACK},
+		{GST_TAG_ORGANIZATION, MAFW_METADATA_KEY_ORGANIZATION},
 #ifdef HAVE_GDKPIXBUF
-	g_hash_table_insert(hash_table, g_strdup(GST_TAG_IMAGE),
-			    g_strdup(MAFW_METADATA_KEY_RENDERER_ART_URI));
+		{GST_TAG_IMAGE, MAFW_METADATA_KEY_RENDERER_ART_URI},
 #endif
+		{NULL, NULL}
+	};
+	GHashTable *hash_table = NULL;
+	gint i = 0;
+
+	hash_table = g_hash_table_new_full(g_str_hash, g_str_equal, NULL,
+					   NULL);
+
+	while(tagmaparray[i][0])
+	{
+		g_hash_table_insert(hash_table, (gpointer)tagmaparray[i][0],
+						(gpointer)tagmaparray[i][1]);
+		i++;
+	}
+	
 
 	return hash_table;
 }
