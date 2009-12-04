@@ -317,7 +317,8 @@ _on_context_available (GUPnPContextManager *context_manager,
 	GUPnPControlPoint* cp = gupnp_control_point_new(context, "ssdp:all");
 	
 	gupnp_context_manager_manage_control_point(context_manager, cp);
-        g_debug("%s %s", G_STRFUNC, gupnp_context_get_host_ip(context));
+	g_object_unref(cp);
+
 	g_signal_connect(cp, "device-proxy-available",
 			 G_CALLBACK(mafw_upnp_source_device_proxy_available),
 			 _plugin);
