@@ -4,26 +4,24 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    2009.50-2
-Date       2009.12.10
+Version    2009.52-1
+Date       2009.12.20
 Maintainer mika.tapojarvi@sse.fi
            tuomas.kamarainen@nokia.com
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
-
-libmafw                0.2.2009.50-2
-mafw-shared            0.2.2009.50-2
-mafw-gst-renderer      0.2.2009.50-2
-mafw-upnp-source       0.2.2009.50-2
-mafw-tracker-source    0.2.2009.50-2
-mafw-iradio-source     0.2.2009.50-2
-mafw-test-gui          0.2.2009.50-2
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 6
+libmafw                0.2.2009.52-1
+mafw-shared            0.2.2009.52-1
+mafw-gst-renderer      0.2.2009.52-1
+mafw-tracker-source    0.2.2009.52-1
+mafw-iradio-source     0.2.2009.52-1
+mafw-test-gui          0.2.2009.52-1
 
 Change logs: 
 
-* This is a rebuild tag.
+* This is a tag fix and rebuild tag.
 
 BUGS RESOLVED IN THIS RELEASE
 
 From changelog: 1
-* Fixes: NB#148080 - Rover UI becomes very slow after long time usage of Media Player
+* Fixes: NB#149945 - mafw-gst-renderer leaks some GStreamer messages
