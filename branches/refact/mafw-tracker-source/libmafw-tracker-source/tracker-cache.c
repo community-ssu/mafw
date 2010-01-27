@@ -35,36 +35,39 @@
 #include "album-art.h"
 #include "util.h"
 
-#define SEVERAL_VALUES_DELIMITER "|"
+#define SEVERAL_VALUES_DELIMITER '|'
+#define SEVERAL_VALUES_DELIMITER_STR "|"
+
+extern gint maxid;
 
 /* ------------------------- Private API ------------------------- */
 
-static void _replace_various_values(GValue *value)
+static void _replace_various_str_values(gchar **str_value, gboolean free_str_if_needed)
 {
-        const gchar *str_value;
-        /* Find if it contains several values */
-        if (G_VALUE_HOLDS_STRING(value)) {
-                str_value = g_value_get_string(value);
-
-                /* Find for separator */
-                if (str_value &&
-                    strstr(str_value, SEVERAL_VALUES_DELIMITER)) {
-                        g_value_set_string(value,
-                                           MAFW_METADATA_VALUE_VARIOUS_VALUES);
-                }
-        }
+	/* Find for separator */
+	if (str_value && *str_value &&
+		strchr(*str_value, SEVERAL_VALUES_DELIMITER)) {
+			if (free_str_if_needed)
+			{
+				g_free(*str_value);
+				*str_value = g_strdup(MAFW_METADATA_VALUE_VARIOUS_VALUES);
+			}
+			else
+			{
+				*str_value = MAFW_METADATA_VALUE_VARIOUS_VALUES;
+			}
+	}
 }
 
-static gboolean _value_is_allowed(GValue *value, const gchar *key)
+static gboolean _value_str_is_allowed(const gchar *str_val, gint key_id)
 {
         MetadataKey *metadata_key;
-        const gchar *str_value;
 
-        if (!value) {
+        if (!str_val) {
                 return FALSE;
         }
 
-        metadata_key = keymap_get_metadata(key);
+        metadata_key = keymap_get_metadata_by_id(key_id);
 
         if (!metadata_key) {
                 return FALSE;
@@ -74,61 +77,71 @@ static gboolean _value_is_allowed(GValue *value, const gchar *key)
                 return TRUE;
         } else {
                 /* Check if value is empty */
-                if (!value) {
-                        return FALSE;
-                } else if (G_VALUE_HOLDS_STRING(value)) {
-                        str_value = g_value_get_string(value);
-                        return !IS_STRING_EMPTY(str_value);
-                } else if (G_VALUE_HOLDS_INT(value)) {
-                        return g_value_get_int(value) > 0;
-                } else if (G_VALUE_HOLDS_LONG(value)) {
-                        return g_value_get_long(value) > 0;
-                } else if (G_VALUE_HOLDS_FLOAT(value)) {
-                        return g_value_get_float(value) > 0;
-                } else {
-                        /* This is the case of storing a gboolean */
-                        return TRUE;
-                }
+		return !IS_STRING_EMPTY(str_val);
         }
 }
-
-static int _get_childcount_level(const gchar *childcount_key)
+static gint _get_idx_from_id(TrackerCache *cache, gint key_id)
 {
-        gint level;
-
-        sscanf(childcount_key, "childcount(%d)", &level);
-        return level;
+	gint idx = -1;
+	gint curid = 0;
+	guint64 keys = cache->asked_tracker_keys;
+	
+	if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE)
+	{
+		idx++;
+	}
+	if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY)
+	{
+		idx += 2;
+	}
+	while (keys)
+	{
+		if ((keys & 1) == 1)
+		{
+			idx++;
+			if (curid == key_id)
+				return idx;
+		}
+		curid++;
+		if (key_id < curid)
+			return -1;
+		keys >>=1;
+	}
+	return -1;
 }
-
-static GValue *_get_title(TrackerCache *cache, gint index, const gchar *path)
+static gchar *_get_title_str(TrackerCache *cache, gint index, gint tracker_index,
+				const gchar *path, gboolean *should_be_freed)
 {
-        GValue *value_title;
-        GValue *value_uri;
+        gchar *str_title;
         gchar *uri_title;
         gchar *filename;
         gchar *pathname;
         gchar *dot;
-        const gchar *value_title_str;
 
-        value_title = tracker_cache_value_get(cache,
-                                              MAFW_METADATA_KEY_TITLE,
-                                              index);
+        str_title = tracker_cache_value_get_str(cache,
+                                              MTrackerSrc_ID_TITLE,
+                                              index,
+		tracker_index,
+		should_be_freed);
 
         /* If it is empty, then use the URI */
-        value_title_str = value_title? g_value_get_string(value_title): NULL;
-        if (IS_STRING_EMPTY(value_title_str) &&
+        if (IS_STRING_EMPTY(str_title) &&
             cache->result_type != TRACKER_CACHE_RESULT_TYPE_UNIQUE) {
-                value_uri = tracker_cache_value_get(cache,
-                                                MAFW_METADATA_KEY_URI,
-                                                index);
-                if (!value_uri) {
-                        return value_title;
+		gboolean uri_to_free;
+                uri_title = tracker_cache_value_get_str(cache,
+                                                MTrackerSrc_ID_URI,
+                                                index, 0, &uri_to_free);
+                if (!uri_title) {
+                        return str_title;
                 }
 
-                uri_title = (gchar *) g_value_get_string(value_uri);
                 if (IS_STRING_EMPTY(uri_title)) {
 			if (IS_STRING_EMPTY(path))
-                        	return value_title;
+			{
+				if (uri_to_free)
+					g_free(uri_title);
+                        	return str_title;
+			}
 			else
 			{
 				pathname = g_strdup(path);
@@ -147,65 +160,57 @@ static GValue *_get_title(TrackerCache *cache, gint index, const gchar *path)
                 }
 
                 /* Use filename as the value */
-                g_value_set_string(value_uri, filename);
-                g_free(filename);
                 g_free(pathname);
-                util_gvalue_free(value_title);
 
-                return value_uri;
-        } else {
-                return value_title;
+		if (*should_be_freed)
+			g_free(str_title);
+		if (uri_to_free)
+			g_free(uri_title);
+		*should_be_freed = TRUE;
+                return filename;
         }
+	return str_title;
 }
 
 /* Inserts a key in the cache. 'pos' only makes sense when type is
  * TRACKER_CACHE_KEY_TYPE_TRACKER */
 static void _insert_key(TrackerCache *cache,
-                        const gchar *key,
-                        enum TrackerCacheKeyType type,
-                        gboolean user_key,
-                        gint pos)
+                        gint key_id)
 {
-        TrackerCacheValue *cached_value;
-
-        cached_value = g_slice_new0(TrackerCacheValue);
-        cached_value->user_key = user_key;
-        cached_value->key_type = type;
-        if (type == TRACKER_CACHE_KEY_TYPE_TRACKER) {
-                cached_value->tracker_index = pos;
-        }
-        g_hash_table_insert(cache->cache, g_strdup(key), cached_value);
+        cache->asked_tracker_keys |= keymap_get_flag_from_keyid(key_id);
 }
 
-static GValue *_get_value_album_art(TrackerCache *cache, gint index)
+static void _insert_unique_key(TrackerCache *cache,
+                        gint key_id)
 {
-        GValue *album_value;
-        GValue *return_value;
-        const gchar *album;
-        gchar *album_art_uri;
-        gchar **singles;
-        gint i;
+        cache->asked_uniq_id = key_id;
+}
 
-        album_value = tracker_cache_value_get(cache,
-                                              MAFW_METADATA_KEY_ALBUM,
-                                              index);
-        if (album_value) {
-                album = g_value_get_string(album_value);
-        } else {
-                album = NULL;
-        }
 
-        if (IS_STRING_EMPTY(album)) {
-                util_gvalue_free(album_value);
+static gchar *_get_value_album_art_str(TrackerCache *cache, gint index)
+{
+	gchar *album_str;
+	gchar **singles;
+	gchar *album_art_uri;
+	gboolean free_str;
+
+	album_str = tracker_cache_value_get_str(cache,
+                                              MTrackerSrc_ID_ALBUM,
+                                              index,
+		_get_idx_from_id(cache, MTrackerSrc_ID_ALBUM),
+		&free_str);
+	
+	if (IS_STRING_EMPTY(album_str)) {
+		if (free_str)
+			g_free(album_str);
                 return NULL;
         }
 
-        /* As album can be actually several albums, split them and
+	/* As album can be actually several albums, split them and
          * show the first available cover */
-        singles = g_strsplit(album, SEVERAL_VALUES_DELIMITER, 0);
-        util_gvalue_free(album_value);
+        singles = g_strsplit(album_str, SEVERAL_VALUES_DELIMITER_STR, 0);
 
-        i=0;
+        gint i=0;
         album_art_uri = NULL;
         while (singles[i] && album_art_uri == NULL) {
                 album_art_uri = albumart_get_album_art_uri(singles[i]);
@@ -213,115 +218,83 @@ static GValue *_get_value_album_art(TrackerCache *cache, gint index)
         }
         g_strfreev(singles);
 
-        if (album_art_uri) {
-                return_value = g_new0(GValue, 1);
-                g_value_init(return_value, G_TYPE_STRING);
-                g_value_set_string(return_value, album_art_uri);
-                g_free(album_art_uri);
-                return return_value;
-        } else {
-                return NULL;
-        }
+	if (free_str)
+		g_free(album_str);
+	return album_art_uri;
 }
 
-static GValue *_get_value_thumbnail(TrackerCache *cache,
-                                    const gchar *key,
+static gchar *_get_value_thumbnail_str(TrackerCache *cache,
+                                    gint key_id,
                                     gint index)
 {
-        GValue *uri_value;
-        GValue *return_value;
-        const gchar *uri;
-        gchar *th_uri;
-        enum thumbnail_size size;
+	gchar *uri;
+	enum thumbnail_size size;
+	gchar *th_uri;
+	gboolean free_uri;
 
-        /* For thumbnails, uri is needed */
-        if (albumart_key_is_thumbnail(key)) {
-                uri_value = tracker_cache_value_get(cache,
-                                                    MAFW_METADATA_KEY_URI,
-                                                    index);
+	/* For thumbnails, uri is needed */
+        if (albumart_key_is_thumbnail_by_id(key_id)) {
+                uri = tracker_cache_value_get_str(cache,
+                                                    MTrackerSrc_ID_URI,
+                                                    index, 0, &free_uri);
         } else {
                 /* In case of album-art-large-uri, album-art is used */
-                if (strcmp(key, MAFW_METADATA_KEY_ALBUM_ART_LARGE_URI) == 0) {
-                        return _get_value_album_art(cache, index);
+                if (key_id == MTrackerSrc_ID_ALBUM_ART_LARGE_URI) {
+                        return _get_value_album_art_str(cache, index);
                 } else {
-                        uri_value =
-                                tracker_cache_value_get(
+                        uri =
+                                tracker_cache_value_get_str(
                                         cache,
-                                        MAFW_METADATA_KEY_ALBUM_ART_URI,
-                                        index);
+                                        MTrackerSrc_ID_ALBUM_ART_URI,
+                                        index,
+					-1, /* Not used */
+					&free_uri);
                 }
         }
 
-        if (uri_value) {
-                uri = g_value_get_string(uri_value);
-        } else {
-                uri = NULL;
-        }
         if (uri) {
                 /* Compute size requested */
-                if (strcmp(key, MAFW_METADATA_KEY_ALBUM_ART_SMALL_URI) == 0 ||
-                    strcmp(key, MAFW_METADATA_KEY_ALBUM_ART_MEDIUM_URI) == 0 ||
-                    albumart_key_is_thumbnail(key)) {
+                if (key_id == MTrackerSrc_ID_ALBUM_ART_SMALL_URI ||
+                    key_id == MTrackerSrc_ID_ALBUM_ART_MEDIUM_URI ||
+                    albumart_key_is_thumbnail_by_id(key_id)) {
                         size = THUMBNAIL_CROPPED;
                 } else {
                         size = THUMBNAIL_NORMAL;
                 }
-                return_value = g_new0(GValue, 1);
-                g_value_init(return_value, G_TYPE_STRING);
                 th_uri = albumart_get_thumbnail_uri(uri, size);
-                g_value_set_string(return_value, th_uri);
-                g_free(th_uri);
-                util_gvalue_free(uri_value);
-                return return_value;
-        } else {
-                return NULL;
+
+		if (free_uri)		
+                	g_free(uri);
+                return th_uri;
         }
+	return NULL;
 }
 
-static GValue * _aggregate_key(TrackerCache *cache,
-                               const gchar *key,
-                               gboolean count_childcount)
+static gint _aggregate_key(TrackerCache *cache,
+                               gint key_id,
+                               gboolean count_childcount,
+			       gint tracker_index)
 {
-        GValue *result;
         gint total = 0;
-        GValue *value;
+        gint value;
         gint i;
         gint results_length;
 
         results_length = cache->tracker_results? cache->tracker_results->len: 0;
 
         if (count_childcount &&
-            strcmp(key, MAFW_METADATA_KEY_CHILDCOUNT_1) == 0) {
+            key_id ==  MTrackerSrc_ID_CHILDCOUNT_1) {
                 total = results_length;
         } else {
                 for (i=0; i < results_length; i++) {
-                        value = tracker_cache_value_get(cache, key, i);
-                        if (value) {
-                                total += g_value_get_int(value);
-                                util_gvalue_free(value);
+                        value = tracker_cache_value_get_int(cache, key_id, i, tracker_index);
+                        if (value != 0 && value != G_MAXINT) {
+                                total += value;
                         }
                 }
         }
 
-        result = g_new0(GValue, 1);
-        g_value_init(result, G_TYPE_INT);
-        g_value_set_int(result, total);
-
-        return result;
-}
-
-static void _tracker_cache_value_free(gpointer data)
-{
-        TrackerCacheValue *value = (TrackerCacheValue *) data;
-
-        if (value) {
-                if (value->key_type == TRACKER_CACHE_KEY_TYPE_COMPUTED) {
-                        g_value_unset(&value->value);
-                } else if (value->key_type == TRACKER_CACHE_KEY_TYPE_DERIVED) {
-                        g_free(value->key_derived_from);
-                }
-                g_slice_free(TrackerCacheValue, value);
-        }
+        return total;
 }
 
 /* ------------------------- Public API ------------------------- */
@@ -345,16 +318,20 @@ tracker_cache_new(ServiceType service,
         cache = g_slice_new(TrackerCache);
         cache->service = service;
         cache->result_type = result_type;
-        cache->cache = g_hash_table_new_full(g_str_hash,
-                                             g_str_equal,
-                                             g_free,
-                                             _tracker_cache_value_free);
-	cache->last_tracker_index = 0;
+	memset(cache->cache, 0, sizeof(cache->cache));
 	cache->tracker_results = NULL;
-	
+	cache->asked_tracker_keys = 0;
+	cache->asked_uniq_id = G_MAXINT;
         return cache;
 }
 
+static void tracker_cache_value_free(TrackerCacheValue *value)
+{
+	if (value->key_derived_from_id == G_MAXINT &&
+		value->value_type == G_TYPE_STRING && value->free_str)
+		g_free(value->str);
+	g_slice_free(TrackerCacheValue, value);
+}
 /*
  * tracker_cache_free:
  * @cache: cache to be freed
@@ -364,6 +341,8 @@ tracker_cache_new(ServiceType service,
 void
 tracker_cache_free(TrackerCache *cache)
 {
+	gint i = 0;
+
         /* Free tracker results */
         if (cache->tracker_results) {
                 g_ptr_array_foreach(cache->tracker_results,
@@ -372,51 +351,21 @@ tracker_cache_free(TrackerCache *cache)
                 g_ptr_array_free(cache->tracker_results, TRUE);
         }
 
-        /* Free cache */
-        g_hash_table_unref(cache->cache);
+	for (i=0; i < 64; i++)
+	{
+		if (cache->cache[i])
+			tracker_cache_value_free(cache->cache[i]);
+	}
+	
 
         /* Free the cache itself */
         g_slice_free(TrackerCache, cache);
 }
 
 /*
- * tracker_cache_key_add_precomputed:
- * @cache: the cache
- * @key: the key to be inserted
- * @user_key: @TRUE if this key has been requested by the user
- * @value: the value to be inserted
- *
- * Inserts a key with its value in the cache. If the key already
- * exists, it does nothing.
- */
-void
-tracker_cache_key_add_precomputed(TrackerCache *cache,
-                                  const gchar *key,
-                                  gboolean user_key,
-                                  const GValue *value)
-{
-        TrackerCacheValue *cached_value;
-
-        /* Look if the key already exists */
-        if (!g_hash_table_lookup(cache->cache, key)) {
-                /* Create the value to be cached */
-                cached_value = g_slice_new(TrackerCacheValue);
-                cached_value->key_type = TRACKER_CACHE_KEY_TYPE_COMPUTED;
-                cached_value->user_key = user_key;
-		memset(&cached_value->value, 0, sizeof(cached_value->value));
-                g_value_init(&cached_value->value, G_VALUE_TYPE(value));
-                g_value_copy(value, &cached_value->value);
-
-                /* Add to cache */
-                g_hash_table_insert(cache->cache, g_strdup(key), cached_value);
-        }
-}
-
-/*
  * tracker_cache_key_add_precomputed_string:
  * @cache: the cache
  * @key: the key to be inserted
- * @user_key: @TRUE if this key has been requested by the user
  * @value: the value to be inserted
  *
  * Inserts a key with its value in the cache. If the key already
@@ -424,16 +373,22 @@ tracker_cache_key_add_precomputed(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_precomputed_string(TrackerCache *cache,
-                                         const gchar *key,
-                                         gboolean user_key,
-                                         const gchar *value)
-{
-        GValue gv = { 0 };
+                                         gint key_id,
+                                         gchar *value,
+					 gboolean free_str)
+{/* TODO: value shouldn't be const, caller should not free the value, but when trackercache frees */
+        TrackerCacheValue *cached_value;
 
-        g_value_init(&gv, G_TYPE_STRING);
-        g_value_set_string(&gv, value);
-        tracker_cache_key_add_precomputed(cache, key, user_key, &gv);
-        g_value_unset(&gv);
+        /* Look if the key already exists */
+        if (!cache->cache[key_id]) {
+                /* Create the value to be cached */
+                cached_value = g_slice_new(TrackerCacheValue);
+		cached_value->str = value;
+		cached_value->free_str = free_str;
+		cached_value->value_type = G_TYPE_STRING;
+		cached_value->key_derived_from_id = G_MAXINT;
+                cache->cache[key_id] = cached_value;
+        }
 }
 
 /*
@@ -448,16 +403,20 @@ tracker_cache_key_add_precomputed_string(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_precomputed_int(TrackerCache *cache,
-                                      const gchar *key,
-                                      gboolean user_key,
+                                      gint key_id,
                                       gint value)
 {
-        GValue gv = { 0 };
+	TrackerCacheValue *cached_value;
 
-        g_value_init(&gv, G_TYPE_INT);
-        g_value_set_int(&gv, value);
-        tracker_cache_key_add_precomputed(cache, key, user_key, &gv);
-        g_value_unset(&gv);
+        /* Look if the key already exists */
+        if (!cache->cache[key_id]) {
+                /* Create the value to be cached */
+                cached_value = g_slice_new(TrackerCacheValue);
+		cached_value->i = value;
+		cached_value->value_type = G_TYPE_INT;
+		cached_value->key_derived_from_id = G_MAXINT;
+                cache->cache[key_id] = cached_value;
+        }
 }
 
 /*
@@ -472,22 +431,18 @@ tracker_cache_key_add_precomputed_int(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_derived(TrackerCache *cache,
-                              const gchar *key,
-                              gboolean user_key,
-                              gchar *source_key)
+                              gint key_id,
+                              gint source_key)
 {
-        TrackerCacheValue *cached_value;
+	TrackerCacheValue *cached_value;
 
         /* Look if the key already exists */
-        if (!g_hash_table_lookup(cache->cache, key)) {
+        if (!cache->cache[key_id]) {
                 /* Create the value to be cached */
                 cached_value = g_slice_new(TrackerCacheValue);
-                cached_value->key_type = TRACKER_CACHE_KEY_TYPE_DERIVED;
-                cached_value->user_key = user_key;
-                cached_value->key_derived_from = g_strdup(source_key);
-
-                /* Add to cache */
-                g_hash_table_insert(cache->cache, g_strdup(key), cached_value);
+		cached_value->key_derived_from_id = source_key;
+		cached_value->value_type = 0;
+                cache->cache[key_id] = cached_value;
         }
 }
 
@@ -506,26 +461,21 @@ tracker_cache_key_add_derived(TrackerCache *cache,
  */
 void
 tracker_cache_key_add(TrackerCache *cache,
-                      const gchar *key,
-                      gint maximum_level,
-                      gboolean user_key)
+                      gint key_id,
+                      gint maximum_level)
 {
-        TrackerCacheValue *value;
-        gint offset;
         gint level;
         MetadataKey *metadata_key;
+	guint64 key_flag = keymap_get_flag_from_keyid(key_id);
+	
 
         /* Look if the key already exists */
-        if ((value = g_hash_table_lookup(cache->cache, key))) {
-                /* The key already exists. If now user asks for this
-                 * key, update it */
-                if (user_key) {
-                        value->user_key = user_key;
-                }
+        if (key_flag == 0 ||
+		((cache->asked_tracker_keys & key_flag) == key_flag)) {
                 return;
         }
 
-        metadata_key = keymap_get_metadata(key);
+        metadata_key = keymap_get_metadata_by_id(key_id);
 
         /* Discard unsupported keys */
         if (!metadata_key) {
@@ -533,22 +483,14 @@ tracker_cache_key_add(TrackerCache *cache,
         }
 
         /* Insert dependencies */
-        if (metadata_key->depends_on) {
-                tracker_cache_key_add(cache, metadata_key->depends_on,
-                                      maximum_level, FALSE);
-        }
-
-        /* Insert album-art and thumbnail keys */
-        if (albumart_key_is_album_art(key) ||
-            albumart_key_is_thumbnail(key)) {
-                _insert_key(cache, key, TRACKER_CACHE_KEY_TYPE_THUMBNAILER,
-                            user_key, -1);
-                return;
+        if (metadata_key->depends_on_id != G_MAXINT) {
+                tracker_cache_key_add(cache, metadata_key->depends_on_id,
+                                      maximum_level);
         }
 
         /* With childcount, check that fits in the allowed range */
         if (metadata_key->special == SPECIAL_KEY_CHILDCOUNT) {
-                level = _get_childcount_level(key);
+                level = keymap_get_childcount_level(key_id);
                 if (level < 1 || level > maximum_level) {
                         return;
                 }
@@ -557,9 +499,7 @@ tracker_cache_key_add(TrackerCache *cache,
         /* Within the current service, check if the key makes sense (CHILDCOUNT
          * always makes sense */
         if (metadata_key->special != SPECIAL_KEY_CHILDCOUNT &&
-            keymap_get_tracker_info(key, cache->service) == NULL) {
-                _insert_key(cache, key, TRACKER_CACHE_KEY_TYPE_VOID,
-                            user_key, -1);
+            keymap_get_tracker_info_by_id(key_id, cache->service) == NULL) {
                 return;
         }
 
@@ -569,26 +509,16 @@ tracker_cache_key_add(TrackerCache *cache,
             metadata_key->special != SPECIAL_KEY_CHILDCOUNT &&
             metadata_key->special != SPECIAL_KEY_DURATION &&
             metadata_key->special != SPECIAL_KEY_MIME  &&
-            !albumart_key_is_album_art(key)) {
-                _insert_key(cache, key, TRACKER_CACHE_KEY_TYPE_VOID,
-                            user_key, -1);
+            metadata_key->key_type != ALBUM_ART_KEY) {
                 return;
         }
 
-        /* In case of Uri, it is always returned in first position
-         * when querying */
-        if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY &&
-            metadata_key->special == SPECIAL_KEY_URI) {
-                _insert_key(cache, key, TRACKER_CACHE_KEY_TYPE_TRACKER,
-                            user_key, 0);
-                return;
-        }
 
         /* Childcount is 0 for all clips, unless playlists */
         if (cache->result_type != TRACKER_CACHE_RESULT_TYPE_UNIQUE &&
             metadata_key->special == SPECIAL_KEY_CHILDCOUNT &&
             cache->service != SERVICE_PLAYLISTS) {
-                tracker_cache_key_add_precomputed_int(cache, key, user_key, 0);
+                tracker_cache_key_add_precomputed_int(cache, key_id, 0);
                 return;
         }
 
@@ -598,9 +528,9 @@ tracker_cache_key_add(TrackerCache *cache,
              cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE)) {
                 tracker_cache_key_add_precomputed_string(
                         cache,
-                        key,
-                        user_key,
-                        MAFW_METADATA_VALUE_MIME_CONTAINER);
+                        key_id,
+                        MAFW_METADATA_VALUE_MIME_CONTAINER,
+		     	FALSE);
                 return;
         }
 
@@ -608,21 +538,11 @@ tracker_cache_key_add(TrackerCache *cache,
          * could be used as title just if there it doesn't have one */
         if (cache->result_type != TRACKER_CACHE_RESULT_TYPE_UNIQUE &&
             metadata_key->special == SPECIAL_KEY_TITLE) {
-                tracker_cache_key_add(cache, MAFW_METADATA_KEY_URI,
-                                      maximum_level, FALSE);
+                tracker_cache_key_add(cache, MTrackerSrc_ID_URI,
+                                      maximum_level);
         }
 
-        /* Insert remaining keys */
-        if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY) {
-                /* In case of queries, skip uri and service */
-                offset = 2;
-        } else {
-                offset = 0;
-        }
-
-        _insert_key(cache, key, TRACKER_CACHE_KEY_TYPE_TRACKER,
-                    user_key, cache->last_tracker_index + offset);
-        cache->last_tracker_index++;
+        _insert_key(cache, key_id);
 
         return;
 }
@@ -639,15 +559,20 @@ tracker_cache_key_add(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_several(TrackerCache *cache,
-                              gchar **keys,
-                              gint max_level,
-                              gboolean user_keys)
+                              guint64 keys,
+                              gint max_level)
 {
-        gint i;
+        gint id = 0;
 
-        for (i=0; keys[i]; i++) {
-                tracker_cache_key_add(cache, keys[i], max_level, user_keys);
-        }
+	while (keys && id <= maxid)
+	{
+		if ((keys & 1) == 1)
+		{
+			tracker_cache_key_add(cache, id, max_level);
+		}
+		keys >>= 1;
+		id++;
+	}
 }
 
 /*
@@ -661,7 +586,7 @@ tracker_cache_key_add_several(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_unique(TrackerCache *cache,
-                             const gchar *unique_key)
+                             gint unique_key)
 {
         MetadataKey *metadata_key;
 
@@ -670,37 +595,26 @@ tracker_cache_key_add_unique(TrackerCache *cache,
         g_return_if_fail(
                 cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE);
 
-        metadata_key = keymap_get_metadata(unique_key);
+        metadata_key = keymap_get_metadata_by_id(unique_key);
 
         /* Skip unsupported keys */
         if (metadata_key) {
-                /* Check the key doesn't exist */
-                if (g_hash_table_lookup(cache->cache, unique_key) == NULL) {
-                        /* Special case: 'unique' functions are used
-                         * when processing containers. In this case,
-                         * mime type of a container must be always
-                         * @MAFW_METADATA_VALUE_MIME_CONTAINER, no
-                         * matter the result tracker returns. */
-                        if (metadata_key->special == SPECIAL_KEY_MIME) {
-                                tracker_cache_key_add_precomputed_string(
-                                        cache,
-                                        unique_key,
-                                        FALSE,
-                                        MAFW_METADATA_VALUE_MIME_CONTAINER);
-                        } else {
-                                _insert_key(
-                                        cache,
-                                        unique_key,
-                                        TRACKER_CACHE_KEY_TYPE_TRACKER,
-                                        FALSE,
-                                        cache->last_tracker_index);
-                        }
-                }
-                /* Though the key already exists, skip its place in
-                 * the results. That is, we will use the already
-                 * stored value even tracker will be returning a
-                 * different value */
-                cache->last_tracker_index++;
+		/* Special case: 'unique' functions are used
+		 * when processing containers. In this case,
+		 * mime type of a container must be always
+		 * @MAFW_METADATA_VALUE_MIME_CONTAINER, no
+		 * matter the result tracker returns. */
+		if (metadata_key->special == SPECIAL_KEY_MIME) {
+			tracker_cache_key_add_precomputed_string(
+				cache,
+				unique_key,
+				MAFW_METADATA_VALUE_MIME_CONTAINER,
+				FALSE);
+		} else {
+			_insert_unique_key(
+				cache,
+				unique_key);
+		}
         }
 }
 
@@ -715,112 +629,13 @@ tracker_cache_key_add_unique(TrackerCache *cache,
  */
 void
 tracker_cache_key_add_concat(TrackerCache *cache,
-                             const gchar *concat_key)
+                             gint concat_key_id)
 {
-        gboolean user_req;
-        TrackerCacheValue *value;
-
         g_return_if_fail(cache->result_type ==
                          TRACKER_CACHE_RESULT_TYPE_UNIQUE);
 
-        /* Check if the key already exists, and if so maintains the user request
-         * value */
-        value = g_hash_table_lookup(cache->cache, concat_key);
+        _insert_key(cache, concat_key_id);
 
-        if (value) {
-                user_req = value->user_key;
-        } else {
-                user_req = FALSE;
-
-        }
-
-        _insert_key(cache, concat_key, TRACKER_CACHE_KEY_TYPE_TRACKER,
-                    user_req, cache->last_tracker_index);
-
-        cache->last_tracker_index++;
-}
-
-/*
- * tracker_cache_keys_get_tracker:
- * @cache: the cache with the keys/values
- *
- * Returns a strv with the keys to add to tracker. Note the keys are
- * MAFW keys. In case of using 'unique' functions, it returns the keys
- * that will be used to group the values.
- *
- * Returns: MAFW keys to ask tracker
- */
-gchar **
-tracker_cache_keys_get_tracker(TrackerCache *cache)
-{
-        gchar **ask_keys;
-        GHashTableIter cache_iter;
-        gchar *key;
-        TrackerCacheValue *value;
-        gint offset;
-        gint limit;
-
-        ask_keys = g_new0(gchar *, cache->last_tracker_index + 1);
-
-        /* Skip uri and service in case of query */
-        if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY) {
-                offset = 2;
-                limit = cache->last_tracker_index + 2;
-        } else {
-                offset = 0;
-                limit = cache->last_tracker_index;
-        }
-
-        /* Search tracker keys and add them to the strv */
-        g_hash_table_iter_init(&cache_iter,
-                               cache->cache);
-        while (g_hash_table_iter_next(&cache_iter,
-                                      (gpointer *)&key,
-                                      (gpointer *)&value)) {
-                /* The keys must be between offset and last_tracker_index */
-                if (value->key_type == TRACKER_CACHE_KEY_TYPE_TRACKER &&
-                    value->tracker_index >= offset &&
-                    value->tracker_index < limit) {
-                        ask_keys[value->tracker_index - offset] = g_strdup(key);
-                }
-        }
-
-        return ask_keys;
-}
-
-/*
- * tracker_cache_keys_get_user:
- * @cache: tracker cache
- *
- * Get a NULL-ending array with the keys requested by the user.
- *
- * Returns: a NULL-ending array
- */
-gchar **
-tracker_cache_keys_get_user(TrackerCache *cache)
-{
-        gchar **user_keys = NULL;
-        GHashTableIter cache_iter;
-        gchar *key;
-        TrackerCacheValue *value;
-        gint index = 0;
-
-        /* We don't know how may elements are from user, but the worst
-         * case is all keys are requested by user */
-        user_keys = g_new0(gchar *, g_hash_table_size(cache->cache) + 1);
-
-        g_hash_table_iter_init(&cache_iter,
-                               cache->cache);
-        while (g_hash_table_iter_next(&cache_iter,
-                                      (gpointer *)&key,
-                                      (gpointer *)&value)) {
-                if (value->user_key) {
-                        user_keys[index] = g_strdup(key);
-                        index++;
-                }
-        }
-
-        return user_keys;
 }
 
 /*
@@ -838,27 +653,6 @@ tracker_cache_values_add_results(TrackerCache *cache,
 }
 
 /*
- * tracker_cache_values_add_result:
- * @cache: tracker cache
- * @tracker_result: result returned by tracker with tracker_get_metadata
- *
- * Adds to the cache the result returned by getting metadata from
- * tracker. Warning! Only works if cache was created with
- * TRACKER_CACHE_RESULT_TYPE_GET_METADATA.
- */
-void
-tracker_cache_values_add_result(TrackerCache *cache,
-                                gchar **tracker_result)
-{
-        g_return_if_fail(
-                cache->result_type == TRACKER_CACHE_RESULT_TYPE_GET_METADATA);
-
-        /* Wrap the result around a gptrarray */
-        cache->tracker_results = g_ptr_array_sized_new(1);
-        g_ptr_array_add(cache->tracker_results, tracker_result);
-}
-
-/*
  * tracker_cache_values_get_results:
  * @cache: tracker cache
  *
@@ -872,145 +666,280 @@ tracker_cache_values_get_results(TrackerCache *cache)
         return cache->tracker_results;
 }
 
-/*
- * tracker_cache_value_get:
- * @cache: tracker cache
- * @key: key to query
- * @index: which result should be used (from tracker), or -1 if none.
- *
- * Returns  the  value  associated  with  the key,  or  @NULL  if  not
- * present. If  -1 is used  as index, then  it doesn't use  any result
- * from tracker, but those that were precomputed.
- *
- * Returns: the value for the queried key. Must be freed.
- */
-GValue *
-tracker_cache_value_get(TrackerCache *cache,
-                        const gchar *key,
-                        gint index)
+static gchar *_get_tr_val(TrackerCache *cache, gint index,
+			gint tracker_index)
 {
-        GValue *return_value = NULL;
-        TrackerCacheValue *cached_value = NULL;
-        gchar **queried_result = NULL;
-        gchar *uri;
-        float float_val = 0;
-        MetadataKey *metadata_key;
+	gchar **queried_result = NULL;
 
-        cached_value = g_hash_table_lookup(cache->cache, key);
+	/* Check if the value can be obtained from tracker */
+	if (index < 0 || tracker_index < 0) {
+		return NULL;
+	}
 
-        /* Check if key is present */
-        if (!cached_value) {
-                return NULL;
-        }
+	/* Verify there is data, and index is within the range */
+	if (!cache->tracker_results || cache->tracker_results->len <= index) {
+		return NULL;
+	}
 
-        /* If the value was precomputed */
-        if (cached_value->key_type == TRACKER_CACHE_KEY_TYPE_COMPUTED) {
-                /* Precalculated value */
-                return_value = g_new0(GValue, 1);
-                g_value_init(return_value, G_VALUE_TYPE(&cached_value->value));
-                g_value_copy(&cached_value->value, return_value);
-                return return_value;
-        }
+	queried_result = (gchar **) g_ptr_array_index(cache->tracker_results,
+							index);
 
-        /* if the value is derived */
-        if (cached_value->key_type == TRACKER_CACHE_KEY_TYPE_DERIVED) {
-                return tracker_cache_value_get(cache,
-                                               cached_value->key_derived_from,
-                                               index);
-        }
+	/* Verify that tracked found the metadata for the corresponding
+	* entry */
+	if (!queried_result[0]) {
+		return NULL;
+	}
+	return queried_result[tracker_index];
+}
 
-        /* If the value must be obtained from hildon-thumbnailer */
-        if (cached_value->key_type == TRACKER_CACHE_KEY_TYPE_THUMBNAILER) {
-                if (strcmp(key, MAFW_METADATA_KEY_ALBUM_ART_URI) == 0) {
-                        return _get_value_album_art(cache, index);
+gchar*
+tracker_cache_value_get_str(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index,
+			gboolean *should_be_freed)
+{
+	MetadataKey *metadata_key;
+	gchar *trval;
+
+	if (cache->cache[key_id])
+	{
+		if (cache->cache[key_id]->key_derived_from_id == G_MAXINT &&
+			cache->cache[key_id]->str)
+		{
+			*should_be_freed = FALSE;
+			return (gchar*)cache->cache[key_id]->str;
+		}
+		if (cache->cache[key_id]->key_derived_from_id != G_MAXINT)
+			return tracker_cache_value_get_str(cache,
+					cache->cache[key_id]->key_derived_from_id,
+					index,
+					_get_idx_from_id(cache,
+						cache->cache[key_id]->key_derived_from_id),
+					should_be_freed);
+	}
+	
+	metadata_key = keymap_get_metadata_by_id(key_id);
+
+	if (!metadata_key)
+		return NULL;
+
+	if (metadata_key->key_type == ALBUM_ART_KEY ||
+		metadata_key->key_type == THUMBNAIL_KEY)
+	{
+		if (key_id == MTrackerSrc_ID_ALBUM_ART_URI) {
+			*should_be_freed = TRUE;
+                        return _get_value_album_art_str(cache, index);
                 } else {
-                        return _get_value_thumbnail(cache, key, index);
+			*should_be_freed = TRUE;
+                        return _get_value_thumbnail_str(cache, key_id, index);
                 }
-        }
+	}
 
-        /* If the value must be obtained from tracker */
-        if (cached_value->key_type == TRACKER_CACHE_KEY_TYPE_TRACKER) {
-                /* Check if the value can be obtained from tracker */
-                if (index < 0) {
-                        return NULL;
-                }
+	if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE &&
+		key_id == cache->asked_uniq_id)
+	{
+		tracker_index = 0;
+	}
+	trval = _get_tr_val(cache, index, tracker_index);
+	/* If the value must be obtained from tracker */
 
-                /* Verify there is data, and index is within the range */
-                if (!cache->tracker_results ||
-                    cache->tracker_results->len <= index) {
-                        return NULL;
-                }
+	if (metadata_key->special == SPECIAL_KEY_URI)
+	{
+		if (trval)
+		{
+			gchar *uri;
+			*should_be_freed = TRUE;
+			uri = g_filename_to_uri(trval, NULL, NULL);
+			return uri;
+		}
+		return NULL;
+	}
+	*should_be_freed = FALSE;
+	return trval;
+}
 
-                queried_result = (gchar **) g_ptr_array_index(
-                        cache->tracker_results,
-                        index);
+gint
+tracker_cache_value_get_int(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index)
+{
+	gchar *trval = NULL;
 
-                /* Verify that tracked found the metadata for the corresponding
-                 * entry */
-                if (!queried_result[0]) {
-                        return NULL;
-                }
+	if (cache->cache[key_id])
+	{
+		if (cache->cache[key_id]->value_type == G_TYPE_INT)
+			return cache->cache[key_id]->i;
+		if (cache->cache[key_id]->key_derived_from_id != G_MAXINT)
+			return tracker_cache_value_get_int(cache,
+					cache->cache[key_id]->key_derived_from_id,
+					index,
+					_get_idx_from_id(cache,
+						cache->cache[key_id]->key_derived_from_id));
+	}
 
-                return_value = g_new0(GValue, 1);
-                metadata_key = keymap_get_metadata(key);
-                switch (metadata_key->value_type) {
-                case G_TYPE_INT:
-                        g_value_init(return_value, G_TYPE_INT);
-                        g_value_set_int(
-                                return_value,
-                                atoi(queried_result[
-                                             cached_value->tracker_index]));
-                        break;
+	/* If the value must be obtained from tracker */
+	trval = _get_tr_val(cache, index, tracker_index);
 
-                case G_TYPE_LONG:
-			g_value_init(return_value, G_TYPE_LONG);
-			g_value_set_long(
-				return_value,
-				atol(queried_result[
-                                             cached_value->tracker_index]));
-                        break;
+	if (trval)
+		return atoi(trval);
+	return G_MAXINT;
+}
 
-                case G_TYPE_FLOAT:
-                        g_value_init(return_value, G_TYPE_FLOAT);
-                        sscanf(queried_result[cached_value->tracker_index],
+static glong
+tracker_cache_value_get_long(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index)
+{
+	gchar *trval = NULL;
+
+	if (cache->cache[key_id])
+	{
+		if (cache->cache[key_id]->key_derived_from_id != G_MAXINT)
+			return tracker_cache_value_get_long(cache,
+					cache->cache[key_id]->key_derived_from_id,
+					index,
+					_get_idx_from_id(cache,
+						cache->cache[key_id]->key_derived_from_id));
+	}
+
+	/* If the value must be obtained from tracker */
+
+	trval = _get_tr_val(cache, index, tracker_index);
+
+	if (trval)
+		return atol(trval);
+	return 0;
+}
+
+static gfloat
+tracker_cache_value_get_float(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index)
+{
+	float float_val = 0;
+	gchar *trval = NULL;
+
+
+	if (cache->cache[key_id])
+	{
+		if (cache->cache[key_id]->key_derived_from_id != G_MAXINT)
+			return tracker_cache_value_get_float(cache,
+					cache->cache[key_id]->key_derived_from_id,
+					index,
+					_get_idx_from_id(cache,
+						cache->cache[key_id]->key_derived_from_id));
+	}
+
+	/* If the value must be obtained from tracker */
+	trval = _get_tr_val(cache, index, tracker_index);
+
+	if (trval)
+	{
+		sscanf(trval,
                                "%f",
                                &float_val);
-                        g_value_set_float(return_value, float_val);
-                        break;
+		return float_val;
+	}
+	return 0;
+}
 
-                case G_TYPE_BOOLEAN:
-                        g_value_init(return_value, G_TYPE_BOOLEAN);
-                        if (queried_result[
-                                    cached_value->tracker_index][0] == '0') {
-                                g_value_set_boolean(return_value, FALSE);
-                        } else {
-                                g_value_set_boolean(return_value, TRUE);
-                        }
-                        break;
+static gboolean
+tracker_cache_value_get_boolean(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index)
+{
+	gchar *trval = NULL;
 
-                default:
-                        g_value_init(return_value, G_TYPE_STRING);
-                        /* Special case: convert pathname to URI */
-                        if (metadata_key->special == SPECIAL_KEY_URI) {
-                                uri = g_filename_to_uri(
-                                        queried_result[
-                                                cached_value->tracker_index],
-                                        NULL,
-                                        NULL);
-                                g_value_set_string(return_value, uri);
-                                g_free(uri);
-			} else {
-				g_value_set_string(
-                                        return_value,
-                                        queried_result[
-                                                cached_value->tracker_index]);
-                        }
-                        break;
-                }
-                return return_value;
-        }
+	if (cache->cache[key_id])
+	{
+		if (cache->cache[key_id]->key_derived_from_id != G_MAXINT)
+			return tracker_cache_value_get_boolean(cache,
+					cache->cache[key_id]->key_derived_from_id,
+					index,
+					_get_idx_from_id(cache,
+						cache->cache[key_id]->key_derived_from_id));
+	}
 
-        return NULL;
+	/* If the value must be obtained from tracker */
+	trval = _get_tr_val(cache, index, tracker_index);
+
+	if (trval)
+		return trval[0] == '0';
+	return FALSE;
+}
+
+
+static void _parse_tracker_value_add_to_mdata(GHashTable *metadata,
+				TrackerCache *cache,
+				const MetadataKey *metadata_key, gint id,
+				gint idx,
+				gint tracker_idx)
+{
+	if (!metadata_key)
+		return;
+	switch (metadata_key->value_type)
+	{
+		case G_TYPE_INT:
+		{
+			gint intval = tracker_cache_value_get_int(cache, id, idx, tracker_idx);
+			if (intval != G_MAXINT &&
+				(metadata_key->allowed_empty || intval > 0)) {
+				mafw_metadata_add_int(metadata,
+					keymap_get_mafwkey_from_keyid(id),
+					intval);
+			}
+			break;
+		}
+		case G_TYPE_LONG:
+		{
+			glong longval = tracker_cache_value_get_long(cache, id, idx, tracker_idx);
+			if (metadata_key->allowed_empty || longval > 0) {
+				mafw_metadata_add_long(metadata,
+					keymap_get_mafwkey_from_keyid(id),
+					longval);
+			}
+			break;
+		}
+		case G_TYPE_FLOAT:
+		{
+			gfloat floatval = tracker_cache_value_get_float(cache, id, idx, tracker_idx);
+			if (metadata_key->allowed_empty || floatval > 0.0) {
+				mafw_metadata_add_long(metadata,
+					keymap_get_mafwkey_from_keyid(id),
+					floatval);
+			}
+			break;
+		}
+		case G_TYPE_STRING:
+		{
+			gboolean be_free = FALSE;
+			gchar *value_str = tracker_cache_value_get_str(cache,
+						id, idx, tracker_idx, &be_free);
+			if (_value_str_is_allowed(value_str, id)) {
+				_replace_various_str_values(&value_str, be_free);
+				mafw_metadata_add_str(metadata,
+					keymap_get_mafwkey_from_keyid(id),
+					value_str);
+			}
+			if (be_free)
+				g_free(value_str);
+			break;
+		}
+		case G_TYPE_BOOLEAN:
+		{
+			gboolean boolval = tracker_cache_value_get_boolean(cache, id, idx, tracker_idx);
+			mafw_metadata_add_boolean(metadata,
+					keymap_get_mafwkey_from_keyid(id),
+					boolval);
+			break;
+		}
+	}
+	
 }
 
 /*
@@ -1022,18 +951,12 @@ tracker_cache_value_get(TrackerCache *cache,
  * Returns: list of MAFW-metadata
  */
 GList *
-tracker_cache_build_metadata(TrackerCache *cache, const gchar **path_list)
+tracker_cache_build_metadata(TrackerCache *cache, guint64 asked_keys, const gchar **path_list)
 {
         GList *mafw_list = NULL;
-        gchar **user_keys;
-        GValue *value;
         gint result_index;
-        gint key_index;
         gint requested_metadatas;
         GHashTable *metadata = NULL;
-
-        /* Get the list of keys user requested */
-        user_keys = tracker_cache_keys_get_user(cache);
 
         /* If there aren't results from tracker, there is even a chance of being
          * able to build metadata with precomputed values */
@@ -1044,39 +967,81 @@ tracker_cache_build_metadata(TrackerCache *cache, const gchar **path_list)
         }
 
         /* Create metadata */
-        for (result_index = 0;
-             result_index < requested_metadatas;
-             result_index++) {
-                metadata = mafw_metadata_new();
-                for (key_index = 0; user_keys[key_index]; key_index++) {
-                        /* Special cache: title must use filename if
-                         * it doesn't contain title */
-                        if (strcmp(user_keys[key_index],
-                                   MAFW_METADATA_KEY_TITLE) == 0) {
-				const gchar *cur_path;
-				if (path_list)
+        for (result_index = 0; result_index < requested_metadatas; result_index++)
+	{
+		metadata = mafw_metadata_new();
+		gint id = 0;
+		gint tracker_idx = -1, cur_tr_idx;
+		guint64 keys = asked_keys;
+		guint64 tr_keys = cache->asked_tracker_keys;
+		gchar *value_str;
+		MetadataKey *metadata_key;
+
+		if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY)
+		{
+			tracker_idx += 2;
+		}
+		else if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE)
+		{
+			tracker_idx++;
+			metadata_key = keymap_get_metadata_by_id(cache->asked_uniq_id);
+			_parse_tracker_value_add_to_mdata(metadata,
+						cache, metadata_key,
+						cache->asked_uniq_id,
+						result_index,
+						0);
+		}
+		while (keys && id <= maxid)
+		{
+			cur_tr_idx = -1;
+			if ((tr_keys & 1) == 1)
+			{
+				tracker_idx++;
+				cur_tr_idx = tracker_idx;
+			}
+			if ((keys & 1) == 1)
+			{
+				metadata_key = keymap_get_metadata_by_id(id);
+				if (id == MTrackerSrc_ID_TITLE)
 				{
-					cur_path = path_list[result_index];
+					const gchar *cur_path;
+					gboolean be_free;
+					if (path_list)
+					{
+						cur_path = path_list[result_index];
+					}
+					else
+					{
+						cur_path = NULL;
+					}
+					value_str = _get_title_str(cache,
+								result_index,
+								cur_tr_idx,
+								cur_path,
+								&be_free);
+					if (_value_str_is_allowed(value_str,
+							MTrackerSrc_ID_TITLE)) {
+                                		_replace_various_str_values(&value_str, be_free);
+                                		mafw_metadata_add_str(metadata,
+                                                      MAFW_METADATA_KEY_TITLE,
+                                                      value_str);
+						
+                        		}
+					if (be_free)
+						g_free(value_str);
 				}
 				else
 				{
-					cur_path = NULL;
+					_parse_tracker_value_add_to_mdata(metadata,
+						cache, metadata_key, id, result_index,
+						cur_tr_idx);
 				}
-                                value = _get_title(cache, result_index, cur_path);
-                        } else {
-                                value = tracker_cache_value_get(
-                                        cache,
-                                        user_keys[key_index],
-                                        result_index);
-                        }
-                        if (_value_is_allowed(value, user_keys[key_index])) {
-                                _replace_various_values(value);
-                                mafw_metadata_add_val(metadata,
-                                                      user_keys[key_index],
-                                                      value);
-                        }
-                        util_gvalue_free(value);
-                }
+				
+			}
+			keys >>= 1;
+			tr_keys >>= 1;
+			id++;
+		}
                 /* If we didn't get any metadata, add a NULL */
                 if (g_hash_table_size(metadata) == 0) {
                         mafw_metadata_release(metadata);
@@ -1088,9 +1053,6 @@ tracker_cache_build_metadata(TrackerCache *cache, const gchar **path_list)
 
         /* Place elements in right order */
         mafw_list = g_list_reverse(mafw_list);
-
-        /* Free unneeded data */
-        g_strfreev(user_keys);
 
         return mafw_list;
 }
@@ -1107,43 +1069,65 @@ tracker_cache_build_metadata(TrackerCache *cache, const gchar **path_list)
  */
 GHashTable *
 tracker_cache_build_metadata_aggregated(TrackerCache *cache,
-                                        gboolean count_childcount)
+                                        gboolean count_childcount,
+					guint64 asked_keys)
 {
-        gchar **user_keys;
-        gint key_index;
-        GValue *value;
-        GHashTable *metadata;
+	gint id = 0;
+	GHashTable *metadata;
         MetadataKey *metadata_key;
+	guint64 tr_keys = cache->asked_tracker_keys;
+	gint tracker_idx = -1, cur_tr_idx;
 
-        /* Get the list of user-requested keys */
-        user_keys = tracker_cache_keys_get_user(cache);
+	metadata = mafw_metadata_new();
+	
+	if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_QUERY)
+	{
+		tracker_idx += 2;
+	}
+	if (cache->result_type == TRACKER_CACHE_RESULT_TYPE_UNIQUE)
+	{
+		tracker_idx++;
+	}
+	
 
-        /* Create metadata */
-        metadata = mafw_metadata_new();
-        for (key_index = 0; user_keys[key_index]; key_index++) {
-                metadata_key = keymap_get_metadata(user_keys[key_index]);
+	while (asked_keys && id <= maxid)
+	{
+		cur_tr_idx = -1;
+		if ((tr_keys & 1) == 1)
+		{
+			tracker_idx++;
+			cur_tr_idx = tracker_idx;
+		}
+		if ((asked_keys & 1) == 1)
+		{
+			metadata_key = keymap_get_metadata_by_id(id);
 
-                /* Special cases */
-                if (metadata_key->special == SPECIAL_KEY_CHILDCOUNT ||
-                    metadata_key->special == SPECIAL_KEY_DURATION) {
-                        value = _aggregate_key(cache, user_keys[key_index],
-                                               count_childcount);
-                } else {
-                        value = tracker_cache_value_get(cache,
-                                                        user_keys[key_index],
-                                                        0);
-                }
+			/* Special cases */
+			if (metadata_key && (metadata_key->special == SPECIAL_KEY_CHILDCOUNT ||
+			    metadata_key->special == SPECIAL_KEY_DURATION)) {
+				gint intval;
 
-                if (_value_is_allowed(value, user_keys[key_index])) {
-                        _replace_various_values(value);
-                        mafw_metadata_add_val(metadata,
-                                              user_keys[key_index],
-                                              value);
-                }
-                util_gvalue_free(value);
-        }
-
-        g_strfreev(user_keys);
+				if (cur_tr_idx > -1)
+				{
+					intval = _aggregate_key(cache, id,
+							       count_childcount,
+							       cur_tr_idx);
+					if (metadata_key->allowed_empty || intval > 0) {
+						mafw_metadata_add_int(metadata,
+							keymap_get_mafwkey_from_keyid(id),
+							intval);
+					}
+				}
+			} else {
+				_parse_tracker_value_add_to_mdata(metadata,
+						cache, metadata_key, id, 0,
+						cur_tr_idx);
+			}
+		}
+		asked_keys >>= 1;
+		tr_keys >>= 1;
+		id++;
+	}
 
         return metadata;
 }
@@ -1159,6 +1143,11 @@ tracker_cache_build_metadata_aggregated(TrackerCache *cache,
  */
 gboolean
 tracker_cache_key_exists(TrackerCache *cache,
-                         const gchar *key){
-        return g_hash_table_lookup_extended(cache->cache, key, NULL, NULL);
+                         gint key_id){
+	guint64 keyflag;
+	
+	if (cache->asked_uniq_id == key_id)
+		return TRUE;
+	keyflag =  keymap_get_flag_from_keyid(key_id);
+        return (cache->asked_tracker_keys && keyflag) == keyflag;
 }

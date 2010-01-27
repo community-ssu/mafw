@@ -29,20 +29,6 @@
 #include <glib-object.h>
 #include <tracker.h>
 
-/* How the key should be managed in the cache */
-enum TrackerCacheKeyType {
-        /* The value is precomputed/fixed */
-        TRACKER_CACHE_KEY_TYPE_COMPUTED,
-        /* The value must be obtained from tracker */
-        TRACKER_CACHE_KEY_TYPE_TRACKER,
-        /* The value must be obtained from hildon thumbnailer */
-        TRACKER_CACHE_KEY_TYPE_THUMBNAILER,
-        /* The value is obtained from other key */
-        TRACKER_CACHE_KEY_TYPE_DERIVED,
-        /* The value cannot be obtained */
-        TRACKER_CACHE_KEY_TYPE_VOID
-};
-
 /* How results from tracker where obtained */
 enum TrackerCacheResultType {
         /* Results were obtained with tracker_search_query_async */
@@ -56,24 +42,19 @@ enum TrackerCacheResultType {
 
 /* The value of the cached key */
 typedef struct TrackerCacheValue {
-        /* How to manage it */
-        enum TrackerCacheKeyType key_type;
-        /* Has the user asked for this key? */
-        gboolean user_key;
-        union {
-                /* Pre-computed/fixed keys */
-                GValue value;
-                /* Obtained from tracker */
-                gint tracker_index;
-                /* Derived from other key */
-                gchar *key_derived_from;
-        };
+	/* If computed, the type of the stored value */
+	GType value_type;
+	union {
+		gchar *str;
+		gint i;
+	};
+	gboolean free_str;
+	/* Derived from other key */
+	gint key_derived_from_id;
 } TrackerCacheValue;
 
 /* The cache where to store the values */
 typedef struct TrackerCache {
-        /* How many keys are to query tracker */
-        gint last_tracker_index;
         /* How results from tracker have been obtained */
         enum TrackerCacheResultType result_type;
         /* The service used with tracker */
@@ -81,7 +62,10 @@ typedef struct TrackerCache {
         /* Values returned by tracker */
         GPtrArray *tracker_results;
         /* The list of keys */
-        GHashTable *cache;
+        TrackerCacheValue *cache[64];
+	
+	guint64 asked_tracker_keys;
+	gint asked_uniq_id;
 } TrackerCache;
 
 
@@ -90,64 +74,57 @@ TrackerCache *tracker_cache_new(ServiceType service,
 
 void tracker_cache_free(TrackerCache *cache);
 
-void tracker_cache_key_add_precomputed(TrackerCache *cache,
-                                       const gchar *key,
-                                       gboolean user_key,
-                                       const GValue *value);
-
 void tracker_cache_key_add_precomputed_string(TrackerCache *cache,
-                                              const gchar *key,
-                                              gboolean user_key,
-                                              const gchar *value);
+                                              gint key,
+                                              gchar *value,
+					      gboolean free_str);
 
 void tracker_cache_key_add_precomputed_int(TrackerCache *cache,
-                                           const gchar *key,
-                                           gboolean user_key,
+                                           gint key,
                                            gint value);
 
 void tracker_cache_key_add_derived(TrackerCache *cache,
-                                   const gchar *key,
-                                   gboolean user_key,
-                                   gchar *source_key);
+                                   gint key,
+                                   gint source_key);
 
 void tracker_cache_key_add(TrackerCache *cache,
-                           const gchar *key,
-                           gint maximum_level,
-                           gboolean user_key);
+                           gint key_id,
+                           gint maximum_level);
 
 void tracker_cache_key_add_several(TrackerCache *cache,
-                                   gchar **keys,
-                                   gint max_level,
-                                   gboolean user_keys);
+                                   guint64 keys,
+                                   gint max_level);
 
 void tracker_cache_key_add_unique(TrackerCache *cache,
-                                  const gchar *unique_key);
+                                  gint unique_key);
 
 void tracker_cache_key_add_concat(TrackerCache *cache,
-                                  const gchar *concat_key);
-
-gchar **tracker_cache_keys_get_tracker(TrackerCache *cache);
-
-gchar **tracker_cache_keys_get_user(TrackerCache *cache);
+                                  gint concat_key);
 
 void tracker_cache_values_add_results(TrackerCache *cache,
                                       GPtrArray *tracker_results);
 
-void tracker_cache_values_add_result(TrackerCache *cache,
-                                     gchar **tracker_result);
-
 const GPtrArray *tracker_cache_values_get_results(TrackerCache *cache);
 
-GValue *tracker_cache_value_get(TrackerCache *cache,
-                                const gchar *key,
-                                gint index);
 
-GList *tracker_cache_build_metadata(TrackerCache *cache, const gchar **path_list);
+GList *tracker_cache_build_metadata(TrackerCache *cache, guint64 asked_keys,
+					const gchar **path_list);
 
 GHashTable *tracker_cache_build_metadata_aggregated(TrackerCache *cache,
-                                                    gboolean count_childcount);
+                                                    gboolean count_childcount,
+						    guint64 asked_keys);
 
 gboolean tracker_cache_key_exists(TrackerCache *cache,
-                                  const gchar *key);
-
+                                  gint key);
+gchar*
+tracker_cache_value_get_str(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index,
+			gboolean *should_be_freed);
+gint
+tracker_cache_value_get_int(TrackerCache *cache,
+                        gint key_id,
+                        gint index,
+			gint tracker_index);
 #endif /* __MAFW_TRACKER_CACHE_H__ */

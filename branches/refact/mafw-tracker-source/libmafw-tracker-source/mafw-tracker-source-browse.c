@@ -28,12 +28,12 @@
 
 #include <string.h>
 #include <totem-pl-parser.h>
-#include <gio/gio.h>
 
 #include "mafw-tracker-source.h"
 #include "tracker-iface.h"
 #include "util.h"
 #include "definitions.h"
+#include "key-mapping.h"
 
 /* Used to store and emit browse results */
 struct _browse_closure {
@@ -43,8 +43,6 @@ struct _browse_closure {
 	guint browse_id;
 	/* The objectid to browse */
 	gchar *object_id;
-	/* Metadata keys requested */
-	gchar **metadata_keys;
 	/* Recursive query */
 	gboolean recursive;
         /* Sort fields */
@@ -68,11 +66,11 @@ struct _browse_closure {
 	guint index;
 	/* When parsing playlists we have to query metadata for all entries
 	   in bulk, so we need to save the URIs */
-	GList *pls_uris;
+	GPtrArray *pls_uris;
 	/* When parsing playlists we cannot expect tracker to provide
 	   info about non-local files, so we have to store the ids of those
 	   files to ask tracker for */
-	GList *pls_local_ids;
+	GPtrArray *pls_local_ids;
 	/* Stores the playlist duration calculated exhaustively by MAFW. */
 	guint pls_duration;
 	/* The user callback used to emit the browse results to the user */
@@ -85,6 +83,7 @@ struct _browse_closure {
 	GList *current_metadata_value;
 	guint current_index;
 	guint remaining_count;
+	guint64 asked_keys;
 };
 
 typedef gboolean (*_BrowseFunc)(struct _browse_closure *bc,
@@ -186,13 +185,16 @@ static void _browse_closure_free(gpointer data)
 	g_list_free(bc->metadata_values);
 
 	/* Free pls_(local)_uris field */
-	g_list_foreach(bc->pls_uris, (GFunc) g_free, NULL);
-	g_list_free(bc->pls_uris);
-        g_list_foreach(bc->pls_local_ids, (GFunc) g_free, NULL);
-	g_list_free(bc->pls_local_ids);
-
-	/* Free metadata keys */
-	g_strfreev(bc->metadata_keys);
+	if (bc->pls_uris)
+	{
+		g_strfreev((gchar**)bc->pls_uris->pdata);
+		g_ptr_array_free(bc->pls_uris, FALSE);
+	}
+	if (bc->pls_local_ids)
+	{
+        	g_strfreev((gchar**)bc->pls_local_ids->pdata);
+		g_ptr_array_free(bc->pls_local_ids, FALSE);
+	}
 
         /* Free sort fields */
         g_strfreev(bc->sort_fields);
@@ -386,8 +388,8 @@ static gboolean _add_playlist_duration_idle(gpointer data)
 
 	/* Remove the non-Mafw data used to check if MAFW has to calculate
 	 the playlist duration. */
-	util_remove_tracker_data_to_check_pls_duration(pls_metadata,
-		playlists_bc->metadata_keys);
+	playlists_bc->asked_keys = util_remove_tracker_data_to_check_pls_duration(pls_metadata,
+		playlists_bc->asked_keys);
 
 	/* If not, the duration contains the correct value. Continue with the
 	   next playlist. */
@@ -427,8 +429,7 @@ static void _browse_playlists_tracker_cb(MafwResult *clips,
 
 		/* Check if it's possible that we have to recalculate the
 		   durations of some playlists. */
-		if (util_is_duration_requested(
-			    (const gchar **) playlists_bc->metadata_keys)) {
+		if (util_is_duration_requested(playlists_bc->asked_keys)) {
 			/* Maybe we have to recalculate some of them.
 			   Set the initial playlist to process in an idle. */
 			playlists_bc->current_id =
@@ -485,10 +486,7 @@ static gchar *_build_object_id(const gchar *item1, ...)
 	GString *result;
 
 	/* Add uuid::item1 to items */
-	result = g_string_new(MAFW_TRACKER_SOURCE_UUID "::");
-	escaped = mafw_tracker_source_escape_string(item1);
-	result = g_string_append(result, escaped);
-        g_free(escaped);
+	result = g_string_new(item1);
 
 	/* Add remaining items */
 	va_start(args, item1);
@@ -534,10 +532,10 @@ static void _browse_enqueue_videos_cb(MafwResult *clips,
         }
 
         /* Browsing /videos category */
-        bc->object_id_prefix = _build_object_id(TRACKER_SOURCE_VIDEOS,
+        bc->object_id_prefix = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_VIDEOS,
                                                 NULL);
 
-        ti_get_videos(bc->metadata_keys,
+        ti_get_videos(bc->asked_keys,
 		      bc->filter_criteria,
 		      bc->sort_fields,
 		      bc->offset,
@@ -547,39 +545,42 @@ static void _browse_enqueue_videos_cb(MafwResult *clips,
 }
 
 static GHashTable *_new_metadata_from_untracked_resource(gchar *uri,
-                                                         gchar **keys)
+                                                         guint64 keys)
 {
 	GHashTable *metadata;
-	gint i=0;
 
 	metadata = mafw_metadata_new();
 
-	for (i=0; keys[i] != NULL; i++) {
-		if (!strcmp(keys[i], MAFW_METADATA_KEY_TITLE)) {
-			gchar *unescaped_title, *temp;
-			temp = g_path_get_basename(uri);
-			unescaped_title = g_uri_unescape_string(temp, NULL);
-			mafw_metadata_add_str(metadata,
-						keys[i],
-						unescaped_title);
-			g_free(unescaped_title);
-			g_free(temp);
-		} else if (!strcmp(keys[i], MAFW_METADATA_KEY_CHILDCOUNT_1)) {
-			mafw_metadata_add_int(metadata, keys[i], 0);
-		} else if (!strcmp(keys[i], MAFW_METADATA_KEY_URI)) {
-			gchar *fixed_uri;
-			if (uri[0] == '/') {
-				fixed_uri = g_filename_from_uri(uri,
-                                                                NULL,
-                                                                NULL);
-			} else {
-				fixed_uri = g_strdup(uri);
-			}
-			mafw_metadata_add_str(metadata, keys[i], fixed_uri);
-			g_free(fixed_uri);
-		}
+	if ((keys & MTrackerSrc_KEY_TITLE) == MTrackerSrc_KEY_TITLE)
+	{
+		gchar *unescaped_title, *temp;
+		temp = g_path_get_basename(uri);
+		unescaped_title = g_uri_unescape_string(temp, NULL);
+		mafw_metadata_add_str(metadata,
+					MAFW_METADATA_KEY_TITLE,
+					unescaped_title);
+		g_free(unescaped_title);
+		g_free(temp);
+		
 	}
-
+	if ((keys & MTrackerSrc_KEY_CHILDCOUNT_1) == MTrackerSrc_KEY_CHILDCOUNT_1)
+	{
+		mafw_metadata_add_int(metadata, MAFW_METADATA_KEY_CHILDCOUNT_1, 0);
+	}
+	if ((keys & MTrackerSrc_KEY_URI) == MTrackerSrc_KEY_URI)
+	{
+		gchar *fixed_uri;
+		if (uri[0] == '/') {
+			fixed_uri = g_filename_from_uri(uri,
+							NULL,
+							NULL);
+		} else {
+			fixed_uri = g_strdup(uri);
+		}
+		mafw_metadata_add_str(metadata, MAFW_METADATA_KEY_URI, fixed_uri);
+		g_free(fixed_uri);
+		
+	}
 	return metadata;
 }
 
@@ -587,19 +588,20 @@ static void _construct_playlist_entries_result(struct _browse_closure * bc,
 					       GHashTable *tracker_metadatas,
 					       MafwResult *clips)
 {
-	GList *iter;
 	GHashTable *metadata;
 	gchar *clip;
 	gchar *pathname;
 	gchar *escape_pathname;
 	gchar *objectid;
         gchar *uri;
+	gint i;
 
-	iter = bc->pls_uris;
-	while (iter != NULL) {
-                uri= (gchar *) iter->data;
+	if (!bc->pls_uris)
+		return;
+
+	for (i = 0; i < bc->pls_uris->len; i++) {
+                uri= (gchar *) bc->pls_uris->pdata[i];
 		if (uri == NULL) {
-			iter = g_list_next(iter);
 			continue;
 		}
 
@@ -636,14 +638,13 @@ static void _construct_playlist_entries_result(struct _browse_closure * bc,
                         clip = 	mafw_source_create_objectid(uri);
                         metadata =
                                 _new_metadata_from_untracked_resource(
-                                        uri, bc->metadata_keys);
+                                        uri, bc->asked_keys);
 
                         clips->ids = g_list_prepend(clips->ids, clip);
                         clips->metadata_values =
                                 g_list_prepend(clips->metadata_values,
                                                metadata);
                 }
-		iter = g_list_next(iter);
 		g_free(objectid);
 	}
 }
@@ -684,12 +685,15 @@ _pls_entry_parsed (TotemPlParser *parser,
                 if (g_str_has_prefix(escaped_uri, "file://")) {
                         filename = g_filename_from_uri(escaped_uri, NULL, NULL);
                         if (filename) {
-                                bc->pls_local_ids =
-                                        g_list_prepend(bc->pls_local_ids,
-                                                       filename);
+				gchar *tmp, *tmp2;
+				tmp = mafw_tracker_source_escape_string(filename);
+				g_free(filename);
+				tmp2 = g_strconcat(bc->object_id_prefix, "/", tmp, NULL);
+				g_free(tmp);
+				g_ptr_array_add(bc->pls_local_ids, tmp2);
                         }
                 }
-		bc->pls_uris = g_list_prepend(bc->pls_uris, escaped_uri);
+		g_ptr_array_add(bc->pls_uris, escaped_uri);
 	}
 	bc->index++;
 }
@@ -739,6 +743,8 @@ static gboolean _get_playlist_entries(const gchar *pls_uri,
 	g_object_set (pl, "recurse", FALSE, "disable-unsafe", TRUE, NULL);
 	g_signal_connect (G_OBJECT (pl), "entry-parsed",
 			  G_CALLBACK (_pls_entry_parsed), bc);
+	bc->pls_local_ids = g_ptr_array_new();
+	bc->pls_uris = g_ptr_array_new();
 
 	if (totem_pl_parser_parse (pl, pls_uri, FALSE) !=
 	    TOTEM_PL_PARSER_RESULT_SUCCESS) {
@@ -752,32 +758,28 @@ static gboolean _get_playlist_entries(const gchar *pls_uri,
 				bc->object_id);
 		}
 	} else {
-		if (bc->pls_local_ids != NULL) {
+		if (bc->pls_uris->len > 0)
+			g_ptr_array_add(bc->pls_uris, NULL);
+		if (bc->pls_local_ids->len > 0)
+			g_ptr_array_add(bc->pls_local_ids, NULL);
+		if (bc->pls_local_ids->len > 0) {
 			gchar **local_objectids;
 
-                        /* Reverse the list */
-                        bc->pls_local_ids =
-                                g_list_reverse(bc->pls_local_ids);
-
 			/* Construct the objectids */
-			_add_object_id_prefix_to_list(bc->object_id_prefix,
-						      bc->pls_local_ids,
-						      TRUE);
-			local_objectids = util_list_to_strv(bc->pls_local_ids);
-
+			local_objectids = (gchar**)g_ptr_array_free(bc->pls_local_ids, FALSE);
+			bc->pls_local_ids = NULL;
 			/* Do we have local references in the playlist? If so,
 			   try to resolve metadata for them using Tracker */
-			mafw_tracker_source_get_metadatas(
+			mafw_tracker_source_get_metadatas_by_flags(
 				bc->source,
 				(const gchar **) local_objectids,
-				(const gchar *const *) bc->metadata_keys,
+				bc->asked_keys,
 				_browse_playlist_tracker_cb,
 				bc);
 
-			g_free(local_objectids);
-		} else if (bc->pls_uris != NULL) {
+			g_strfreev(local_objectids);
+		} else if (bc->pls_uris->len != 0) {
                         /* Reverse the list */
-                        bc->pls_uris = g_list_reverse(bc->pls_uris);
 			/* We do not have local references, but we have
 			   external references at least: simulate an empty
 			   tracker result */
@@ -793,6 +795,11 @@ static gboolean _get_playlist_entries(const gchar *pls_uri,
 						    NULL);
 		}
 		result = TRUE;
+		if (bc->pls_local_ids)
+		{
+			g_ptr_array_free(bc->pls_local_ids, FALSE);
+			bc->pls_local_ids = NULL;
+		}
 	}
 	g_object_unref(pl);
 
@@ -816,17 +823,16 @@ static void _send_error(MafwSource *source,
         g_error_free(error);
 }
 
-static void _browse_songs_branch(const gchar *genre,
-                                 const gchar *artist,
-                                 const gchar *album,
+static void _browse_songs_branch(gchar *genre,
+                                 gchar *artist,
+                                 gchar *album,
                                  struct _browse_closure *bc)
 {
         /* Browsing /music/songs */
-        bc->object_id_prefix = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                TRACKER_SOURCE_SONGS,
+        bc->object_id_prefix = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_SONGS,
                                                 NULL);
         ti_get_songs(genre, artist, album,
-                     bc->metadata_keys,
+                     bc->asked_keys,
                      bc->filter_criteria,
                      bc->sort_fields,
                      bc->offset,
@@ -835,7 +841,7 @@ static void _browse_songs_branch(const gchar *genre,
                      bc);
 }
 
-static void _browse_albums_branch(const gchar *album,
+static void _browse_albums_branch(gchar *album,
                                   struct _browse_closure *bc)
 {
         gchar *escaped_album;
@@ -848,12 +854,11 @@ static void _browse_albums_branch(const gchar *album,
                         escaped_album =
                                 mafw_tracker_source_escape_string(album);
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_ALBUMS,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ALBUMS,
                                                  escaped_album, NULL);
                         g_free(escaped_album);
                         ti_get_songs(NULL, NULL, album,
-                                     bc->metadata_keys,
+                                     bc->asked_keys,
                                      bc->filter_criteria,
                                      bc->sort_fields,
                                      bc->offset,
@@ -863,11 +868,10 @@ static void _browse_albums_branch(const gchar *album,
                 } else {
                         /* Browsing /music/albums */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_ALBUMS,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ALBUMS,
                                                  NULL);
                         ti_get_albums(NULL, NULL,
-                                      bc->metadata_keys,
+                                      bc->asked_keys,
                                       bc->filter_criteria,
                                       bc->sort_fields,
                                       bc->offset,
@@ -878,8 +882,8 @@ static void _browse_albums_branch(const gchar *album,
         }
 }
 
-static void _browse_artists_branch(const gchar *artist,
-                                   const gchar *album,
+static void _browse_artists_branch(gchar *artist,
+                                   gchar *album,
                                    struct _browse_closure *bc)
 {
         if (bc->recursive) {
@@ -888,11 +892,10 @@ static void _browse_artists_branch(const gchar *artist,
                 if (album) {
                         /* Browsing /music/artists/<artists>/<album> */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_ARTISTS,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ARTISTS,
                                                  artist, album, NULL);
                         ti_get_songs(NULL, artist, album,
-                                     bc->metadata_keys,
+                                     bc->asked_keys,
                                      bc->filter_criteria,
                                      bc->sort_fields,
                                      bc->offset,
@@ -902,11 +905,10 @@ static void _browse_artists_branch(const gchar *artist,
                 } else if (artist) {
                         /* Browsing /music/artists/<artist> */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_ARTISTS,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ARTISTS,
                                                  artist, NULL);
                         ti_get_albums(NULL, artist,
-                                      bc->metadata_keys,
+                                      bc->asked_keys,
                                       bc->filter_criteria,
                                       bc->sort_fields,
                                       bc->offset,
@@ -916,11 +918,10 @@ static void _browse_artists_branch(const gchar *artist,
                 } else {
                         /* Browsing /music/artists */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_ARTISTS,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ARTISTS,
                                                  NULL);
                         ti_get_artists(NULL,
-                                       bc->metadata_keys,
+                                       bc->asked_keys,
                                        bc->filter_criteria,
                                        bc->sort_fields,
                                        bc->offset,
@@ -931,9 +932,9 @@ static void _browse_artists_branch(const gchar *artist,
         }
 }
 
-static void _browse_genres_branch(const gchar *genre,
-                                  const gchar *artist,
-                                  const gchar *album,
+static void _browse_genres_branch(gchar *genre,
+                                  gchar *artist,
+                                  gchar *album,
                                   struct _browse_closure *bc)
 {
         if (bc->recursive) {
@@ -942,11 +943,10 @@ static void _browse_genres_branch(const gchar *genre,
                 if (album) {
                         /* Browsing /music/genres/<genre>/<artists>/<album> */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_GENRES,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_GENRES,
                                                  genre, artist, album, NULL);
                         ti_get_songs(genre, artist, album,
-                                     bc->metadata_keys,
+                                     bc->asked_keys,
                                      bc->filter_criteria,
                                      bc->sort_fields,
                                      bc->offset,
@@ -956,11 +956,10 @@ static void _browse_genres_branch(const gchar *genre,
                 } else if (artist) {
                         /* Browsing /music/genres/<genre>/<artist> */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_GENRES,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_GENRES,
                                                  genre, artist, NULL);
                         ti_get_albums(genre, artist,
-                                      bc->metadata_keys,
+                                      bc->asked_keys,
                                       bc->filter_criteria,
                                       bc->sort_fields,
                                       bc->offset,
@@ -970,11 +969,10 @@ static void _browse_genres_branch(const gchar *genre,
                 } else if (genre) {
                         /* Browsing /music/genres/<genre> */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_GENRES,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_GENRES,
                                                  genre, NULL);
                         ti_get_artists(genre,
-                                       bc->metadata_keys,
+                                       bc->asked_keys,
                                        bc->filter_criteria,
                                        bc->sort_fields,
                                        bc->offset,
@@ -984,10 +982,9 @@ static void _browse_genres_branch(const gchar *genre,
                 } else {
                         /* Browsing /music/genres */
                         bc->object_id_prefix =
-                                _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                 TRACKER_SOURCE_GENRES,
+                                _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_GENRES,
                                                  NULL);
-                        ti_get_genres(bc->metadata_keys,
+                        ti_get_genres(bc->asked_keys,
                                       bc->filter_criteria,
                                       bc->sort_fields,
                                       bc->offset,
@@ -1003,11 +1000,10 @@ static void _browse_root(struct _browse_closure *bc)
         gchar *object_id;
 
         if (bc->recursive) {
-                bc->object_id_prefix = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                        TRACKER_SOURCE_SONGS,
+                bc->object_id_prefix = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_SONGS,
                                                         NULL);
                 ti_get_songs(NULL, NULL, NULL,
-                             bc->metadata_keys,
+                             bc->asked_keys,
                              bc->filter_criteria,
                              bc->sort_fields,
                              bc->offset,
@@ -1024,21 +1020,21 @@ static void _browse_root(struct _browse_closure *bc)
                 bc->remaining_count = 2;
 
                 /* Get metadata for videos */
-                object_id = _build_object_id(TRACKER_SOURCE_VIDEOS, NULL);
-                mafw_tracker_source_get_metadata(
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_VIDEOS, NULL);
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
 
                 /* Get metadata for music */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC, NULL);
-                mafw_tracker_source_get_metadata(
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC, NULL);
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
@@ -1048,9 +1044,9 @@ static void _browse_root(struct _browse_closure *bc)
 static void _browse_videos_branch(struct _browse_closure *bc)
 {
         /* Browsing /videos */
-        bc->object_id_prefix = _build_object_id(TRACKER_SOURCE_VIDEOS,
+        bc->object_id_prefix = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_VIDEOS,
                                                 NULL);
-        ti_get_videos(bc->metadata_keys,
+        ti_get_videos(bc->asked_keys,
                       bc->filter_criteria,
                       bc->sort_fields,
                       bc->offset,
@@ -1072,61 +1068,56 @@ static void _browse_music_branch(struct _browse_closure *bc)
                 bc->remaining_count = 5;
 
                 /* Get metadata for albums */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                             TRACKER_SOURCE_ALBUMS,
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ALBUMS,
                                              NULL);
-                mafw_tracker_source_get_metadata(
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
 
                 /* Get metadata for artists */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                             TRACKER_SOURCE_ARTISTS,
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_ARTISTS,
                                              NULL);
-                mafw_tracker_source_get_metadata(
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
 
                 /* Get metadata for genres */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                             TRACKER_SOURCE_GENRES,
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_GENRES,
                                              NULL);
-                mafw_tracker_source_get_metadata(
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
 
                 /* Get metadata for songs */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                             TRACKER_SOURCE_SONGS,
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_SONGS,
                                              NULL);
-                mafw_tracker_source_get_metadata(
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
 
                 /* Get metadata for playlists */
-                object_id = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                             TRACKER_SOURCE_PLAYLISTS,
+                object_id = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_PLAYLISTS,
                                              NULL);
-                mafw_tracker_source_get_metadata(
+                mafw_tracker_source_get_metadata_by_flags(
                         bc->source,
                         object_id,
-                        (const gchar *const *) bc->metadata_keys,
+                        bc->asked_keys,
                         _consolidate_metadata_cb,
                         bc);
                 g_free(object_id);
@@ -1140,8 +1131,7 @@ static gboolean _browse_playlists_branch(const gchar *playlist,
 
         if (playlist) {
                 /* Browsing /music/playlists/<playlist> */
-                bc->object_id_prefix = _build_object_id(TRACKER_SOURCE_MUSIC,
-                                                        TRACKER_SOURCE_SONGS,
+                bc->object_id_prefix = _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_SONGS,
                                                         NULL);
                 if (_get_playlist_entries(playlist, bc, &error)) {
                         return TRUE;
@@ -1157,18 +1147,16 @@ static gboolean _browse_playlists_branch(const gchar *playlist,
         } else {
                 /* Browsing /music/playlists */
                 bc->object_id_prefix =
-                        _build_object_id(TRACKER_SOURCE_MUSIC,
-                                         TRACKER_SOURCE_PLAYLISTS,
+                        _build_object_id(MAFW_TRACKER_SOURCE_UUID "::" TRACKER_SOURCE_MUSIC "/" TRACKER_SOURCE_PLAYLISTS,
                                          NULL);
 
-		if (util_is_duration_requested(
-			    (const gchar **) bc->metadata_keys)) {
-			bc->metadata_keys =
+		if (util_is_duration_requested(bc->asked_keys)) {
+			bc->asked_keys =
 				util_add_tracker_data_to_check_pls_duration(
-					bc->metadata_keys);
+					bc->asked_keys);
 		}
 
-		ti_get_playlists(bc->metadata_keys,
+		ti_get_playlists(bc->asked_keys,
 				 bc->filter_criteria,
 				 bc->sort_fields,
 				 bc->offset,
@@ -1194,7 +1182,6 @@ mafw_tracker_source_browse(MafwSource *self,
 	gint browse_id = 0;
 	struct _browse_closure *bc = NULL;
         CategoryType category;
-        const gchar* const* meta_keys;
         gchar *album = NULL;
         gchar *artist = NULL;
         gchar *clip = NULL;
@@ -1229,17 +1216,6 @@ mafw_tracker_source_browse(MafwSource *self,
                             user_data);
                 return MAFW_SOURCE_INVALID_BROWSE_ID;
         }
-
-	if (metadata_keys == NULL) {
-		metadata_keys = MAFW_SOURCE_NO_KEYS;
-	}
-
-	if (mafw_source_all_keys(metadata_keys)) {
-		meta_keys = MAFW_SOURCE_LIST(KNOWN_METADATA_KEYS);
-	} else {
-		meta_keys = metadata_keys;
-	}
-
 	if (item_count == MAFW_SOURCE_BROWSE_ALL) {
 		item_count = G_MAXINT;
         }
@@ -1249,9 +1225,9 @@ mafw_tracker_source_browse(MafwSource *self,
 
 	/* Prepare browse operation */
 	bc = g_slice_new0(struct _browse_closure);
+	bc->asked_keys = keymap_compile_mdata_keys(metadata_keys);
 	bc->source = self;
 	bc->object_id = g_strdup(object_id);
-	bc->metadata_keys = g_strdupv((gchar **) meta_keys);
 	bc->sort_fields = sort_criteria?
                 g_strsplit(sort_criteria, ",", 0): NULL;
 	bc->filter_criteria = ti_create_filter(filter);

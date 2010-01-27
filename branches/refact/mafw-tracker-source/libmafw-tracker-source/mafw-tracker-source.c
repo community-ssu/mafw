@@ -35,6 +35,7 @@
 #include "tracker-iface.h"
 #include "util.h"
 #include "definitions.h"
+#include "key-mapping.h"
 
 #undef G_LOG_DOMAIN
 #define G_LOG_DOMAIN "mafw-tracker-source"
@@ -67,7 +68,7 @@ struct _destroy_object_closure {
 	guint current_index;
 	guint remaining_count;
 	/* We may have to allocate memory for URI resolution */
-	gchar **metadata_keys;
+	guint64 asked_keys;
 };
 
 
@@ -133,8 +134,6 @@ static void _destroy_object_closure_free(gpointer data)
 		g_list_free(dc->uris);
 	}
 
-	/* Free metadata keys */
-	g_strfreev(dc->metadata_keys);
 
 	/* Free callback error */
 	if (dc->error) {
@@ -303,6 +302,7 @@ MafwSource *mafw_tracker_source_new(void)
 
 		/* Connect to notifications about changes on the filesystem */
 		ti_init_watch(G_OBJECT(source));
+		keymap_init_hash();
 	}
 
 	return source;
@@ -344,7 +344,7 @@ void mafw_tracker_source_destroy_object(MafwSource *self,
 	dc->uris = NULL;
 	dc->current_index = 0;
 	dc->remaining_count = 1;
-	dc->metadata_keys = NULL;
+	dc->asked_keys = 0;
 
 	/* Destroy operation */
 	if (clip) {
@@ -357,11 +357,9 @@ void mafw_tracker_source_destroy_object(MafwSource *self,
 			(GDestroyNotify) _destroy_object_closure_free);
 	} else if (artist || album){
 		/* Delete a an album or an artist container and its files */
-		dc->metadata_keys =
-			g_strdupv((gchar **)
-				  MAFW_SOURCE_LIST(MAFW_METADATA_KEY_URI));
+		dc->asked_keys = MTrackerSrc_KEY_URI;
 
-		ti_get_songs(genre, artist, album, dc->metadata_keys, NULL,
+		ti_get_songs(genre, artist, album, dc->asked_keys, NULL,
 			     NULL, 0, 0, _destroy_object_tracker_cb, dc);
 	} else {
 		/* Delete other containers is not allowed */

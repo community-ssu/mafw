@@ -29,27 +29,32 @@
 #include <stdlib.h>
 #include <hildon-thumbnail-factory.h>
 #include <hildon-albumart-factory.h>
-#include <gio/gio.h>
 
 
 /* ------------------------- Public API ------------------------- */
+static gboolean _file_check(const gchar *path)
+{
+	return g_file_test(path, G_FILE_TEST_EXISTS);
+}
+
+static gboolean _file_check_uri(const gchar *uri)
+{
+	return _file_check(uri + sizeof("file://"));
+}
 
 gchar *albumart_get_thumbnail_uri(const gchar *orig_file_uri,
 				  enum thumbnail_size size)
 {
         gchar *file_uri;
-        GFile *file;
 
         if (size == THUMBNAIL_CROPPED) {
                 file_uri = hildon_thumbnail_get_uri(orig_file_uri,
                                                     128, 128, TRUE);
                 /* Check if file doesn't exist */
-                file = g_file_new_for_uri(file_uri);
-                if (!g_file_query_exists(file, NULL)) {
-                        g_free(file_uri);
-                        file_uri = NULL;
-                }
-                g_object_unref(file);
+		if (_file_check_uri(file_uri))
+			return file_uri;
+		g_free(file_uri);
+		return NULL;
         } else {
                 /* Get the original album art */
                 file_uri = albumart_get_album_art_uri(orig_file_uri);
@@ -62,50 +67,28 @@ gchar *albumart_get_album_art_uri(const gchar *album)
 {
 	gchar *file_uri;
         gchar *file_path;
-	gchar *album_key;
-        GFile *file;
 
-	if (util_tracker_value_is_unknown(album)) {
+	if (util_tracker_value_is_unknown(album))
                 return NULL;
-	} else {
-		album_key = g_strdup(album);
-	}
 
 	/* Get the path to the album-art */
-	file_path = hildon_albumart_get_path(NULL, album_key, "album");
-        file_uri = g_filename_to_uri(file_path, NULL, NULL);
-        g_free(file_path);
+	file_path = hildon_albumart_get_path(NULL, album, "album");
+	if (_file_check(file_path))
+	{
+		file_uri = g_filename_to_uri(file_path, NULL, NULL);
+        	g_free(file_path);
+		return file_uri;
+	}
+	g_free(file_path);
 
-        /* Check if file exists */
-        file = g_file_new_for_uri(file_uri);
-        if (!g_file_query_exists(file, NULL)) {
-                g_free(file_uri);
-                file_uri = NULL;
-        }
-	g_object_unref(file);
-	g_free(album_key);
-
-	return file_uri;
+	return 	NULL;
 }
 
-gboolean albumart_key_is_album_art(const gchar *key)
+gboolean albumart_key_is_thumbnail_by_id(gint key_id)
 {
         MetadataKey *metadata_key;
 
-        metadata_key = keymap_get_metadata(key);
-
-        if (metadata_key) {
-                return metadata_key->key_type == ALBUM_ART_KEY;
-        } else {
-                return FALSE;
-        }
-}
-
-gboolean albumart_key_is_thumbnail(const gchar *key)
-{
-        MetadataKey *metadata_key;
-
-        metadata_key = keymap_get_metadata(key);
+        metadata_key = keymap_get_metadata_by_id(key_id);
 
         if (metadata_key) {
                 return metadata_key->key_type == THUMBNAIL_KEY;

@@ -30,268 +30,438 @@
 
 /* ------------------------- Public API ------------------------- */
 
-gchar *keymap_mafw_key_to_tracker_key(const gchar *mafw_key,
-				      ServiceType service)
+
+
+struct _tracker_hash_data {
+	const gchar *mafw_key;
+	guint64 flag;
+	TrackerKey tracker_musickeydata;
+	TrackerKey tracker_videokeydata;
+	TrackerKey tracker_playlistkeydata;
+	TrackerKey tracker_commonkeydata;
+	MetadataKey metadata_key;
+};
+
+#define VALUE_TYPE_STRING "String"
+#define VALUE_TYPE_INT "Integer"
+#define VALUE_TYPE_DATE "Date"
+#define VALUE_TYPE_DOUBLE "Double"
+
+static struct _tracker_hash_data tracker_hash_data[] = {
+	{MAFW_METADATA_KEY_URI, MTrackerSrc_KEY_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_FULLNAME, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, SPECIAL_KEY_URI}},
+	{MAFW_METADATA_KEY_MIME, MTrackerSrc_KEY_MIME,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_MIME, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, SPECIAL_KEY_MIME}},
+	{MAFW_METADATA_KEY_TITLE, MTrackerSrc_KEY_TITLE,
+		{TRACKER_AKEY_TITLE, VALUE_TYPE_STRING},
+			{TRACKER_VKEY_TITLE, VALUE_TYPE_STRING},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, TRUE, 0, G_MAXINT, SPECIAL_KEY_TITLE}},
+	{MAFW_METADATA_KEY_DURATION, MTrackerSrc_KEY_DURATION,
+		{TRACKER_AKEY_DURATION, VALUE_TYPE_INT},
+			{TRACKER_VKEY_DURATION, VALUE_TYPE_INT},
+				{TRACKER_PKEY_DURATION, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_INT, TRUE, FALSE, 0, G_MAXINT, SPECIAL_KEY_DURATION}},
+	{MAFW_METADATA_KEY_ARTIST, MTrackerSrc_KEY_ARTIST,
+		{TRACKER_AKEY_ARTIST, VALUE_TYPE_STRING},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_ALBUM, MTrackerSrc_KEY_ALBUM,
+		{TRACKER_AKEY_ALBUM, VALUE_TYPE_STRING},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_GENRE, MTrackerSrc_KEY_GENRE,
+		{TRACKER_AKEY_GENRE, VALUE_TYPE_STRING},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_TRACK, MTrackerSrc_KEY_TRACK,
+		{TRACKER_AKEY_TRACK, VALUE_TYPE_INT},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_YEAR, MTrackerSrc_KEY_YEAR,
+		{TRACKER_AKEY_YEAR, VALUE_TYPE_DATE},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_BITRATE, MTrackerSrc_KEY_BITRATE,
+		{TRACKER_AKEY_BITRATE, VALUE_TYPE_DOUBLE},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_PLAY_COUNT, MTrackerSrc_KEY_PLAY_COUNT, 
+		{TRACKER_AKEY_PLAY_COUNT, VALUE_TYPE_INT},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, TRUE, TRUE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_LAST_PLAYED, MTrackerSrc_KEY_LAST_PLAYED,
+		{TRACKER_AKEY_LAST_PLAYED, VALUE_TYPE_DATE},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, TRUE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_ADDED, MTrackerSrc_KEY_ADDED,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_ADDED, VALUE_TYPE_DATE},
+						{G_TYPE_LONG, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_MODIFIED, MTrackerSrc_KEY_MODIFIED,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_MODIFIED, VALUE_TYPE_DATE},
+						{G_TYPE_LONG, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_THUMBNAIL_URI, MTrackerSrc_KEY_THUMBNAIL_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MTrackerSrc_ID_URI, 0}},
+	{MAFW_METADATA_KEY_THUMBNAIL_SMALL_URI, MTrackerSrc_KEY_THUMBNAIL_SMALL_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MTrackerSrc_ID_URI, 0}},
+	{MAFW_METADATA_KEY_THUMBNAIL_MEDIUM_URI, MTrackerSrc_KEY_THUMBNAIL_MEDIUM_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MTrackerSrc_ID_URI, 0}},
+	{MAFW_METADATA_KEY_THUMBNAIL_LARGE_URI, MTrackerSrc_KEY_THUMBNAIL_LARGE_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MTrackerSrc_ID_URI, 0}},
+	{MAFW_METADATA_KEY_PAUSED_THUMBNAIL_URI, MTrackerSrc_KEY_PAUSED_THUMBNAIL_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_VKEY_PAUSED_THUMBNAIL, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, TRUE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_PAUSED_POSITION, MTrackerSrc_KEY_PAUSED_POSITION,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_VKEY_PAUSED_POSITION, VALUE_TYPE_INT},
+						{G_TYPE_INT, TRUE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_RES_X, MTrackerSrc_KEY_RES_X,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_VKEY_RES_X, VALUE_TYPE_INT},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_RES_Y, MTrackerSrc_KEY_RES_Y,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_VKEY_RES_Y, VALUE_TYPE_INT},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_FILENAME, MTrackerSrc_KEY_FILENAME,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_FILENAME, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_FILESIZE, MTrackerSrc_KEY_FILESIZE,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_FILESIZE, VALUE_TYPE_INT},
+						{G_TYPE_INT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_COPYRIGHT, MTrackerSrc_KEY_COPYRIGHT,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_COPYRIGHT, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_ALBUM_ART_URI, MTrackerSrc_KEY_ALBUM_ART_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MTrackerSrc_ID_ALBUM, 0}},
+	{MAFW_METADATA_KEY_ALBUM_ART_SMALL_URI, MTrackerSrc_KEY_ALBUM_ART_SMALL_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MTrackerSrc_ID_ALBUM_ART_URI, 0}},
+	{MAFW_METADATA_KEY_ALBUM_ART_MEDIUM_URI, MTrackerSrc_KEY_ALBUM_ART_MEDIUM_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MTrackerSrc_ID_ALBUM_ART_URI, 0}},
+	{MAFW_METADATA_KEY_ALBUM_ART_LARGE_URI, MTrackerSrc_KEY_ALBUM_ART_LARGE_URI,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MTrackerSrc_ID_ALBUM_ART_URI, 0}},
+	{MAFW_METADATA_KEY_VIDEO_FRAMERATE, MTrackerSrc_KEY_VIDEO_FRAMERATE,
+		{NULL, 0},
+			{TRACKER_VKEY_FRAMERATE, VALUE_TYPE_DOUBLE},
+				{NULL, 0},
+					{NULL, 0},
+						{G_TYPE_FLOAT, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_VIDEO_SOURCE, MTrackerSrc_KEY_VIDEO_SOURCE,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_VKEY_SOURCE, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{MAFW_METADATA_KEY_CHILDCOUNT_1, MTrackerSrc_KEY_CHILDCOUNT_1,
+		{NULL, 0},
+			{NULL, 0},
+				{TRACKER_PKEY_COUNT, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, TRUE, 0, G_MAXINT, SPECIAL_KEY_CHILDCOUNT}},
+	{MAFW_METADATA_KEY_CHILDCOUNT_2, MTrackerSrc_KEY_CHILDCOUNT_2,
+		{NULL, 0},
+			{NULL, 0},
+				{TRACKER_PKEY_COUNT, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, TRUE, 0, G_MAXINT, SPECIAL_KEY_CHILDCOUNT}},
+	{MAFW_METADATA_KEY_CHILDCOUNT_3, MTrackerSrc_KEY_CHILDCOUNT_3,
+		{NULL, 0},
+			{NULL, 0},
+				{TRACKER_PKEY_COUNT, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, TRUE, 0, G_MAXINT, SPECIAL_KEY_CHILDCOUNT}},
+	{MAFW_METADATA_KEY_CHILDCOUNT_4, MTrackerSrc_KEY_CHILDCOUNT_4,
+		{NULL, 0},
+			{NULL, 0},
+				{TRACKER_PKEY_COUNT, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_INT, FALSE, TRUE, 0, G_MAXINT, SPECIAL_KEY_CHILDCOUNT}},
+	{TRACKER_PKEY_VALID_DURATION, MTrackerSrc_TRACKER_PKEY_VALID_DURATION,
+		{NULL, 0},
+			{NULL, 0},
+				{TRACKER_PKEY_VALID_DURATION, VALUE_TYPE_INT},
+					{NULL, 0},
+						{G_TYPE_BOOLEAN, FALSE, FALSE, 0, G_MAXINT, 0}},
+	{TRACKER_FKEY_PATH, MTrackerSrc_TRACKER_FKEY_PATH,
+		{NULL, 0},
+			{NULL, 0},
+				{NULL, 0},
+					{TRACKER_FKEY_PATH, VALUE_TYPE_STRING},
+						{G_TYPE_STRING, FALSE, FALSE, 0, G_MAXINT, 0}}
+};
+
+static GHashTable *_tracker_key_hash;
+gint maxid = -1;
+
+void keymap_init_hash(void)
+{
+	gint i = 0;
+
+	maxid = G_N_ELEMENTS(tracker_hash_data) - 1;
+
+	if (_tracker_key_hash)
+		return;
+
+	_tracker_key_hash = g_hash_table_new(g_str_hash, g_str_equal);
+	g_assert(_tracker_key_hash);
+	
+	for(i=0; i <= maxid; i++)
+	{
+		g_hash_table_insert(_tracker_key_hash,
+					(gpointer)tracker_hash_data[i].mafw_key,
+					GINT_TO_POINTER(i+1));
+	}
+}
+
+const gchar *keymap_get_mafwkey_from_keyid(gint keyid)
+{
+	if (keyid >= G_N_ELEMENTS(tracker_hash_data))
+		return NULL;
+	return tracker_hash_data[keyid].mafw_key;
+}
+
+guint64 keymap_get_flag_from_keyid(gint keyid)
+{
+	if (keyid >= G_N_ELEMENTS(tracker_hash_data))
+		return 0;
+	return tracker_hash_data[keyid].flag;
+}
+
+gint keymap_get_id_from_mafwkey(const gchar *mafw_key)
+{
+	gint id = GPOINTER_TO_INT(g_hash_table_lookup(_tracker_key_hash,
+					mafw_key));
+	if (id != 0)
+		return  id - 1;
+	return G_MAXINT;
+}
+
+/**
+ * keymap_get_flag_from_mafwkey:
+ * @mafwkey:	MAFW metadata key
+ *
+ * Returns the flag of the asked metadata-key, or 0, if not supported
+ */
+guint64 keymap_get_flag_from_mafwkey(const gchar *mafwkey)
+{
+	guint64 flagn = 1;
+	gint id = keymap_get_id_from_mafwkey(mafwkey);
+
+	if (id == G_MAXINT)
+		return 0;
+
+	flagn <<= id;
+	return flagn;
+}
+
+/**
+ * keymap_compile_mdata_keys:
+ * @original:	metadatakeys
+ *
+ * Converts the list of metadata-keys into flags.
+ */
+guint64 keymap_compile_mdata_keys(const gchar* const* original)
+{
+	guint64 mkeys = 0;
+	gint i;
+	
+	if (original == NULL || original[0] == NULL)
+		return 0;
+
+	if (strcmp(MAFW_SOURCE_ALL_KEYS[0], original[0]) == 0)
+	{
+		mkeys = G_MAXUINT64;
+		mkeys &= ~MTrackerSrc_TRACKER_PKEY_VALID_DURATION;
+		mkeys &= ~MTrackerSrc_TRACKER_FKEY_PATH;
+		return mkeys;
+	}
+	
+	for (i = 0; original[i]; i++)
+	{
+		mkeys |= keymap_get_flag_from_mafwkey(original[i]);
+	}
+	return mkeys;
+}
+
+const TrackerKey *keymap_get_tracker_info_by_id(gint mafw_key_id, 
+						ServiceType service)
 {
         TrackerKey *tracker_key;
+
+	if (mafw_key_id >= G_N_ELEMENTS(tracker_hash_data))
+		return NULL;
+
+        switch (service) {
+        case SERVICE_VIDEOS:
+                tracker_key = &tracker_hash_data[mafw_key_id].tracker_videokeydata;
+                break;
+        case SERVICE_PLAYLISTS:
+                tracker_key = &tracker_hash_data[mafw_key_id].tracker_playlistkeydata;
+                break;
+        default:
+                tracker_key = &tracker_hash_data[mafw_key_id].tracker_musickeydata;
+        }
+
+        if (tracker_key->tracker_key) {
+                return tracker_key;
+        } else {
+		tracker_key = &tracker_hash_data[mafw_key_id].tracker_commonkeydata;
+		if (tracker_key->tracker_key) {
+                	return tracker_key;
+		}
+        }
+	return NULL;
+}
+
+const TrackerKey *keymap_get_tracker_info(const gchar *mafw_key,
+                                    ServiceType service)
+{
+	gint id = keymap_get_id_from_mafwkey(mafw_key);
+
+	return keymap_get_tracker_info_by_id(id, service);
+}
+
+const gchar *keymap_mafw_key_to_tracker_key(const gchar *mafw_key,
+				      ServiceType service)
+{
+        const TrackerKey *tracker_key;
 
         tracker_key = keymap_get_tracker_info(mafw_key, service);
 
         if (tracker_key) {
-                return g_strdup(tracker_key->tracker_key);
+                return tracker_key->tracker_key;
         } else {
                 return NULL;
         }
 }
 
-gboolean keymap_is_key_supported_in_tracker(const gchar *mafw_key)
+gint keymap_get_childcount_level(gint childcount_key_id)
 {
-        static InfoKeyTable *t = NULL;
+        return childcount_key_id - MTrackerSrc_ID_CHILDCOUNT_1 + 1;
+}
 
-        if (!t) {
-                t = keymap_get_info_key_table();
+const gchar *keymap_get_tracker_key_by_id(gint mafw_key_id,
+				      ServiceType service)
+{
+        const TrackerKey *tracker_key;
+
+        tracker_key = keymap_get_tracker_info_by_id(mafw_key_id, service);
+
+        if (tracker_key) {
+                return tracker_key->tracker_key;
         }
-
-        return g_hash_table_lookup(t->music_keys, mafw_key) != NULL ||
-                g_hash_table_lookup(t->videos_keys, mafw_key) != NULL ||
-                g_hash_table_lookup(t->playlist_keys, mafw_key) != NULL ||
-                g_hash_table_lookup(t->common_keys, mafw_key) != NULL;
+	return NULL;
 }
 
-gboolean keymap_mafw_key_is_writable(gchar *mafw_key)
+MetadataKey *keymap_get_metadata_by_id(gint key_id)
 {
-        MetadataKey *metadata_key;
-
-        metadata_key = keymap_get_metadata(mafw_key);
-
-        /* If key is not found, return FALSE */
-        return metadata_key && metadata_key->writable;
-}
-
-struct TrackerKeyData {
-	gchar *metadata_key;
-	TrackerKey keydata;
-};
-
-static struct TrackerKeyData music_keys[] = {
-	{MAFW_METADATA_KEY_TITLE, {TRACKER_AKEY_TITLE, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_DURATION, {TRACKER_AKEY_DURATION, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_ARTIST, {TRACKER_AKEY_ARTIST, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_ALBUM, {TRACKER_AKEY_ALBUM, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_GENRE, {TRACKER_AKEY_GENRE, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_TRACK, {TRACKER_AKEY_TRACK, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_YEAR, {TRACKER_AKEY_YEAR, VALUE_TYPE_DATE}},
-	{MAFW_METADATA_KEY_BITRATE, {TRACKER_AKEY_BITRATE, VALUE_TYPE_DOUBLE}},
-	{MAFW_METADATA_KEY_LAST_PLAYED, {TRACKER_AKEY_LAST_PLAYED, VALUE_TYPE_DATE}},
-	{MAFW_METADATA_KEY_PLAY_COUNT, {TRACKER_AKEY_PLAY_COUNT, VALUE_TYPE_INT}},
-	{NULL, {0, 0}}
-};
-
-static struct TrackerKeyData video_keys[] = {
-	{MAFW_METADATA_KEY_TITLE, {TRACKER_VKEY_TITLE, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_DURATION, {TRACKER_VKEY_DURATION, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_VIDEO_FRAMERATE, {TRACKER_VKEY_FRAMERATE, VALUE_TYPE_DOUBLE}},
-	{NULL, {0, 0}}
-};
-
-static struct TrackerKeyData playlist_keys[] = {
-	{MAFW_METADATA_KEY_DURATION, {TRACKER_PKEY_DURATION, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_CHILDCOUNT_1, {TRACKER_PKEY_COUNT, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_CHILDCOUNT_2, {TRACKER_PKEY_COUNT, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_CHILDCOUNT_3, {TRACKER_PKEY_COUNT, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_CHILDCOUNT_4, {TRACKER_PKEY_COUNT, VALUE_TYPE_INT}},
-	{TRACKER_PKEY_VALID_DURATION, {TRACKER_PKEY_VALID_DURATION, VALUE_TYPE_INT}},
-	{NULL, {0, 0}}
-};
-
-static struct TrackerKeyData common_keys[] = {
-	{MAFW_METADATA_KEY_PAUSED_THUMBNAIL_URI, {TRACKER_VKEY_PAUSED_THUMBNAIL, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_PAUSED_POSITION, {TRACKER_VKEY_PAUSED_POSITION, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_VIDEO_SOURCE, {TRACKER_VKEY_SOURCE, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_RES_X, {TRACKER_VKEY_RES_X, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_RES_Y, {TRACKER_VKEY_RES_Y, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_COPYRIGHT, {TRACKER_FKEY_COPYRIGHT, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_FILESIZE, {TRACKER_FKEY_FILESIZE, VALUE_TYPE_INT}},
-	{MAFW_METADATA_KEY_FILENAME, {TRACKER_FKEY_FILENAME, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_MIME, {TRACKER_FKEY_MIME, VALUE_TYPE_STRING}},
-	{MAFW_METADATA_KEY_ADDED, {TRACKER_FKEY_ADDED, VALUE_TYPE_DATE}},
-	{MAFW_METADATA_KEY_MODIFIED, {TRACKER_FKEY_MODIFIED, VALUE_TYPE_DATE}},
-	{MAFW_METADATA_KEY_URI, {TRACKER_FKEY_FULLNAME, VALUE_TYPE_STRING}},
-	{TRACKER_FKEY_PATH, {TRACKER_FKEY_PATH, VALUE_TYPE_STRING}},
-	{NULL, {0, 0}}
-};
-
-struct MetadataKeyList {
-	gchar *metadata_key;
-	MetadataKey keydata;
-};
-
-static struct MetadataKeyList mdata_keys[] = {
-                {MAFW_METADATA_KEY_CHILDCOUNT_1, {G_TYPE_INT, FALSE, TRUE, 0, NULL, SPECIAL_KEY_CHILDCOUNT}},
-                {MAFW_METADATA_KEY_CHILDCOUNT_2, {G_TYPE_INT, FALSE, TRUE, 0, NULL, SPECIAL_KEY_CHILDCOUNT}},
-                {MAFW_METADATA_KEY_CHILDCOUNT_3, {G_TYPE_INT, FALSE, TRUE, 0, NULL, SPECIAL_KEY_CHILDCOUNT}},
-                {MAFW_METADATA_KEY_CHILDCOUNT_4, {G_TYPE_INT, FALSE, TRUE, 0, NULL, SPECIAL_KEY_CHILDCOUNT}},
-                {MAFW_METADATA_KEY_VIDEO_FRAMERATE, {G_TYPE_FLOAT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_COPYRIGHT, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_FILESIZE, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_FILENAME, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_TITLE, {G_TYPE_STRING, FALSE, TRUE, 0, NULL, SPECIAL_KEY_TITLE}},
-                {MAFW_METADATA_KEY_DURATION, {G_TYPE_INT, TRUE, FALSE, 0, NULL, SPECIAL_KEY_DURATION}},
-                {MAFW_METADATA_KEY_MIME, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, SPECIAL_KEY_MIME}},
-                {MAFW_METADATA_KEY_ARTIST, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_ALBUM, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_GENRE, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_TRACK, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_YEAR, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_BITRATE, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_URI, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, SPECIAL_KEY_URI}},
-                {MAFW_METADATA_KEY_LAST_PLAYED, {G_TYPE_LONG, TRUE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_PLAY_COUNT, {G_TYPE_STRING, TRUE, TRUE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_ADDED, {G_TYPE_LONG, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_MODIFIED, {G_TYPE_LONG, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_PAUSED_THUMBNAIL_URI, {G_TYPE_STRING, TRUE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_PAUSED_POSITION, {G_TYPE_INT, TRUE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_VIDEO_SOURCE, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_RES_X, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_RES_Y, {G_TYPE_INT, FALSE, FALSE, 0, NULL, 0}},
-                {TRACKER_PKEY_VALID_DURATION, {G_TYPE_BOOLEAN, FALSE, FALSE, 0, NULL, 0}},
-                {TRACKER_FKEY_PATH, {G_TYPE_STRING, FALSE, FALSE, 0, NULL, 0}},
-                {MAFW_METADATA_KEY_ALBUM_ART_SMALL_URI, {G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MAFW_METADATA_KEY_ALBUM_ART_URI, 0}},
-                {MAFW_METADATA_KEY_ALBUM_ART_MEDIUM_URI, {G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MAFW_METADATA_KEY_ALBUM_ART_URI, 0}},
-                {MAFW_METADATA_KEY_ALBUM_ART_LARGE_URI, {G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MAFW_METADATA_KEY_ALBUM_ART_URI, 0}},
-                {MAFW_METADATA_KEY_ALBUM_ART_URI, {G_TYPE_STRING, FALSE, FALSE, ALBUM_ART_KEY, MAFW_METADATA_KEY_ALBUM_ART, 0}},
-                {MAFW_METADATA_KEY_THUMBNAIL_SMALL_URI, {G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MAFW_METADATA_KEY_URI, 0}},
-                {MAFW_METADATA_KEY_THUMBNAIL_MEDIUM_URI, {G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MAFW_METADATA_KEY_URI, 0}},
-                {MAFW_METADATA_KEY_THUMBNAIL_LARGE_URI, {G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MAFW_METADATA_KEY_URI, 0}},
-                {MAFW_METADATA_KEY_THUMBNAIL_URI, {G_TYPE_STRING, FALSE, FALSE, THUMBNAIL_KEY, MAFW_METADATA_KEY_URI, 0}},
-                {NULL, {0, FALSE, FALSE, 0, NULL, 0}}
-};
-
-InfoKeyTable *keymap_get_info_key_table(void)
-{
-	static InfoKeyTable *table = NULL;
-
-        if (!table) {
-		gint i;
-
-                table = g_new(InfoKeyTable, 1);
-                table->music_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-                table->videos_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-                table->playlist_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-                table->common_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-                table->metadata_keys = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, NULL);
-
-                /* Insert mapping for music service */
-		for (i = 0; music_keys[i].metadata_key; i++)
-		{
-			g_hash_table_insert(table->music_keys,
-                                    music_keys[i].metadata_key,
-                                    &music_keys[i].keydata);
-		}
-
-                /* Insert mapping for videos service */
- 		for (i = 0; video_keys[i].metadata_key; i++)
-		{
-			g_hash_table_insert(table->videos_keys,
-                                    video_keys[i].metadata_key,
-                                    &video_keys[i].keydata);
-		}
-
-                /* Insert mapping for playlist service */
- 		for (i = 0; playlist_keys[i].metadata_key; i++)
-		{
-			g_hash_table_insert(table->playlist_keys,
-                                    playlist_keys[i].metadata_key,
-                                    &playlist_keys[i].keydata);
-		}
-
-                /* Insert mapping common for all services */
-		for (i = 0; common_keys[i].metadata_key; i++)
-		{
-			g_hash_table_insert(table->common_keys,
-                                    common_keys[i].metadata_key,
-                                    &common_keys[i].keydata);
-		}
-
-                /* Insert metadata assocciated with each key */
-		for (i = 0; mdata_keys[i].metadata_key; i++)
-		{
-			g_hash_table_insert(table->metadata_keys,
-                                    mdata_keys[i].metadata_key,
-                                    &mdata_keys[i].keydata);
-		}
-        }
-
-	return table;
-}
-
-gchar **keymap_mafw_keys_to_tracker_keys(gchar **mafw_keys,
-					 ServiceType service)
-{
-	gchar **tracker_keys;
-	gint i, count;
-        TrackerKey *tracker_key;
-
-	if (mafw_keys == NULL) {
+	if (key_id >= G_N_ELEMENTS(tracker_hash_data))
 		return NULL;
-	}
-
-	/* Count the number of keys */
-	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
-                /* Check if the key is translatable to tracker */
-                if (keymap_get_tracker_info(mafw_keys[i], service) != NULL) {
-                        count++;
-                }
-	}
-
-	/* Allocate memory for the converted array (include trailing NULL) */
-	tracker_keys = g_new(gchar *, count + 1);
-
-	/* Now, translate the keys supported in tracker */
-	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
-                tracker_key = keymap_get_tracker_info(mafw_keys[i], service);
-                if (tracker_key) {
-                        tracker_keys[count++] =
-                                keymap_mafw_key_to_tracker_key(mafw_keys[i],
-                                                               service);
-                }
-        }
-	tracker_keys[count] = NULL;
-
-	return tracker_keys;
+        return &tracker_hash_data[key_id].metadata_key;
 }
+
+
+
 
 gchar **keymap_mafw_sort_keys_to_tracker_keys(gchar **mafw_keys,
                                               ServiceType service)
 {
-	gchar **tracker_keys;
-	gint i, count;
-        TrackerKey *tracker_key;
+	gint i;
+        const TrackerKey *tracker_key;
         gchar *key;
         gchar *sort_type;
+	GPtrArray *str_array;
 
 	if (mafw_keys == NULL) {
 		return NULL;
 	}
 
-	/* Count the number of keys */
-	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
-                key = mafw_keys[i];
-                /* Skip the sort type (+/-) */
-                if (key[0] == '+' || key[0] == '-') {
-                        key++;
-                }
-                /* Check if the key is translatable to tracker */
-                if (keymap_get_tracker_info(key, service) != NULL) {
-                        count++;
-                }
-	}
-
-	/* Allocate memory for the converted array (include trailing NULL) */
-	tracker_keys = g_new(gchar *, count + 1);
+	str_array = g_ptr_array_new();
 
 	/* Now, translate the keys supported in tracker */
-	for (i=0, count=0; mafw_keys[i] != NULL; i++) {
+	for (i=0; mafw_keys[i] != NULL; i++) {
                 key = mafw_keys[i];
                 /* Set the sort type */
                 if (key[0] == '-') {
@@ -305,73 +475,26 @@ gchar **keymap_mafw_sort_keys_to_tracker_keys(gchar **mafw_keys,
                 }
                 tracker_key = keymap_get_tracker_info(key, service);
                 if (tracker_key) {
-                        tracker_keys[count++] =
+                        g_ptr_array_add(str_array,
                                 g_strconcat (
                                         keymap_mafw_key_to_tracker_key(
                                                 key,
                                                 service),
                                         sort_type,
-                                        NULL);
+                                        NULL));
                 }
         }
-	tracker_keys[count] = NULL;
+	g_ptr_array_add(str_array, NULL);
 
-	return tracker_keys;
+	return (gchar**)g_ptr_array_free(str_array, FALSE);;
 }
 
-MetadataKey *keymap_get_metadata(const gchar *mafw_key)
+gboolean keymap_mafw_key_is_writable(gchar *mafw_key)
 {
-        static InfoKeyTable *table = NULL;
+        MetadataKey *metadata_key;
 
-        if (!table) {
-                table = keymap_get_info_key_table();
-        }
+        metadata_key = keymap_get_metadata_by_id(keymap_get_id_from_mafwkey(mafw_key));
 
-        return g_hash_table_lookup(table->metadata_keys, mafw_key);
-}
-
-TrackerKey *keymap_get_tracker_info(const gchar *mafw_key,
-                                    ServiceType service)
-{
-        static InfoKeyTable *table = NULL;
-        TrackerKey *tracker_key;
-
-        if (!table) {
-                table = keymap_get_info_key_table();
-        }
-
-        switch (service) {
-        case SERVICE_VIDEOS:
-                tracker_key = g_hash_table_lookup(table->videos_keys,
-                                                  mafw_key);
-                break;
-        case SERVICE_PLAYLISTS:
-                tracker_key = g_hash_table_lookup(table->playlist_keys,
-                                                  mafw_key);
-                break;
-        default:
-                tracker_key = g_hash_table_lookup(table->music_keys,
-                                                  mafw_key);
-        }
-
-        if (tracker_key) {
-                return tracker_key;
-        } else {
-                return g_hash_table_lookup(table->common_keys,
-                                           mafw_key);
-        }
-}
-
-enum ValueType keymap_get_tracker_type(const gchar *mafw_key,
-                              ServiceType service)
-{
-        TrackerKey *tracker_key;
-
-        tracker_key = keymap_get_tracker_info(mafw_key, service);
-
-        if (tracker_key) {
-                return tracker_key->value_type;
-        } else {
-                return VALUE_TYPE_NONE;
-        }
+        /* If key is not found, return FALSE */
+        return metadata_key && metadata_key->writable;
 }
