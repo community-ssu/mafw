@@ -56,6 +56,8 @@ struct _MafwGstRendererWorkerVolume {
 	gpointer user_data;
 	MafwGstRendererWorkerVolumeMuteCb mute_cb;
 	gpointer mute_user_data;
+	MafwGstRendererWorkerVolumeInitCb init_cb;
+	gpointer init_user_data;
 	gdouble current_volume;
 	gboolean current_mute;
 	gboolean pending_operation;
@@ -64,12 +66,6 @@ struct _MafwGstRendererWorkerVolume {
 	guint change_request_id;
 	pa_operation *pa_operation;
 };
-
-typedef struct {
-	MafwGstRendererWorkerVolume *wvolume;
-	MafwGstRendererWorkerVolumeInitCb cb;
-	gpointer user_data;
-} InitCbClosure;
 
 #define _pa_volume_to_per_one(volume) \
 	((guint) ((((gdouble)(volume) / (gdouble) PA_VOLUME_NORM) + \
@@ -81,7 +77,7 @@ typedef struct {
 	(wvolume->pa_operation != NULL && \
 	 pa_operation_get_state(wvolume->pa_operation) == PA_OPERATION_RUNNING)
 
-static void _state_cb_init(pa_context *c, void *data);
+static void _state_cb_init(pa_context *c, MafwGstRendererWorkerVolume *wvolume);
 
 
 static gchar *_get_client_name(void) {
@@ -174,26 +170,18 @@ static void _destroy_context(MafwGstRendererWorkerVolume *wvolume)
 	pa_context_unref(wvolume->context);
 }
 
-static InitCbClosure *_init_cb_closure_new(MafwGstRendererWorkerVolume *wvolume,
+static void _init_cb_closure_new(MafwGstRendererWorkerVolume *wvolume,
 					   MafwGstRendererWorkerVolumeInitCb cb,
 					   gpointer user_data)
 {
-	InitCbClosure *closure;
-
-	closure = g_new(InitCbClosure, 1);
-	closure->wvolume = wvolume;
-	closure->cb = cb;
-	closure->user_data = user_data;
-
-	return closure;
+	wvolume->init_cb = cb;
+	wvolume->init_user_data = user_data;
 }
 
-static void _connect(gpointer user_data)
+static void _connect(MafwGstRendererWorkerVolume *wvolume)
 {
 	gchar *name = NULL;
 	pa_mainloop_api *api = NULL;
-	InitCbClosure *closure = user_data;
-	MafwGstRendererWorkerVolume *wvolume = closure->wvolume;
 
 	name = _get_client_name();
 
@@ -203,8 +191,9 @@ static void _connect(gpointer user_data)
 	g_assert(wvolume->context != NULL);
 
 	/* register some essential callbacks */
-	pa_context_set_state_callback(wvolume->context, _state_cb_init,
-				      closure);
+	pa_context_set_state_callback(wvolume->context,
+					(pa_context_notify_cb_t)_state_cb_init,
+				      	wvolume);
 
 	g_debug("connecting to pulse");
 
@@ -215,22 +204,18 @@ static void _connect(gpointer user_data)
 	g_free(name);
 }
 
-static gboolean _reconnect(gpointer user_data)
+static gboolean _reconnect(MafwGstRendererWorkerVolume *wvolume)
 {
-	InitCbClosure *closure = user_data;
-	MafwGstRendererWorkerVolume *wvolume = closure->wvolume;
-
 	g_warning("got disconnected from pulse, reconnecting");
 	_destroy_context(wvolume);
-	_connect(user_data);
+	_connect(wvolume);
 
 	return FALSE;
 }
 
 static void
-_state_cb(pa_context *c, void *data)
+_state_cb(pa_context *c, MafwGstRendererWorkerVolume *wvolume)
 {
-	MafwGstRendererWorkerVolume *wvolume = data;
 	pa_context_state_t state;
 
 	state = pa_context_get_state(c);
@@ -239,10 +224,8 @@ _state_cb(pa_context *c, void *data)
 	case PA_CONTEXT_TERMINATED:
 	case PA_CONTEXT_FAILED:
 	{
-		InitCbClosure *closure;
-
-		closure = _init_cb_closure_new(wvolume, NULL, NULL);
-		g_idle_add(_reconnect, closure);
+		_init_cb_closure_new(wvolume, NULL, NULL);
+		g_idle_add((GSourceFunc)_reconnect, wvolume);
 		break;
 	}
 	case PA_CONTEXT_READY: {
@@ -263,10 +246,8 @@ _state_cb(pa_context *c, void *data)
 static void _ext_stream_restore_read_cb_init(pa_context *c,
 					     const pa_ext_stream_restore2_info *i,
 					     int eol,
-					     void *userdata)
+					     MafwGstRendererWorkerVolume *wvolume)
 {
-	InitCbClosure *closure = userdata;
-
 	if (eol < 0) {
 		g_critical("eol parameter should not be < 1");
 	}
@@ -276,40 +257,36 @@ static void _ext_stream_restore_read_cb_init(pa_context *c,
 		   MAFW_GST_RENDERER_WORKER_VOLUME_ROLE) != 0)
 		return;
 
-	closure->wvolume->pulse_volume =
+	wvolume->pulse_volume =
 		_pa_volume_to_per_one(pa_cvolume_max(&i->volume));
-	closure->wvolume->pulse_mute = i->mute != 0 ? TRUE : FALSE;
-	closure->wvolume->current_volume = closure->wvolume->pulse_volume;
-	closure->wvolume->current_mute = closure->wvolume->pulse_mute;
+	wvolume->pulse_mute = i->mute != 0 ? TRUE : FALSE;
+	wvolume->current_volume = wvolume->pulse_volume;
+	wvolume->current_mute = wvolume->pulse_mute;
 
 	/* NOT EMIT VOLUME, BUT DEBUG */
 	g_debug("ext stream volume is %lf (mute: %d) for role %s in device %s",
-		closure->wvolume->pulse_volume, i->mute, i->name, i->device);
+		wvolume->pulse_volume, i->mute, i->name, i->device);
 
-	if (closure->cb != NULL) {
+	if (wvolume->init_cb != NULL) {
 		g_debug("initialized: returning volume manager");
-		closure->cb(closure->wvolume, closure->user_data);
+		wvolume->init_cb(wvolume, wvolume->init_user_data);
 	} else {
-		if (closure->wvolume->cb != NULL) {
+		if (wvolume->cb != NULL) {
 			g_debug("signalling volume after reconnection");
-			closure->wvolume->cb(closure->wvolume,
-					     closure->wvolume->current_volume,
-					     closure->wvolume->user_data);
+			wvolume->cb(wvolume,wvolume->current_volume,
+					     wvolume->user_data);
 		}
-		if (closure->wvolume->mute_cb != NULL) {
+		if (wvolume->mute_cb != NULL) {
 			g_debug("signalling mute after reconnection");
-			closure->wvolume->mute_cb(closure->wvolume,
-						  closure->wvolume->
-						  current_mute,
-						  closure->wvolume->
-						  mute_user_data);
+			wvolume->mute_cb(wvolume, wvolume->current_mute,
+						  wvolume->mute_user_data);
 		}
 	}
 
-	pa_context_set_state_callback(closure->wvolume->context, _state_cb,
-				      closure->wvolume);
-
-	g_free(closure);
+	pa_context_set_state_callback(wvolume->context,
+					(pa_context_notify_cb_t)_state_cb,
+					wvolume);
+	wvolume->init_cb = NULL;
 }
 
 static void _ext_stream_restore_subscribe_cb(pa_context *c, void *userdata)
@@ -322,10 +299,8 @@ static void _ext_stream_restore_subscribe_cb(pa_context *c, void *userdata)
 }
 
 static void
-_state_cb_init(pa_context *c, void *data)
+_state_cb_init(pa_context *c, MafwGstRendererWorkerVolume *wvolume)
 {
-	InitCbClosure *closure = data;
-	MafwGstRendererWorkerVolume *wvolume = closure->wvolume;
 	pa_context_state_t state;
 
 	state = pa_context_get_state(c);
@@ -337,7 +312,7 @@ _state_cb_init(pa_context *c, void *data)
 	case PA_CONTEXT_FAILED:
 		g_critical("Connection to pulse failed, reconnection in 1 "
 			   "second");
-		g_timeout_add_seconds(1, _reconnect, closure);
+		g_timeout_add_seconds(1, (GSourceFunc)_reconnect, wvolume);
 		break;
 	case PA_CONTEXT_READY: {
 		pa_operation *o;
@@ -345,8 +320,8 @@ _state_cb_init(pa_context *c, void *data)
 		g_debug("PA_CONTEXT_READY");
 
 		o = pa_ext_stream_restore2_read(c,
-					       _ext_stream_restore_read_cb_init,
-					       closure);
+			(pa_ext_stream_restore2_read_cb_t)_ext_stream_restore_read_cb_init,
+					       wvolume);
 		g_assert(o != NULL);
 		pa_operation_unref(o);
 
@@ -471,8 +446,7 @@ static gboolean _set_timeout(gpointer data)
 	return wvolume->change_request_id != 0;
 }
 
-void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
-					  MafwGstRendererWorkerVolumeInitCb cb,
+void mafw_gst_renderer_worker_volume_init(MafwGstRendererWorkerVolumeInitCb cb,
 					  gpointer user_data,
 					  MafwGstRendererWorkerVolumeChangedCb
 					  changed_cb,
@@ -481,7 +455,6 @@ void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
 					  mute_cb, gpointer mute_user_data)
 {
 	MafwGstRendererWorkerVolume *wvolume = NULL;
-	InitCbClosure *closure;
 
 	g_return_if_fail(cb != NULL);
 
@@ -499,11 +472,11 @@ void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
 	wvolume->mute_cb = mute_cb;
 	wvolume->mute_user_data = mute_user_data;
 
-	wvolume->mainloop = pa_glib_mainloop_new(main_context);
+	wvolume->mainloop = pa_glib_mainloop_new(g_main_context_default());
 	g_assert(wvolume->mainloop != NULL);
 
-	closure = _init_cb_closure_new(wvolume, cb, user_data);
-	_connect(closure);
+	_init_cb_closure_new(wvolume, cb, user_data);
+	_connect(wvolume);
 }
 
 void mafw_gst_renderer_worker_volume_set(MafwGstRendererWorkerVolume *wvolume,
@@ -595,24 +568,19 @@ struct _MafwGstRendererWorkerVolume {
 	gpointer user_data;
 	MafwGstRendererWorkerVolumeMuteCb mute_cb;
 	gpointer mute_user_data;
+	MafwGstRendererWorkerVolumeInitCb init_cb;
+	gpointer init_user_data;
 	gdouble current_volume;
 	gboolean current_mute;
 };
 
-typedef struct {
-	MafwGstRendererWorkerVolume *wvolume;
-	MafwGstRendererWorkerVolumeInitCb cb;
-	gpointer user_data;
-} InitCbClosure;
-
-static gboolean _init_cb_closure(gpointer user_data)
+static gboolean _init_cb_closure(struct _MafwGstRendererWorkerVolume *wvolume)
 {
-	InitCbClosure *closure = user_data;
 
-	if (closure->cb != NULL) {
-		closure->cb(closure->wvolume, closure->user_data);
+	if (wvolume->init_cb != NULL) {
+		wvolume->init_cb(wvolume, wvolume->init_user_data);
 	}
-	g_free(closure);
+	wvolume->init_cb = NULL;
 
 	return FALSE;
 }
@@ -627,7 +595,6 @@ void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
 					  mute_cb, gpointer mute_user_data)
 {
 	MafwGstRendererWorkerVolume *wvolume = NULL;
-	InitCbClosure *closure;
 
 	g_return_if_fail(cb != NULL);
 
@@ -641,11 +608,9 @@ void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
 	wvolume->mute_user_data = mute_user_data;
 	wvolume->current_volume = 0.485;
 
-	closure = g_new0(InitCbClosure, 1);
-	closure->wvolume = wvolume;
-	closure->cb = cb;
-	closure->user_data = user_data;
-	g_idle_add(_init_cb_closure, closure);
+	wvolume->init_cb = cb;
+	wvolume->init_user_data = user_data;
+	g_idle_add(_init_cb_closure, wvolume);
 }
 
 void mafw_gst_renderer_worker_volume_set(MafwGstRendererWorkerVolume *wvolume,

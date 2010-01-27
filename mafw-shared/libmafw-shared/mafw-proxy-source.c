@@ -53,36 +53,18 @@
 				      MafwProxySourcePrivate))
 
 typedef struct _MafwProxySourceBrowseReq MafwProxySourceBrowseReq;
-typedef struct _MafwProxySourceMetadataReq MafwProxySourceMetadataReq;
 
 /* Communication area between DBusPendingCall issuers and callbacks. */
 typedef struct {
 	MafwSource *src;
-
-	union {
-		gpointer cb;
-		MafwSourceMetadataResultCb got_metadata_cb;
-		MafwSourceMetadataResultsCb got_metadatas_cb;
-		MafwSourceObjectCreatedCb object_created_cb;
-		MafwSourceObjectDestroyedCb object_destroyed_cb;
-		MafwSourceMetadataSetCb metadata_set_cb;
-	};
+	gpointer cb;
 	gpointer cbdata;
-
-	union {
-		char *objectid;
-	};
+	char *objectid;
 } RequestReplyInfo;
 
-struct _MafwProxySourceMetadataReq {
-	MafwSourceMetadataResultCb metadata_cb;
-	gpointer user_data;
-};
 
 struct _MafwProxySourceBrowseReq {
 	MafwSourceBrowseResultCb browse_cb;
-	gboolean emitting;
-	gboolean stop_emitting;
 	gpointer user_data;
 };
 
@@ -214,13 +196,10 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 			dbus_message_iter_next(&iary);
 
 			if (!new_req)
-			{
 				new_req = g_hash_table_lookup(
 					priv->browse_requests,
 					GUINT_TO_POINTER(browse_id));
-				if (new_req)
-					new_req->emitting = TRUE;
-			}
+
 			if (new_req) {
 				new_req->browse_cb(MAFW_SOURCE(self),
 						   browse_id,
@@ -232,15 +211,10 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 						   metadata,
 						   new_req->user_data,
 						   error);
-				if (remaining_count == 0 || new_req->stop_emitting)
-				{
+				if (remaining_count == 0 )
 					g_hash_table_remove(
 						priv->browse_requests,
 						GUINT_TO_POINTER(browse_id));
-					g_clear_error(&error);
-					mafw_metadata_release(metadata);
-					break;
-				}
 			}
 			else
 			{
@@ -252,9 +226,7 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 			g_clear_error(&error);
 			mafw_metadata_release(metadata);
 		}
-		if (new_req) {
-			new_req->emitting = FALSE;
-		}
+
 		return DBUS_HANDLER_RESULT_HANDLED;
 	} else if (!dbus_message_has_path(msg,
                                           proxy_extension_return_path(self))) {
@@ -275,6 +247,11 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 /*****************************************************************************
  * Methods
  *****************************************************************************/
+
+static void free_browse_req(MafwProxySourceBrowseReq *data)
+{
+	g_slice_free(MafwProxySourceBrowseReq, data);
+}
 
 /**
  * mafw_proxy_source_browse:
@@ -323,7 +300,7 @@ static guint mafw_proxy_source_browse(MafwSource * self,
 		priv->browse_requests = g_hash_table_new_full(NULL,
 							      NULL,
 							      NULL,
-							      g_free);
+							      (GDestroyNotify)free_browse_req);
 	}
 
 	/* Prepare arguments and call remote side. */
@@ -355,7 +332,7 @@ static guint mafw_proxy_source_browse(MafwSource * self,
 		if (browse_id != MAFW_SOURCE_INVALID_BROWSE_ID)
 		{
 			/* Remember this new request. */
-			new_req = g_new0(MafwProxySourceBrowseReq, 1);
+			new_req = g_slice_new0(MafwProxySourceBrowseReq);
 			new_req->browse_cb = browse_cb;
 			new_req->user_data = user_data;
 			g_hash_table_replace(priv->browse_requests,
@@ -397,22 +374,14 @@ static gboolean mafw_proxy_source_cancel_browse(MafwSource * self,
 
 	req = g_hash_table_lookup(priv->browse_requests,
 				  GUINT_TO_POINTER(browse_id));
-	
 	if (req != NULL) {
 		DBusMessage *reply;
 		/* The request is still in progress. */
 
-		if (req->emitting)
-		{
-			req->stop_emitting = TRUE;
-		}
-		else
-		{
-			/* $req doesn't contain dynamically allocated data
-		 	* we care about. */
-			g_hash_table_remove(priv->browse_requests,
+		/* $req doesn't contain dynamically allocated data
+		 * we care about. */
+		g_hash_table_remove(priv->browse_requests,
 				    GUINT_TO_POINTER(browse_id));
-		}
 
 		/* Tell our mate to cancel. */
 		reply = mafw_dbus_call(
@@ -453,10 +422,11 @@ static RequestReplyInfo *new_request_reply_info(DBusPendingCall *pendelum,
 	/* We can't set up $pendelum right here because the caller may need
 	 * to add more details to $rri, but mockbus tends to fire the callback
 	 * at the moment it's set. */
-	rri = g_new0(RequestReplyInfo, 1);
+	rri = g_slice_new(RequestReplyInfo);
 	rri->src	= g_object_ref(self);
 	rri->cb		= cb;
 	rri->cbdata	= cbdata;
+	rri->objectid	= NULL;
 	return rri;
 }
 
@@ -466,13 +436,8 @@ static RequestReplyInfo *new_request_reply_info(DBusPendingCall *pendelum,
 static void free_request_reply_info(RequestReplyInfo *info)
 {
 	g_object_unref(info->src);
-	g_free(info);
-}
-
-static void free_reply_info_and_oid(RequestReplyInfo *info)
-{
 	g_free(info->objectid);
-	free_request_reply_info(info);
+	g_slice_free(RequestReplyInfo, info);
 }
 
 static gint mafw_proxy_source_get_update_progress(MafwSource * self,
@@ -536,12 +501,12 @@ static void got_metadata(DBusPendingCall *pendelum, RequestReplyInfo *info)
                          DBUS_MESSAGE_TYPE_METHOD_RETURN);
 		mafw_dbus_parse(reply,
 				MAFW_DBUS_TYPE_METADATA, &metadata);
-		info->got_metadata_cb(info->src,
+		((MafwSourceMetadataResultCb)info->cb)(info->src,
 				      info->objectid, metadata,
 				      info->cbdata, NULL);
 		mafw_metadata_release(metadata);
 	} else {
-		info->got_metadata_cb(info->src,
+		((MafwSourceMetadataResultCb)info->cb)(info->src,
 				      info->objectid, NULL,
 				      info->cbdata, error);
 		g_error_free(error);
@@ -589,7 +554,7 @@ static void mafw_proxy_source_get_metadata(MafwSource *self,
 	rri->objectid = g_strdup(object_id);
 	dbus_pending_call_set_notify(pendelum,
 				     (gpointer)got_metadata,
-				     rri, (gpointer)free_reply_info_and_oid);
+				     rri, (gpointer)free_request_reply_info);
 }
 
 /* MafwSource::get_metadatas */
@@ -644,13 +609,13 @@ static void got_metadatas(DBusPendingCall *pendelum, RequestReplyInfo *info)
 					g_quark_from_string(domain_str),
 					    code, "%s", message);
 
-		info->got_metadatas_cb(info->src,
+		((MafwSourceMetadataResultsCb)info->cb)(info->src,
 				      metadatas,
 				      info->cbdata, error);
 		if (metadatas)
 			g_hash_table_unref(metadatas);
 	} else {
-		info->got_metadatas_cb(info->src,
+		((MafwSourceMetadataResultsCb)info->cb)(info->src,
 				      NULL,
 				      info->cbdata, error);
 		g_error_free(error);
@@ -698,7 +663,7 @@ mafw_proxy_source_get_metadatas(MafwSource *self,
 	rri = new_request_reply_info(pendelum, self, cb, cbdata);
 	dbus_pending_call_set_notify(pendelum,
 				     (gpointer)got_metadatas,
-				     rri, (gpointer)free_reply_info_and_oid);
+				     rri, (gpointer)free_request_reply_info);
 }
 
 
@@ -715,13 +680,13 @@ static void object_created(DBusPendingCall *pendelum, RequestReplyInfo *info)
 		g_assert(dbus_message_get_type(reply) ==
                          DBUS_MESSAGE_TYPE_METHOD_RETURN);
 		mafw_dbus_parse(reply, DBUS_TYPE_STRING, &objectid);
-		if (info->object_created_cb)
-			info->object_created_cb(info->src, objectid,
+		if (info->cb)
+			((MafwSourceObjectCreatedCb)info->cb)(info->src, objectid,
                                                 info->cbdata,
                                                 NULL);
 	} else {
-		if (info->object_created_cb)
-			info->object_created_cb(info->src, NULL, info->cbdata,
+		if (info->cb)
+			((MafwSourceObjectCreatedCb)info->cb)(info->src, NULL, info->cbdata,
                                                 error);
 		g_error_free(error);
 	}
@@ -785,13 +750,13 @@ static void object_destroyed(DBusPendingCall *pendelum, RequestReplyInfo *info)
 	if (!(error = mafw_dbus_is_error(reply, MAFW_SOURCE_ERROR))) {
 		g_assert(dbus_message_get_type(reply) ==
                          DBUS_MESSAGE_TYPE_METHOD_RETURN);
-		if (info->object_destroyed_cb)
-			info->object_destroyed_cb(info->src,
+		if (info->cb)
+			((MafwSourceObjectDestroyedCb)info->cb)(info->src,
 					  info->objectid,
 					  info->cbdata, NULL);
 	} else {
-		if (info->object_destroyed_cb)
-			info->object_destroyed_cb(info->src,
+		if (info->cb)
+			((MafwSourceObjectDestroyedCb)info->cb)(info->src,
 					  info->objectid,
 					  info->cbdata, error);
 		g_error_free(error);
@@ -838,7 +803,7 @@ static void mafw_proxy_source_destroy_object(MafwSource *self,
 	rri->objectid = g_strdup(objectid);
 	dbus_pending_call_set_notify(pendelum,
 			(DBusPendingCallNotifyFunction)object_destroyed,
-			rri, (DBusFreeFunction)free_reply_info_and_oid);
+			rri, (DBusFreeFunction)free_request_reply_info);
 }
 
 static void metadata_set(DBusPendingCall *pendelum, RequestReplyInfo *info)
@@ -863,8 +828,8 @@ static void metadata_set(DBusPendingCall *pendelum, RequestReplyInfo *info)
 			mafw_dbus_parse(reply, DBUS_TYPE_STRING, &objectid,
 					DBUS_TYPE_ARRAY, DBUS_TYPE_STRING,
 					&failed_keys, &n_elements);
-			if (info->metadata_set_cb)
-				info->metadata_set_cb(info->src, objectid,
+			if (info->cb)
+				((MafwSourceMetadataSetCb)info->cb)(info->src, objectid,
                                                       failed_keys,
                                                       info->cbdata, NULL);
 		} else {
@@ -878,8 +843,8 @@ static void metadata_set(DBusPendingCall *pendelum, RequestReplyInfo *info)
 			g_set_error(&error_in_keys,
 				    g_quark_from_string(domain_str),
 				    code, "%s", message);
-			if (info->metadata_set_cb)
-				info->metadata_set_cb(info->src, objectid,
+			if (info->cb)
+				((MafwSourceMetadataSetCb)info->cb)(info->src, objectid,
                                                       failed_keys,
                                                       info->cbdata,
                                                       error_in_keys);
@@ -887,8 +852,8 @@ static void metadata_set(DBusPendingCall *pendelum, RequestReplyInfo *info)
 		}
 		g_strfreev((gchar **)failed_keys);
 	} else {
-		if (info->metadata_set_cb)
-			info->metadata_set_cb(info->src, NULL, NULL,
+		if (info->cb)
+			((MafwSourceMetadataSetCb)info->cb)(info->src, NULL, NULL,
                                               info->cbdata,
                                               error);
 		g_error_free(error);

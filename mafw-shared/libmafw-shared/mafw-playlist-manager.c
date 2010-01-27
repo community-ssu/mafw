@@ -816,6 +816,11 @@ void mafw_playlist_manager_free_list_of_playlists(
 	g_array_free(playlist_list, TRUE);
 }
 
+static void free_import_req(struct _import_req *req)
+{
+	g_slice_free(struct _import_req, req);
+}
+
 /**
  * mafw_playlist_manager_import:
  * @self: a #MafwPlaylistManager instance.
@@ -870,10 +875,10 @@ guint mafw_playlist_manager_import(MafwPlaylistManager *self,
 			import_requests = g_hash_table_new_full(NULL,
 							      	NULL,
 							      	NULL,
-							      	g_free);
+							      	(GDestroyNotify)free_import_req);
 		}
 
-		new_req = g_new0(struct _import_req, 1);
+		new_req = g_slice_new(struct _import_req);
 		new_req->cb = cb;
 		new_req->udata = user_data;
 		g_hash_table_replace(import_requests,

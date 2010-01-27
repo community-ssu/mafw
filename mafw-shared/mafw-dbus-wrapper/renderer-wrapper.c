@@ -502,12 +502,12 @@ static void metadata_changed(MafwRenderer *self,
 static void _destroy_bufdata(struct buffering_data *bufdata, GClosure *closure)
 {
 	_remove_buffering_tout(bufdata);
-	g_free(bufdata);
+	g_slice_free(struct buffering_data, bufdata);
 }
 
-void connect_to_renderer_signals(gpointer ecomp)
+void connect_to_renderer_signals(ExportedComponent *ecomp)
 {
-	struct buffering_data *bufdata = g_new0(struct buffering_data, 1);
+	struct buffering_data *bufdata = g_slice_new0(struct buffering_data);
 	gulong id;
 	GError *err = NULL;
 	MafwRegistry *registry;
@@ -515,15 +515,15 @@ void connect_to_renderer_signals(gpointer ecomp)
 	bufdata->ecomp = ecomp;
 
 
-	id = g_signal_connect_data(bufdata->ecomp->comp, "buffering-info",
+	id = g_signal_connect_data(ecomp->comp, "buffering-info",
 				(GCallback)buffering_info,
 				bufdata, (GClosureNotify)_destroy_bufdata, 0);
-	g_array_append_val(bufdata->ecomp->sighandlers, id);
+	g_array_append_val(ecomp->sighandlers, id);
 
-	id = g_signal_connect(bufdata->ecomp->comp, "state-changed",
+	id = g_signal_connect(ecomp->comp, "state-changed",
 				(GCallback)state_changed,
 				bufdata);
-	g_array_append_val(bufdata->ecomp->sighandlers, id);
+	g_array_append_val(ecomp->sighandlers, id);
 
 	connect_signal(ecomp, "playlist-changed", playlist_changed);
 	connect_signal(ecomp, "media-changed", media_changed);

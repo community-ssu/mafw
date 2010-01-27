@@ -135,7 +135,7 @@ MafwCallbas *mafw_callbas_new(GCallback cb, GClosureMarshal mars,
 	GValue empty, *arg;
 
 	/* Construct the callbas and the GClosure. */
-	cbas = g_new(MafwCallbas, 1);
+	cbas = g_slice_new(MafwCallbas);
 	cbas->closure = g_cclosure_new(cb, NULL, NULL);
 	g_closure_set_marshal(cbas->closure, mars);
 
@@ -177,7 +177,7 @@ void mafw_callbas_free(MafwCallbas *cbas)
 	for (i = 0; i < cbas->gvargs->len; i++)
 		g_value_unset(&g_array_index(cbas->gvargs, GValue, i));
 	g_array_free(cbas->gvargs, TRUE);
-	g_free(cbas);
+	g_slice_free(MafwCallbas, cbas);
 }
 
 /**

@@ -191,7 +191,7 @@ Pls *pls_new(guint id, const gchar *name)
 		return NULL;
         }
 
-	p = g_new0(Pls, 1);
+	p = g_slice_new0(Pls);
 	p->id = id;
 	p->dirty = TRUE;
 	p->use_count = 0;
@@ -251,7 +251,7 @@ void pls_free(Pls *pls)
 		g_free(pls->name);
         }
 
-	g_free(pls);
+	g_slice_free(Pls, pls);
 }
 
 static void maybe_realloc(Pls *pls, guint want_to_add)
@@ -442,6 +442,14 @@ gchar *pls_get_item(Pls *pls, guint idx)
 {
 	if (idx >= pls->len) {
 		return NULL;
+        }
+
+        if (pls->shuffled) {
+                /* If element is unshuffled, shuffle it */
+                if (pls->iidx[idx] >= pls->poolst) {
+                        swap_elements(pls, pls->poolst, pls->iidx[idx]);
+                        pls->poolst++;
+                }
         }
 
 	return g_strdup(pls->vidx[idx]);

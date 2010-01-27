@@ -23,13 +23,13 @@
 #define __BVW_FRAME_CONV_H__
 
 #include <gst/gst.h>
-
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include "mafw-gst-renderer-worker.h"
 G_BEGIN_DECLS
 
-typedef void (*BvwFrameConvCb)(GstBuffer *result, gpointer user_data);
-
-gboolean bvw_frame_conv_convert (GstBuffer *buf, GstCaps *to,
-				 BvwFrameConvCb cb, gpointer cb_data);
+gboolean bvw_frame_conv_convert (MafwGstRendererWorker *worker,
+				 GstBuffer *buf, GstCaps *to,
+				 const gchar *mdata_key);
 
 G_END_DECLS
 

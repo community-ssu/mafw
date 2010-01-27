@@ -784,7 +784,7 @@ static void miwmd_free(struct GetPlItemData *mi)
 	}
 	g_strfreev(mi->oids);
         g_object_unref(mi->pls);
-	g_free(mi);
+	g_slice_free(struct GetPlItemData, mi);
 }
 static void miwd_got_mdatas(MafwSource *self, GHashTable *metadatas,
 				struct GetPlItemData *data, const GError *error)
@@ -1013,7 +1013,7 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 	}
 
 	if (pl_items) {
-		pldata = g_new0(struct GetPlItemData, 1);
+		pldata = g_slice_new(struct GetPlItemData);
 		pldata->remaining_reqs = 0;
 		pldata->cb = cb;
 		pldata->pls = g_object_ref(pls);
@@ -1024,6 +1024,8 @@ gpointer mafw_playlist_get_items_md(MafwPlaylist *pls,
 		pldata->from = from;
 		if (keys)
 			pldata->keys = g_strdupv((gchar**)keys);
+		else
+			pldata->keys = NULL;
 		pldata->indexhash = NULL;
 	
 		g_queue_push_tail(Active_miwmds, pldata);

@@ -152,7 +152,7 @@ static void wrapper_export(gpointer comp)
 					MAFW_REGISTRY_INTERFACE,
 					MAFW_REGISTRY_SIGNAL_HELLO,
 					MAFW_DBUS_STRING(service_name)));
-	ecomp = g_new0(ExportedComponent, 1);
+	ecomp = g_slice_new(ExportedComponent);
 	ecomp->comp = comp;
 	ecomp->connection = Session_bus;
 	ecomp->name = g_strdup(name);
@@ -166,7 +166,8 @@ static void wrapper_export(gpointer comp)
 		ecomp->handler = handle_source_msg;
 	else if (MAFW_IS_RENDERER(comp))
 		ecomp->handler = handle_renderer_msg;
-	g_assert(ecomp->handler);
+	else
+		g_assert_not_reached();
 
 	memset(&path_vtable, 0, sizeof(DBusObjectPathVTable));
 	path_vtable.message_function =
@@ -191,7 +192,7 @@ static void wrapper_export(gpointer comp)
 
 err2:   g_free(ecomp->name);
 	g_free(ecomp->uuid);
-	g_free(ecomp);
+	g_slice_free(ExportedComponent, ecomp);
 err1:   g_free(service_name);
 	g_free(object_path);
 }
@@ -241,7 +242,7 @@ static void wrapper_unexport(gpointer comp)
 	ecomp->object_path = NULL;
 	g_free(ecomp->name);
 	g_free(ecomp->uuid);
-	g_free(ecomp);
+	g_slice_free(ExportedComponent, ecomp);
 	Exports = g_list_delete_link(Exports, node);
 	extension_deregister(comp);
 }

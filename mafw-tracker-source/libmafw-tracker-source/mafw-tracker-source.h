@@ -109,6 +109,18 @@ void mafw_tracker_source_get_metadatas(MafwSource *self,
                                        const gchar *const *metadata_keys,
                                        MafwSourceMetadataResultsCb metadata_cb,
                                        gpointer user_data);
+void
+mafw_tracker_source_get_metadata_by_flags(MafwSource *self,
+                                 const gchar *object_id,
+                                 guint64 metadata_keys,
+                                 MafwSourceMetadataResultCb metadata_cb,
+                                 gpointer user_data);
+void
+mafw_tracker_source_get_metadatas_by_flags(MafwSource *self,
+                                  const gchar **object_ids,
+                                  guint64 metadata_keys,
+                                  MafwSourceMetadataResultsCb metadatas_cb,
+                                  gpointer user_data);
 void mafw_tracker_source_set_metadata(MafwSource *self,
                                       const gchar *object_id,
                                       GHashTable *metadata,

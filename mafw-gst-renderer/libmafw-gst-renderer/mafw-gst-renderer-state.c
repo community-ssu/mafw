@@ -449,13 +449,12 @@ void mafw_gst_renderer_state_do_play(MafwGstRendererState *self, GError **error)
 	}
 
 	/* Do we have any objectid to play? Otherwise we cannot do it */
-        if (renderer->media->object_id) {
+        if (renderer->media.object_id) {
 		/* If so, resolve URI for this objectid */
                 mafw_gst_renderer_get_metadata(renderer,
-					     renderer->media->object_id,
+					     renderer->media.object_id,
 					     &gm_error);
                 if (gm_error) {
-			MafwGstRendererErrorClosure *error_closure;
 			if (error) {
                                 g_set_error(error,
                                             MAFW_RENDERER_ERROR,
@@ -464,11 +463,9 @@ void mafw_gst_renderer_state_do_play(MafwGstRendererState *self, GError **error)
 			}
 
 			/* This is a playback error: execute error policy */
-			error_closure = g_new0(MafwGstRendererErrorClosure, 1);
-			error_closure->renderer = renderer;
-			error_closure->error = g_error_copy(gm_error);
-			g_idle_add(mafw_gst_renderer_manage_error_idle,
-				   error_closure);
+			renderer->error = g_error_copy(gm_error);
+			g_idle_add((GSourceFunc)mafw_gst_renderer_manage_error_idle,
+				   renderer);
 
 			g_error_free(gm_error);
                 } else {
@@ -502,10 +499,9 @@ void  mafw_gst_renderer_state_do_play_object(MafwGstRendererState *self,
 
                 mafw_gst_renderer_set_object(renderer, object_id);
                 mafw_gst_renderer_get_metadata(renderer,
-					     renderer->media->object_id,
+					     renderer->media.object_id,
 					     &gm_error);
                 if (gm_error) {
-			MafwGstRendererErrorClosure *error_closure;
                         if (error) {
                                 g_set_error(error,
                                             MAFW_RENDERER_ERROR,
@@ -514,11 +510,9 @@ void  mafw_gst_renderer_state_do_play_object(MafwGstRendererState *self,
 			}
 
 			/* This is a playback error: execute error policy */
-			error_closure = g_new0(MafwGstRendererErrorClosure, 1);
-			error_closure->renderer = renderer;
-			error_closure->error = g_error_copy(gm_error);
-			g_idle_add(mafw_gst_renderer_manage_error_idle,
-				   error_closure);
+			renderer->error = g_error_copy(gm_error);
+			g_idle_add((GSourceFunc)mafw_gst_renderer_manage_error_idle,
+				   renderer);
                         g_error_free(gm_error);
                 } else {
 			/* Play object has been successful */

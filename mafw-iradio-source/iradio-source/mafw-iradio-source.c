@@ -84,7 +84,7 @@ static void free_data_container_cb (struct data_container *data)
 {
 	g_free(data->object_id);
 	g_strfreev(data->metadata_keys);
-	g_free(data);
+	g_slice_free(struct data_container, data);
 }
 
 /**
@@ -229,7 +229,7 @@ static gboolean object_creation_done(struct data_container *data)
 	else
 		g_error_free(data->error);
 	g_free(data->object_id);
-	g_free(data);
+	g_slice_free(struct data_container, data);
 	return FALSE;
 }
 
@@ -279,8 +279,8 @@ static void create_object(MafwSource *self, const gchar *parent,
 	
 	new_id = get_next_id(MAFW_IRADIO_SOURCE(self));
 	
-	struct data_container *create_object_data = g_new0(
-						struct data_container, 1);
+	struct data_container *create_object_data = g_slice_new(
+							struct data_container);
 	create_object_data->id = new_id;
 	create_object_data->cb = cb;
 	create_object_data->self = self;
@@ -288,6 +288,9 @@ static void create_object(MafwSource *self, const gchar *parent,
 	create_object_data->object_id = g_strdup_printf(MAFW_IRADIO_SOURCE_UUID
 					"::%lld",
 					new_id);
+	create_object_data->free_data_cb = NULL;
+	create_object_data->error = NULL;
+	create_object_data->metadata_keys = NULL;
 	if (!mafw_db_begin())
 		goto create_object_err0;
 	g_hash_table_foreach(metadata, (GHFunc)store_metadata,
@@ -345,7 +348,7 @@ static gboolean destroy_object_cb(struct data_container *data)
 					MAFW_IRADIO_SOURCE_UUID "::");
 	
 	g_free(data->object_id);
-	g_free(data);
+	g_slice_free(struct data_container, data);
 	return FALSE;
 }
 
@@ -379,12 +382,15 @@ static void destroy_object(MafwSource *self, const gchar *object_id,
 		g_error_free(error);
 		return;
 	}
-	cb_data = g_new0(struct data_container, 1);
+	cb_data = g_slice_new(struct data_container);
 	cb_data->self = self;
 	cb_data->id = id;
 	cb_data->cb = cb;
 	cb_data->user_data = user_data;
 	cb_data->object_id = g_strdup(object_id);
+	cb_data->free_data_cb = NULL;
+	cb_data->error = NULL;
+	cb_data->metadata_keys = NULL;
 	g_idle_add((GSourceFunc)destroy_object_cb, (gpointer)cb_data);
 	return;
 }
@@ -405,7 +411,7 @@ static gboolean set_mdata_cb(struct data_container *data)
 	else
 		g_error_free(data->error);
 	g_free(data->object_id);
-	g_free(data);
+	g_slice_free(struct data_container, data);
 	return FALSE;
 }
 
@@ -479,12 +485,15 @@ static void set_metadata(MafwSource *self, const gchar *object_id,
 		return;
 	}
 	
-	data = g_new0(struct data_container, 1);
+	data = g_slice_new(struct data_container);
 	data->id = id;
 	data->object_id = g_strdup(object_id);
 	data->self = self;
 	data->cb = cb;
 	data->user_data = user_data;
+	data->free_data_cb = NULL;
+	data->error = NULL;
+	data->metadata_keys = NULL;
 	
 	g_hash_table_foreach(metadata, (GHFunc)remove_all_key, data);
 	if (!mafw_db_begin())
@@ -711,7 +720,7 @@ static void get_metadata(MafwSource *self, const gchar *object_id,
 		g_error_free(error);
 		return;
 	}
-	data = g_new0(struct data_container, 1);
+	data = g_slice_new(struct data_container);
 
 	data->object_id = g_strdup(object_id);
 	data->self = self;
@@ -723,6 +732,7 @@ static void get_metadata(MafwSource *self, const gchar *object_id,
 	data->user_data = user_data;
 	data->id = id;
 	data->free_data_cb = free_data_container_cb;
+	data->error = NULL;
 
 	g_idle_add((GSourceFunc)get_metadata_cb, data);
 	
@@ -762,7 +772,7 @@ static GList *browse_result_free_list_item(GList *list,
 	GList *new_list;
 	mafw_metadata_release(data->metadata);
 	new_list = g_list_remove(list, data);
-	g_free(data);
+	g_slice_free(struct metadata_data, data);
 	return new_list;
 }
 
@@ -786,7 +796,7 @@ static void free_browse_data(struct browse_data_container *browse_data)
 				browse_data->object_list->data);
 	}
 
-	g_free(browse_data);
+	g_slice_free(struct browse_data_container, browse_data);
 }
 
 /** 
@@ -970,8 +980,8 @@ static void browse_metadata_cb(MafwSource *self, const gchar *object_id,
 	if (!metadata || !browse_data->filter ||
 		mafw_metadata_filter(metadata, browse_data->filter,NULL))
 	{ /* Filter passed.... */
-		struct metadata_data *new_metadata = g_new0(
-						struct metadata_data, 1);
+		struct metadata_data *new_metadata = g_slice_new(
+						struct metadata_data);
 		
 		new_metadata->metadata = metadata;
 		new_metadata->id = browse_data->current_id;
@@ -1011,7 +1021,7 @@ static guint browse(MafwSource *self, const gchar *object_id,
 	
 	memset(&current_data, 0, sizeof current_data);
 
-	browse_data = g_new0(struct browse_data_container, 1);
+	browse_data = g_slice_new0(struct browse_data_container);
 	current_data.user_data = browse_data;
 	
 	browse_data->filter = mafw_filter_copy(filter);

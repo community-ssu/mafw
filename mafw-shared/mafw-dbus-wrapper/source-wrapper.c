@@ -96,7 +96,7 @@ static void free_browse_req(struct browse_data *bdata)
 		dbus_message_unref(bdata->message_to_send);
 	if (bdata->oci)
 		mafw_dbus_oci_free(bdata->oci);
-	g_free(bdata);
+	g_slice_free(struct browse_data, bdata);
 }
 
 static void emit_browse_result(MafwSource *self, guint browse_id,
@@ -427,7 +427,7 @@ DBusHandlerResult handle_source_msg(DBusConnection *conn,
 		guint item_count;
 		guint browse_id;
 		MafwFilter *filter = NULL;
-		struct browse_data *bdata = g_new0(struct browse_data, 1);
+		struct browse_data *bdata = g_slice_new0(struct browse_data);
 
 		/* NOTE Though i didn't find it documented, but D-BUS
 		 * adds NULL-termination to $metadata_keys.  <relief> */

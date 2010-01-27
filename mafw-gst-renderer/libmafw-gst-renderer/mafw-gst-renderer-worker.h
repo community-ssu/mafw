@@ -23,11 +23,17 @@
  */
 #ifndef MAFW_GST_RENDERER_WORKER_H
 #define MAFW_GST_RENDERER_WORKER_H
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <X11/Xdefs.h>
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "mafw-gst-renderer-worker-volume.h"
+#ifdef HAVE_GDKPIXBUF
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#endif
 
 #define MAFW_GST_RENDERER_MAX_TMP_FILES 5
 
@@ -197,15 +203,18 @@ XID mafw_gst_renderer_worker_get_xid(MafwGstRendererWorker *worker);
 gboolean mafw_gst_renderer_worker_get_autopaint(MafwGstRendererWorker *worker);
 void mafw_gst_renderer_worker_set_autopaint(MafwGstRendererWorker *worker, gboolean autopaint);
 gint mafw_gst_renderer_worker_get_colorkey(MafwGstRendererWorker *worker);
-void mafw_gst_renderer_worker_set_colorkey(MafwGstRendererWorker *worker, gint autopaint);
 gboolean mafw_gst_renderer_worker_get_seekable(MafwGstRendererWorker *worker);
 GHashTable *mafw_gst_renderer_worker_get_current_metadata(MafwGstRendererWorker *worker);
-void mafw_gst_renderer_worker_play(MafwGstRendererWorker *worker, const gchar *uri, GSList *plitems);
+void mafw_gst_renderer_worker_play(MafwGstRendererWorker *worker, const gchar *uri);
 void mafw_gst_renderer_worker_play_alternatives(MafwGstRendererWorker *worker, gchar **uris);
 void mafw_gst_renderer_worker_stop(MafwGstRendererWorker *worker);
 void mafw_gst_renderer_worker_pause(MafwGstRendererWorker *worker);
 void mafw_gst_renderer_worker_resume(MafwGstRendererWorker *worker);
-
+#ifdef HAVE_GDKPIXBUF
+void mafw_gst_renderer_worker_pbuf_handler(MafwGstRendererWorker *worker,
+						GdkPixbuf *pixbuf,
+						const gchar *metadata_key);
+#endif
 G_END_DECLS
 #endif
 /* vi: set noexpandtab ts=8 sw=8 cino=t0,(0: */

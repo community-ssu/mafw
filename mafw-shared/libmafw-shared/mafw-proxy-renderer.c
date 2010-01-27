@@ -244,7 +244,7 @@ static void mafw_proxy_renderer_async_free(gpointer data)
 
 	if (params != NULL) {
 		g_object_unref(params->renderer);
-		g_free(params);
+		g_slice_free(AsyncParams, params);
 	}
 }
 
@@ -308,7 +308,7 @@ static void mafw_proxy_renderer_play(MafwRenderer *self,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -342,7 +342,7 @@ static void mafw_proxy_renderer_play_object(MafwRenderer *self,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -376,7 +376,7 @@ static void mafw_proxy_renderer_play_uri(MafwRenderer *self, const gchar* uri,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -410,7 +410,7 @@ static void mafw_proxy_renderer_stop(MafwRenderer *self,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -443,7 +443,7 @@ static void mafw_proxy_renderer_pause(MafwRenderer *self,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -476,7 +476,7 @@ static void mafw_proxy_renderer_resume(MafwRenderer *self,
 	proxy = MAFW_PROXY_RENDERER(self);
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -586,7 +586,7 @@ static void mafw_proxy_renderer_get_status(MafwRenderer *self,
 	g_return_if_fail(connection != NULL);
 	g_return_if_fail(callback != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -667,7 +667,7 @@ static void mafw_proxy_renderer_next(MafwRenderer *self,
 
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -700,7 +700,7 @@ static void mafw_proxy_renderer_previous(MafwRenderer *self,
 
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -733,7 +733,7 @@ static void mafw_proxy_renderer_goto_index(MafwRenderer *self, guint index,
 
 	g_return_if_fail(connection != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -809,7 +809,7 @@ static void mafw_proxy_renderer_set_position(MafwRenderer *self,
 	g_return_if_fail(connection != NULL);
 	g_return_if_fail(callback != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -845,7 +845,7 @@ static void mafw_proxy_renderer_get_position(MafwRenderer *self,
 	g_return_if_fail(connection != NULL);
 	g_return_if_fail(callback != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;
@@ -934,7 +934,7 @@ static void mafw_proxy_renderer_get_current_metadata(
 	g_return_if_fail(connection != NULL);
 	g_return_if_fail(callback != NULL);
 
-	ap = g_new0(AsyncParams, 1);
+	ap = g_slice_new(AsyncParams);
 	ap->renderer = g_object_ref(self);
 	ap->callback = callback;
 	ap->user_data = user_data;

@@ -51,8 +51,8 @@
 #define G_LOG_DOMAIN "mafw-gst-renderer"
 
 #define is_current_uri_stream(self) \
-	(((self)->media != NULL) && ((self)->media->uri != NULL) &&	\
-	 uri_is_stream((self)->media->uri))
+	(((self)->media.uri != NULL) &&	\
+	 uri_is_stream((self)->media.uri))
 
 #define GCONF_OSSO_AF "/system/osso/af"
 #define GCONF_BATTERY_COVER_OPEN "/system/osso/af/mmc-cover-open"
@@ -197,8 +197,9 @@ static void mafw_gst_renderer_class_init(MafwGstRendererClass *klass)
 	GObjectClass *gclass = NULL;
 	MafwRendererClass *renderer_class = NULL;
 	const gchar *preloaded_plugins[] = {"playback", "uridecodebin",
-				"coreelements", "typefindfunctions", "dsp",
-				"pulseaudio", "xvimagesink", NULL};
+		"coreelements", "typefindfunctions", "omx", "selector",
+		"autodetect", "pulseaudio", "audioconvert", "audioresample",
+		"xvimagesink", "ffmpegcolorspace", "videoscale", NULL};
 	gint i = 0;
 	GObject *plugin;
 
@@ -288,8 +289,7 @@ static void mafw_gst_renderer_init(MafwGstRenderer *self)
                                     MAFW_PROPERTY_GST_RENDERER_TV_CONNECTED,
                                     G_TYPE_BOOLEAN);
  	MAFW_EXTENSION_SUPPORTS_TRANSPORT_ACTIONS(self);
-	renderer->media = g_new0(MafwGstRendererMedia, 1);
-	renderer->media->seekability = SEEKABILITY_UNKNOWN;
+	renderer->media.seekability = SEEKABILITY_UNKNOWN;
 	renderer->current_state = Stopped;
 
 	renderer->playlist = NULL;
@@ -307,7 +307,7 @@ static void mafw_gst_renderer_init(MafwGstRenderer *self)
         renderer->worker->notify_eos_handler = _notify_eos;
 	renderer->worker->notify_buffer_status_handler = _notify_buffer_status;
 
-	renderer->states = g_new0 (MafwGstRendererState*, _LastMafwPlayState);
+	renderer->states = g_new (MafwGstRendererState*, _LastMafwPlayState);
 	renderer->states[Stopped] =
 		MAFW_GST_RENDERER_STATE(mafw_gst_renderer_state_stopped_new(self));
 	renderer->states[Transitioning] =
@@ -418,12 +418,6 @@ static void mafw_gst_renderer_finalize(GObject *object)
 	g_return_if_fail(MAFW_IS_GST_RENDERER(self));
 
 	mafw_gst_renderer_clear_media(self);
-
-	if (self->media)
-	{
-		g_free(self->media);
-		self->media = NULL;
-	}
 
 	G_OBJECT_CLASS(mafw_gst_renderer_parent_class)->finalize(object);
 }
@@ -613,14 +607,11 @@ void mafw_gst_renderer_get_metadata(MafwGstRenderer* self,
 	else
 	{
 		/* This is a playback error: execute error policy */
-		MafwGstRendererErrorClosure *error_closure;
-		error_closure = g_new0(MafwGstRendererErrorClosure, 1);
-		error_closure->renderer = self;
-		g_set_error (&(error_closure->error),
+		g_set_error (&(self->error),
 			     MAFW_EXTENSION_ERROR,
 			     MAFW_EXTENSION_ERROR_EXTENSION_NOT_AVAILABLE,
 			     "Unable to find source for current object ID");
-		g_idle_add(mafw_gst_renderer_manage_error_idle, error_closure);
+		g_idle_add((GSourceFunc)mafw_gst_renderer_manage_error_idle, self);
 	}
 }
 
@@ -639,7 +630,7 @@ void mafw_gst_renderer_set_object(MafwGstRenderer *self, const gchar *object_id)
 	mafw_gst_renderer_clear_media(renderer);
 
 	/* Set new object */
-	renderer->media->object_id = g_strdup(object_id);
+	renderer->media.object_id = g_strdup(object_id);
 
 	/* Signal media changed */
 	_signal_media_changed(renderer);
@@ -656,25 +647,24 @@ void mafw_gst_renderer_set_object(MafwGstRenderer *self, const gchar *object_id)
 void mafw_gst_renderer_clear_media(MafwGstRenderer *self)
 {
 	g_return_if_fail(MAFW_IS_GST_RENDERER(self));
-	g_return_if_fail(self->media != NULL);
 
-	g_free(self->media->object_id);
-	self->media->object_id = NULL;
+	g_free(self->media.object_id);
+	self->media.object_id = NULL;
 
-	g_free(self->media->uri);
-	self->media->uri = NULL;
+	g_free(self->media.uri);
+	self->media.uri = NULL;
 
-	g_free(self->media->title);
-	self->media->title = NULL;
+	g_free(self->media.title);
+	self->media.title = NULL;
 
-	g_free(self->media->artist);
-	self->media->artist = NULL;
+	g_free(self->media.artist);
+	self->media.artist = NULL;
 
-	g_free(self->media->album);
-	self->media->album = NULL;
+	g_free(self->media.album);
+	self->media.album = NULL;
 
-	self->media->duration = 0;
-	self->media->position = 0;
+	self->media.duration = 0;
+	self->media.position = 0;
 }
 
 
@@ -695,10 +685,10 @@ void mafw_gst_renderer_set_media_playlist(MafwGstRenderer* self)
         if (self->playlist != NULL &&
             mafw_playlist_iterator_get_size(self->iterator, NULL) > 0) {
                 /* Get the current item from playlist */
-                self->media->object_id =
+                self->media.object_id =
 			g_strdup(mafw_playlist_iterator_get_current_objectid(self->iterator));
         } else {
-                self->media->object_id = NULL;
+                self->media.object_id = NULL;
 	}
 
 	_signal_media_changed(self);
@@ -910,7 +900,7 @@ static void _signal_media_changed(MafwGstRenderer *self)
 	g_signal_emit_by_name(MAFW_RENDERER(self),
 			      "media-changed",
 			      index,
-			      self->media->object_id);
+			      self->media.object_id);
 }
 
 /**
@@ -1192,14 +1182,15 @@ void mafw_gst_renderer_set_position(MafwRenderer *self, MafwRendererSeekMode mod
 		g_error_free(error);
 }
 
-gboolean mafw_gst_renderer_manage_error_idle(gpointer data)
+gboolean mafw_gst_renderer_manage_error_idle(MafwGstRenderer *renderer)
 {
-        MafwGstRendererErrorClosure *mec = (MafwGstRendererErrorClosure *) data;
+        mafw_gst_renderer_manage_error(renderer, renderer->error);
 
-        mafw_gst_renderer_manage_error(mec->renderer, mec->error);
-	if (mec->error)
-        	g_error_free(mec->error);
-        g_free(mec);
+	if (renderer->error)
+	{
+        	g_error_free(renderer->error);
+		renderer->error = NULL;
+	}
 
         return FALSE;
 }
@@ -1424,11 +1415,11 @@ gboolean mafw_gst_renderer_update_stats(gpointer data)
         MafwGstRenderer *renderer = (MafwGstRenderer *) data;
 
         /* Update stats only for audio content */
-        if (renderer->media->object_id &&
+        if (renderer->media.object_id &&
             !renderer->worker->media.has_visual_content) {
 		GHashTable *mdata = mafw_gst_renderer_add_lastplayed(NULL);
 		mafw_gst_renderer_increase_playcount(renderer,
-                                                     renderer->media->object_id,
+                                                     renderer->media.object_id,
                                                      mdata);
 	}
         renderer->update_playcount_id = 0;
@@ -1441,17 +1432,17 @@ void mafw_gst_renderer_update_source_duration(MafwGstRenderer *renderer,
 	GHashTable *metadata;
 	MafwSource* source;
 
-	source = _get_source(renderer, renderer->media->object_id);
+	source = _get_source(renderer, renderer->media.object_id);
 	g_return_if_fail(source != NULL);
 
-	renderer->media->duration = duration;
+	renderer->media.duration = duration;
 
 	g_debug("updated source duration to %d", duration);
 
 	metadata = mafw_metadata_new();
 	mafw_metadata_add_int(metadata, MAFW_METADATA_KEY_DURATION, duration);
 
-	mafw_source_set_metadata(source, renderer->media->object_id, metadata,
+	mafw_source_set_metadata(source, renderer->media.object_id, metadata,
 				 _metadata_set_cb, NULL);
 	g_hash_table_unref(metadata);
 }
@@ -1853,7 +1844,7 @@ void mafw_gst_renderer_get_status(MafwRenderer *self, MafwRendererStatusCB callb
 
 	/* TODO: Set error parameter */
 	callback(self, renderer->playlist, index, renderer->current_state,
-		 (const gchar*) renderer->media->object_id, user_data, NULL);
+		 (const gchar*) renderer->media.object_id, user_data, NULL);
 }
 
 void mafw_gst_renderer_get_current_metadata(MafwRenderer *self,
@@ -1870,7 +1861,7 @@ void mafw_gst_renderer_get_current_metadata(MafwRenderer *self,
 			renderer->worker);
 
 	callback(self,
-		 (const gchar*) renderer->media->object_id,
+		 (const gchar*) renderer->media.object_id,
 		 metadata,
 		 user_data,
 		 NULL);
@@ -1901,11 +1892,6 @@ gboolean mafw_gst_renderer_assign_playlist(MafwRenderer *self,
 
 	/* Get rid of previously assigned playlist  */
 	if (renderer->playlist != NULL) {
-		g_signal_handlers_disconnect_matched(renderer->iterator,
-						     (GSignalMatchType) G_SIGNAL_MATCH_FUNC,
-						     0, 0, NULL,
-						     _playlist_changed_handler,
-						     NULL);
 		g_signal_handlers_disconnect_matched(renderer->playlist,
 					(GSignalMatchType) G_SIGNAL_MATCH_FUNC,
 					0, 0, NULL,
@@ -2172,11 +2158,6 @@ static void mafw_gst_renderer_set_property(MafwExtension *self,
 		mafw_gst_renderer_worker_set_autopaint(
 			renderer->worker,
 			g_value_get_boolean(value));
-	}
-	else if (!strcmp(key, MAFW_PROPERTY_RENDERER_COLORKEY)) {
-		mafw_gst_renderer_worker_set_colorkey(
-			renderer->worker,
-			g_value_get_int(value));
 	}
 #ifdef HAVE_GDKPIXBUF
 	else if (!strcmp(key,

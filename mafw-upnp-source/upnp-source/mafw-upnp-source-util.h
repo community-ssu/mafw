@@ -33,18 +33,10 @@ gchar* util_uuid_to_udn(const gchar* uuid);
 guint64 util_compile_mdata_keys(const gchar* const* original);
 
 gint util_compare_uint(guint a, guint b);
-gchar* util_create_objectid(MafwUPnPSource* source, GUPnPDIDLLiteObject* didlobject);
+gchar* util_create_objectid(MafwUPnPSource* source, xmlNode* didl_node);
 
 const gchar* util_mafwkey_to_upnp_result(gint id, gint* type);
 const gchar *util_get_metadatakey_from_id(gint id);
-gint util_get_upnp_filterid_from_id(gint id);
-const gchar *util_get_upnp_filter_by_id(gint id);
 void util_init(void);
-/*----------------------------------------------------------------------------
-  Browse filter
-  ----------------------------------------------------------------------------*/
-const gchar* util_mafwkey_to_upnp_filter(const gchar* mafwkey);
-gchar* util_mafwkey_array_to_upnp_filter(guint64 keys);
-
 
 #endif

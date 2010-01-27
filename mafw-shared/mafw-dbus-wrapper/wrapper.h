@@ -66,7 +66,7 @@ extern DBusHandlerResult handle_source_msg(DBusConnection *conn,
 					   DBusMessage *msg,
 					   void *data);
 
-extern void connect_to_renderer_signals(gpointer ecomp);
+extern void connect_to_renderer_signals(ExportedComponent *ecomp);
 extern DBusHandlerResult handle_renderer_msg(DBusConnection *conn,
 					     DBusMessage *msg,
 					     void *data);

@@ -261,7 +261,7 @@ static void free_plparse_data(struct plparse_data *pl_dat)
 		g_free(cur_item->data);
 		cur_item = g_list_delete_link(cur_item, cur_item);
 	}
-	g_free(pl_dat);
+	g_slice_free(struct plparse_data, pl_dat);
 }
 
 static void import_done(struct plparse_data *pl_dat, const GError *err)
@@ -472,11 +472,12 @@ static guint import_playlist(const gchar *pl, const gchar *base,
 	gchar *src_uuid;
 	guint import_id;
 	MafwSource *src;
-	struct plparse_data *pl_dat = g_new0(struct plparse_data, 1);
+	struct plparse_data *pl_dat = g_slice_new0(struct plparse_data);
 
 	import_id = pl_dat->import_id = get_next_import_id();
 	pl_dat->oci = oci;
 	pl_dat->pl_uri = g_strdup(pl);
+
 	if (base && base[0])
 	{
 		pl_dat->base = g_strdup(base);

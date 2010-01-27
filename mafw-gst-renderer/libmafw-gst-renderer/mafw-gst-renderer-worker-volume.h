@@ -40,8 +40,7 @@ typedef void(*MafwGstRendererWorkerVolumeInitCb)(
 
 G_BEGIN_DECLS
 
-void mafw_gst_renderer_worker_volume_init(GMainContext *main_context,
-					  MafwGstRendererWorkerVolumeInitCb cb,
+void mafw_gst_renderer_worker_volume_init(MafwGstRendererWorkerVolumeInitCb cb,
 					  gpointer user_data,
 					  MafwGstRendererWorkerVolumeChangedCb
 					  changed_cb,

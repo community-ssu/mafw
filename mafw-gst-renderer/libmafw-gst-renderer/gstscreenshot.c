@@ -26,16 +26,16 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#include "gstscreenshot.h"
 
-typedef struct {
-	GstBuffer *result;
-	GstElement *src;
-	GstElement *sink;
-	GstElement *pipeline;
-	BvwFrameConvCb cb;
-	gpointer cb_data;
-} GstScreenshotData;
+#include "gstscreenshot.h"
+#include "mafw-gst-renderer-worker.h"
+
+static GstElement *src;
+static GstElement *sink;
+static GstElement *pipeline;
+static GstBuffer *result;
+static MafwGstRendererWorker *current_worker;
+static const gchar *metadata_key;
 
 /* GST_DEBUG_CATEGORY_EXTERN (_totem_gst_debug_cat); */
 /* #define GST_CAT_DEFAULT _totem_gst_debug_cat */
@@ -64,12 +64,11 @@ static void feed_fakesrc(GstElement *src, GstBuffer *buf, GstPad *pad,
 static void save_result(GstElement *sink, GstBuffer *buf, GstPad *pad,
 			gpointer data)
 {
-	GstScreenshotData *gsd = data;
 
-	gsd->result = gst_buffer_ref(buf);
+	result = gst_buffer_ref(buf);
 
 	GST_DEBUG("received converted buffer %p with caps %" GST_PTR_FORMAT,
-		  gsd->result, GST_BUFFER_CAPS(gsd->result));
+		  result, GST_BUFFER_CAPS(result));
 }
 
 static gboolean create_element(const gchar *factory_name, GstElement **element,
@@ -89,37 +88,61 @@ static gboolean create_element(const gchar *factory_name, GstElement **element,
 	return FALSE;
 }
 
-static gboolean finalize_process(GstScreenshotData *gsd)
+static gboolean finalize_process(void)
 {
-	g_signal_handlers_disconnect_matched(gsd->sink, (GSignalMatchType)
+	g_signal_handlers_disconnect_matched(sink, (GSignalMatchType)
 					     G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
 					     save_result, NULL);
-	g_signal_handlers_disconnect_matched(gsd->src, (GSignalMatchType)
+	g_signal_handlers_disconnect_matched(src, (GSignalMatchType)
 					     G_SIGNAL_MATCH_FUNC, 0, 0, NULL,
 					     feed_fakesrc, NULL);
-	gst_element_set_state(gsd->pipeline, GST_STATE_NULL);
-
-	g_free(gsd);
+	gst_element_set_state(pipeline, GST_STATE_NULL);
 
 	return FALSE;
+}
+
+static void _destroy_pixbuf (guchar *pixbuf, gpointer data)
+{
+	gst_buffer_unref(GST_BUFFER(data));
+}
+
+static GdkPixbuf *_convert_gstbuf_to_pixbuf(GstBuffer *new_buffer)
+{
+	gint width, height;
+	GstStructure *structure;
+	GdkPixbuf *pixbuf = NULL;
+
+	structure =
+		gst_caps_get_structure(GST_BUFFER_CAPS(new_buffer), 0);
+
+	gst_structure_get_int(structure, "width", &width);
+	gst_structure_get_int(structure, "height", &height);
+
+	pixbuf = gdk_pixbuf_new_from_data(
+		GST_BUFFER_DATA(new_buffer), GDK_COLORSPACE_RGB,
+		FALSE, 8, width, height,
+		GST_ROUND_UP_4(3 * width), _destroy_pixbuf,
+		new_buffer);
+	return pixbuf;
 }
 
 static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 				  gpointer data)
 {
-	GstScreenshotData *gsd = data;
 	gboolean keep_watch = TRUE;
 
 	switch (GST_MESSAGE_TYPE(msg)) {
 	case GST_MESSAGE_EOS: {
-		if (gsd->result != NULL) {
+		GdkPixbuf *pbuf = NULL;
+		if (result != NULL) {
 			GST_DEBUG("conversion successful: result = %p",
-				  gsd->result);
+				  result);
+			pbuf = _convert_gstbuf_to_pixbuf(result);
 		} else {
 			GST_WARNING("EOS but no result frame?!");
 		}
-		gsd->cb(gsd->result, gsd->cb_data);
-		keep_watch = finalize_process(gsd);
+		mafw_gst_renderer_worker_pbuf_handler(current_worker, pbuf, metadata_key);
+		keep_watch = finalize_process();
 		break;
 	}
 	case GST_MESSAGE_ERROR: {
@@ -138,9 +161,10 @@ static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 				  "NULL error!)");
 		}
 		g_free(dbg);
-		gsd->result = NULL;
-		gsd->cb(gsd->result, gsd->cb_data);
-		keep_watch = finalize_process(gsd);
+		result = NULL;
+		mafw_gst_renderer_worker_pbuf_handler(current_worker, NULL,
+							metadata_key);
+		keep_watch = finalize_process();
 		break;
 	}
 	default:
@@ -151,19 +175,18 @@ static gboolean async_bus_handler(GstBus *bus, GstMessage *msg,
 }
 
 /* takes ownership of the input buffer */
-gboolean bvw_frame_conv_convert(GstBuffer *buf, GstCaps *to_caps,
-				BvwFrameConvCb cb, gpointer cb_data)
+gboolean bvw_frame_conv_convert(MafwGstRendererWorker *worker,
+				GstBuffer *buf, GstCaps *to_caps,
+				const gchar *mdata_key)
 {
-	static GstElement *src = NULL, *sink = NULL, *pipeline = NULL,
-		*filter1 = NULL, *filter2 = NULL;
+	static GstElement *filter1 = NULL, *filter2 = NULL;
 	static GstBus *bus;
 	GError *error = NULL;
 	GstCaps *to_caps_no_par;
-	GstScreenshotData *gsd;
 
 	g_return_val_if_fail(GST_BUFFER_CAPS(buf) != NULL, FALSE);
-	g_return_val_if_fail(cb != NULL, FALSE);
 
+	current_worker = worker;
 	if (pipeline == NULL) {
 		GstElement *csp, *vscale;
 
@@ -235,19 +258,13 @@ gboolean bvw_frame_conv_convert(GstBuffer *buf, GstCaps *to_caps,
 	g_object_set(filter2, "caps", to_caps, NULL);
 	gst_caps_unref(to_caps);
 
-	gsd = g_new0(GstScreenshotData, 1);
+	metadata_key = mdata_key;
 
-	gsd->src = src;
-	gsd->sink = sink;
-	gsd->pipeline = pipeline;
-	gsd->cb = cb;
-	gsd->cb_data = cb_data;
-
-	g_signal_connect(sink, "handoff", G_CALLBACK(save_result), gsd);
+	g_signal_connect(sink, "handoff", G_CALLBACK(save_result), NULL);
 
 	g_signal_connect(src, "handoff", G_CALLBACK(feed_fakesrc), buf);
 
-	gst_bus_add_watch(bus, async_bus_handler, gsd);
+	gst_bus_add_watch(bus, async_bus_handler, NULL);
 
 	/* set to 'fixed' sizetype */
 	g_object_set(src, "sizemax", GST_BUFFER_SIZE(buf), NULL);

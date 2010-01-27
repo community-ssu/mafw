@@ -172,6 +172,11 @@ static void got_extension_property(DBusPendingCall *pending, void *udata)
 	dbus_pending_call_unref(pending);
 }
 
+static void free_getpropinfo(GetPropInfo *pinfo)
+{
+	g_slice_free(GetPropInfo, pinfo);
+}
+
 void proxy_extension_get_extension_property(MafwExtension *self,
                                             const gchar *name,
                                             MafwExtensionPropertyCallback cb,
@@ -189,13 +194,13 @@ void proxy_extension_get_extension_property(MafwExtension *self,
                         MAFW_EXTENSION_INTERFACE,
                         MAFW_EXTENSION_METHOD_GET_PROPERTY,
                         MAFW_DBUS_STRING(name)));
-	info = g_new(GetPropInfo, 1);
+	info = g_slice_new(GetPropInfo);
 	/* XXX should we ref @self? */
 	info->extension = self;
 	info->cb = cb;
 	info->data = udata;
 	dbus_pending_call_set_notify(pending, got_extension_property,
-				     info, g_free);
+				     info, (gpointer)free_getpropinfo);
 }
 
 /* GObject::notify handler for proxies.  Sends a D-Bus message when
@@ -331,7 +336,7 @@ static void got_prop_lists(DBusPendingCall *pendelum,
                         MAFW_EXTENSION(att_data->extension));
 	else
 		g_object_unref(att_data->extension);
-	g_free(att_data);
+	g_slice_free(struct _extension_attach_data, att_data);
 	dbus_pending_call_unref(pendelum);
 }
 
@@ -394,7 +399,7 @@ void proxy_extension_attach(GObject *extension, DBusConnection *connection,
 	gchar *path, *service, *match_str;
 	DBusPendingCall *pending_name;
 	struct _extension_attach_data *att_data =
-                g_new0(struct _extension_attach_data, 1);
+                g_slice_new(struct _extension_attach_data);
 
 	att_data->extension = extension;
 	att_data->registry = registry;

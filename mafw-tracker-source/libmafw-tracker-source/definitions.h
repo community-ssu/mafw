@@ -105,6 +105,85 @@
                 MAFW_METADATA_KEY_CHILDCOUNT_3,                         \
                 MAFW_METADATA_KEY_CHILDCOUNT_4
 
+/* Known mdata key flags */
+#define	MTrackerSrc_KEY_URI			G_GUINT64_CONSTANT(0x1)
+#define	MTrackerSrc_KEY_MIME			G_GUINT64_CONSTANT(0x2)
+#define MTrackerSrc_KEY_TITLE			G_GUINT64_CONSTANT(0x4)
+#define	MTrackerSrc_KEY_DURATION		G_GUINT64_CONSTANT(0x8)
+#define MTrackerSrc_KEY_ARTIST			G_GUINT64_CONSTANT(0x10)
+#define MTrackerSrc_KEY_ALBUM			G_GUINT64_CONSTANT(0x20)
+#define MTrackerSrc_KEY_GENRE			G_GUINT64_CONSTANT(0x40)
+#define MTrackerSrc_KEY_TRACK			G_GUINT64_CONSTANT(0x80)
+#define MTrackerSrc_KEY_YEAR			G_GUINT64_CONSTANT(0x100)
+#define MTrackerSrc_KEY_BITRATE			G_GUINT64_CONSTANT(0x200)
+#define MTrackerSrc_KEY_PLAY_COUNT		G_GUINT64_CONSTANT(0x400)
+#define MTrackerSrc_KEY_LAST_PLAYED		G_GUINT64_CONSTANT(0x800)
+#define MTrackerSrc_KEY_ADDED			G_GUINT64_CONSTANT(0x1000)
+#define MTrackerSrc_KEY_MODIFIED		G_GUINT64_CONSTANT(0x2000)
+#define MTrackerSrc_KEY_THUMBNAIL_URI		G_GUINT64_CONSTANT(0x4000)
+#define MTrackerSrc_KEY_THUMBNAIL_SMALL_URI	G_GUINT64_CONSTANT(0x8000)
+#define MTrackerSrc_KEY_THUMBNAIL_MEDIUM_URI	G_GUINT64_CONSTANT(0x10000)
+#define MTrackerSrc_KEY_THUMBNAIL_LARGE_URI	G_GUINT64_CONSTANT(0x20000)
+#define MTrackerSrc_KEY_PAUSED_THUMBNAIL_URI	G_GUINT64_CONSTANT(0x40000)
+#define MTrackerSrc_KEY_PAUSED_POSITION		G_GUINT64_CONSTANT(0x80000)
+#define MTrackerSrc_KEY_RES_X			G_GUINT64_CONSTANT(0x100000)
+#define MTrackerSrc_KEY_RES_Y			G_GUINT64_CONSTANT(0x200000)
+#define MTrackerSrc_KEY_FILENAME		G_GUINT64_CONSTANT(0x400000)
+#define MTrackerSrc_KEY_FILESIZE		G_GUINT64_CONSTANT(0x800000)
+#define MTrackerSrc_KEY_COPYRIGHT		G_GUINT64_CONSTANT(0x1000000)
+#define MTrackerSrc_KEY_ALBUM_ART_URI		G_GUINT64_CONSTANT(0x2000000)
+#define MTrackerSrc_KEY_ALBUM_ART_SMALL_URI	G_GUINT64_CONSTANT(0x4000000)
+#define MTrackerSrc_KEY_ALBUM_ART_MEDIUM_URI	G_GUINT64_CONSTANT(0x8000000)
+#define MTrackerSrc_KEY_ALBUM_ART_LARGE_URI	G_GUINT64_CONSTANT(0x10000000)
+#define MTrackerSrc_KEY_VIDEO_FRAMERATE		G_GUINT64_CONSTANT(0x20000000)
+#define MTrackerSrc_KEY_VIDEO_SOURCE		G_GUINT64_CONSTANT(0x40000000)
+#define MTrackerSrc_KEY_CHILDCOUNT_1		G_GUINT64_CONSTANT(0x80000000)
+#define MTrackerSrc_KEY_CHILDCOUNT_2		G_GUINT64_CONSTANT(0x100000000)
+#define MTrackerSrc_KEY_CHILDCOUNT_3		G_GUINT64_CONSTANT(0x200000000)
+#define MTrackerSrc_KEY_CHILDCOUNT_4		G_GUINT64_CONSTANT(0x400000000)
+#define MTrackerSrc_TRACKER_PKEY_VALID_DURATION	G_GUINT64_CONSTANT(0x800000000)
+#define MTrackerSrc_TRACKER_FKEY_PATH		G_GUINT64_CONSTANT(0x1000000000)
+
+/* Known mdata key ids */
+#define	MTrackerSrc_ID_URI			0
+#define	MTrackerSrc_ID_MIME			1
+#define MTrackerSrc_ID_TITLE			2
+#define	MTrackerSrc_ID_DURATION			3
+#define MTrackerSrc_ID_ARTIST			4
+#define MTrackerSrc_ID_ALBUM			5
+#define MTrackerSrc_ID_GENRE			6
+#define MTrackerSrc_ID_TRACK			7
+#define MTrackerSrc_ID_YEAR			8
+#define MTrackerSrc_ID_BITRATE			9
+#define MTrackerSrc_ID_PLAY_COUNT		10
+#define MTrackerSrc_ID_LAST_PLAYED		11
+#define MTrackerSrc_ID_ADDED			12
+#define MTrackerSrc_ID_MODIFIED			13
+#define MTrackerSrc_ID_THUMBNAIL_URI		14
+#define MTrackerSrc_ID_THUMBNAIL_SMALL_URI	15
+#define MTrackerSrc_ID_THUMBNAIL_MEDIUM_URI	16
+#define MTrackerSrc_ID_THUMBNAIL_LARGE_URI	17
+#define MTrackerSrc_ID_PAUSED_THUMBNAIL_URI	18
+#define MTrackerSrc_ID_PAUSED_POSITION		19
+#define MTrackerSrc_ID_RES_X			20
+#define MTrackerSrc_ID_RES_Y			21
+#define MTrackerSrc_ID_FILENAME			22
+#define MTrackerSrc_ID_FILESIZE			23
+#define MTrackerSrc_ID_COPYRIGHT		24
+#define MTrackerSrc_ID_ALBUM_ART_URI		25
+#define MTrackerSrc_ID_ALBUM_ART_SMALL_URI	26
+#define MTrackerSrc_ID_ALBUM_ART_MEDIUM_URI	27
+#define MTrackerSrc_ID_ALBUM_ART_LARGE_URI	28
+#define MTrackerSrc_ID_VIDEO_FRAMERATE		29
+#define MTrackerSrc_ID_VIDEO_SOURCE		30
+#define MTrackerSrc_ID_CHILDCOUNT_1		31
+#define MTrackerSrc_ID_CHILDCOUNT_2		32
+#define MTrackerSrc_ID_CHILDCOUNT_3		33
+#define MTrackerSrc_ID_CHILDCOUNT_4		34
+
+/* Flag for date types */
+#define MTrackerSrc_Date_Types (MTrackerSrc_KEY_YEAR | MTrackerSrc_KEY_LAST_PLAYED | \
+				MTrackerSrc_KEY_ADDED | MTrackerSrc_KEY_MODIFIED)
 /* Tracker metadata keys */
 #define TRACKER_AKEY_ALBUM            "Audio:Album"
 #define TRACKER_AKEY_ARTIST           "Audio:Artist"

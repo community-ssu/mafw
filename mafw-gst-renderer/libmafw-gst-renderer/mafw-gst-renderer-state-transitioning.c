@@ -266,8 +266,8 @@ static void _notify_metadata(MafwGstRendererState *self,
 
 	/* If we have received metadata for the item that we are playing
 	   then play it */
-	if (object_id && renderer->media->object_id &&
-	    !strcmp(object_id, renderer->media->object_id)) {
+	if (object_id && renderer->media.object_id &&
+	    !strcmp(object_id, renderer->media.object_id)) {
                 /* Check how many uris provide the object_id */
                 value = g_hash_table_lookup(metadata, MAFW_METADATA_KEY_URI);
                 nuris = mafw_metadata_nvalues(value);
@@ -275,10 +275,10 @@ static void _notify_metadata(MafwGstRendererState *self,
                         mval = mafw_metadata_first(metadata,
                                                    MAFW_METADATA_KEY_URI);
                         g_assert(mval);
-			g_free(renderer->media->uri);
-			renderer->media->uri =
+			g_free(renderer->media.uri);
+			renderer->media.uri =
                                 g_strdup(g_value_get_string(mval));
-			uri = renderer->media->uri;
+			uri = renderer->media.uri;
                 } else if (nuris > 1) {
                         uris = g_new0(gchar *, nuris + 1);
                         for (i = 0; i < nuris; i++) {
@@ -290,8 +290,8 @@ static void _notify_metadata(MafwGstRendererState *self,
                          * one will be selected until we get a successful one or
                          * all failed. On success, the selected URI will be
                          * emitted as metadata */
-                        g_free(renderer->media->uri);
-                        renderer->media->uri = g_strdup(uris[0]);
+                        g_free(renderer->media.uri);
+                        renderer->media.uri = g_strdup(uris[0]);
                 } else {
                         g_assert_not_reached();
                 }
@@ -302,13 +302,13 @@ static void _notify_metadata(MafwGstRendererState *self,
                 mval = mafw_metadata_first(metadata,
                                            MAFW_METADATA_KEY_IS_SEEKABLE);
                 if (mval != NULL) {
-                        renderer->media->seekability =
+                        renderer->media.seekability =
                                 g_value_get_boolean(mval) ?
                                 SEEKABILITY_SEEKABLE : SEEKABILITY_NO_SEEKABLE;
                         g_debug("_notify_metadata: source seekability %d",
-                                renderer->media->seekability);
+                                renderer->media.seekability);
                 } else {
-                        renderer->media->seekability = SEEKABILITY_UNKNOWN;
+                        renderer->media.seekability = SEEKABILITY_UNKNOWN;
                         g_debug("_notify_metadata: source seekability unknown");
                 }
 
@@ -317,17 +317,17 @@ static void _notify_metadata(MafwGstRendererState *self,
                                            MAFW_METADATA_KEY_DURATION);
 
                 if (mval != NULL) {
-                        renderer->media->duration = g_value_get_int(mval);
+                        renderer->media.duration = g_value_get_int(mval);
                         g_debug("_notify_metadata: source duration %d",
-				renderer->media->duration);
+				renderer->media.duration);
 		} else {
-                        renderer->media->duration = -1;
+                        renderer->media.duration = -1;
                         g_debug("_notify_metadata: source duration unknown");
                 }
 
                 /* Play the available uri(s) */
                 if (nuris == 1) {
-			mafw_gst_renderer_worker_play(renderer->worker, uri, NULL);
+			mafw_gst_renderer_worker_play(renderer->worker, uri);
 		} else {
                         mafw_gst_renderer_worker_play_alternatives(
                                 renderer->worker, uris);
@@ -346,7 +346,7 @@ static void _notify_play(MafwGstRendererState *self, GError **error)
 
 	MafwGstRenderer *renderer = MAFW_GST_RENDERER_STATE(self)->renderer;
 
-	if (renderer->media->object_id)
+	if (renderer->media.object_id)
 	{
                 renderer->update_playcount_id = g_timeout_add_seconds(
 			UPDATE_DELAY,

@@ -253,7 +253,7 @@ static void _do_goto_index(MafwGstRendererState *self, guint index,
 			   GError **error)
 {
         g_return_if_fail(MAFW_IS_GST_RENDERER_STATE_PAUSED(self));
-	self->renderer->worker->stay_paused = TRUE;
+	self->renderer->worker->stay_paused = FALSE;
 	mafw_gst_renderer_state_do_goto_index(self, index, error);
 }
 
@@ -315,7 +315,6 @@ static void _playlist_contents_changed(MafwGstRendererState *self,
 	   played if that's been suggested with renderer->resume_playlist */
 	mode = mafw_gst_renderer_get_playback_mode(self->renderer);
 	if (clip_changed && mode == MAFW_GST_RENDERER_MODE_PLAYLIST) {
-		self->renderer->worker->stay_paused = TRUE;
 		mafw_gst_renderer_state_do_play(self, error);
 	}
 }
@@ -357,7 +356,7 @@ static void _handle_pre_unmount(MafwGstRendererState *self,
 	gchar *mount_uri;
 
 	/* If not playing anything, bail out */
-	if (!self->renderer->media->uri) {
+	if (!self->renderer->media.uri) {
 		return;
 	}
 
@@ -369,7 +368,7 @@ static void _handle_pre_unmount(MafwGstRendererState *self,
 	}
 
 	/* Stop if playing from unmounted location */
-	if (g_str_has_prefix(self->renderer->media->uri, mount_uri)) {
+	if (g_str_has_prefix(self->renderer->media.uri, mount_uri)) {
                 g_debug("PAUSED-STATE: stopping to mount card");
 		mafw_gst_renderer_stop(MAFW_RENDERER(self->renderer),
 				       NULL,

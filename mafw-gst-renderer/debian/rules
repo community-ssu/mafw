@@ -71,8 +71,6 @@ binary-arch: build install
 	dh_installchangelogs ChangeLog
 	dh_installdocs
 	dh_install --sourcedir=debian/tmp -v
-	install debian/mafw-gst-renderer.mafw.xsession \
-		debian/mafw-gst-renderer/etc/X11/Xsession.post/32mafw-gst-renderer
 	dh_link
 	dh_strip --dbg-package=mafw-gst-renderer
 	dh_compress
@@ -95,3 +93,4 @@ vg:
 		
 
 .PHONY: build clean binary-indep binary-arch binary install distcheck vg
+

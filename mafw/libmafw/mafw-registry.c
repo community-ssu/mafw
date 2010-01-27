@@ -146,7 +146,7 @@ static void unload_plugin(MafwRegistryPlugin *ext)
 	/* XXX: and here we crash */
         g_module_close(ext->handle);
         g_free(ext->name);
-        g_free(ext);
+        g_slice_free(MafwRegistryPlugin, ext);
 }
 
 /* I'm sure you don't see GList ***:s too often.  Finds out the appropriate
@@ -384,7 +384,7 @@ static gboolean register_plugin(MafwRegistry *self,
 				    name);
                 return FALSE;
         }
-        new_plugin              = g_new0(MafwRegistryPlugin, 1);
+        new_plugin              = g_slice_new(MafwRegistryPlugin);
         new_plugin->handle      = module_handle;
         new_plugin->descriptor  = descriptor;
         new_plugin->name        = plugin_symbol_name(name);

@@ -544,7 +544,7 @@ static gboolean _emit_result(struct metadatas_data *mdatas_data)
 	if (mdatas_data->err)
 		g_error_free(mdatas_data->err);
 	g_object_unref(mdatas_data->self);
-	g_free(mdatas_data);
+	g_slice_free(struct metadatas_data, mdatas_data);
 	return FALSE;
 }
 
@@ -605,7 +605,7 @@ void mafw_source_get_metadatas(MafwSource *self,
 	else
 	{
 		gint i;
-		struct metadatas_data *mdatas_data = g_new0(struct metadatas_data, 1);
+		struct metadatas_data *mdatas_data = g_slice_new(struct metadatas_data);
 
 		g_assert(object_ids && object_ids[0]);
 
@@ -616,6 +616,9 @@ void mafw_source_get_metadatas(MafwSource *self,
 						g_str_equal,
 						(GDestroyNotify)g_free,
 						(GDestroyNotify)mafw_metadata_release);
+		mdatas_data->remaining_count = 0;
+		mdatas_data->result_id = 0;
+		mdatas_data->err = NULL;
 
 		for (i = 0; object_ids[i]; i++)
 		{
