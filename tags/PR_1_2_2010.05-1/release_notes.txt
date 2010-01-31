@@ -1,0 +1,22 @@
+
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    2010.05-1
+Date       2010.01.31
+Maintainer mika.tapojarvi@sse.fi
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
+mafw-shared            0.2.2010.05-1
+
+
+Change logs: 
+
+* This is a bug fix tag.
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 1
+* Fixes: NB#153390 - Shuffle all songs often plays a non-random sequence after the first song
