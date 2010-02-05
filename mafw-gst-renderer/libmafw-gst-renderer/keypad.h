@@ -21,35 +21,14 @@
  * 02110-1301 USA
  *
  */
+#ifndef KEYPAD_H
+#define KEYPAD_H
 
-#ifndef __MAFW_LOG_H__
-#define __MAFW_LOG_H__
-
-#include <glib.h>
-
-/**
- * g_info():
- * @...: List of parameters.
- *
- * Convenience macro to log at INFO level. It receives a format
- * string, followed by parameters to insert into the format string (as
- * with printf())
- */
-#ifdef G_HAVE_ISO_VARARGS
-#define g_info(...) g_log(G_LOG_DOMAIN, \
-			  G_LOG_LEVEL_INFO, \
-			  __VA_ARGS__)
-#elif defined(G_HAVE_GNUC_VARARGS)
-#define g_info(format...) g_log(G_LOG_DOMAIN, \
-				G_LOG_LEVEL_INFO, \
-				format)
-#else
-#define g_info(...)
-#endif
-
-/* Prototypes. */
 G_BEGIN_DECLS
-extern void mafw_log_init(gchar const *doms);
+
+void keypadlocking_prohibit(void);
+void keypadlocking_allow(void);
+
 G_END_DECLS
 
 #endif
