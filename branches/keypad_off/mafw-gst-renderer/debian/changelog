@@ -1,3 +1,9 @@
+mafw-gst-renderer (0.2.2010.06-1) unstable; urgency=low
+
+  * Fix for the bug NB#151641.
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Wed, 10 Feb 2010 10:54:18 +0200
+
 mafw-gst-renderer (0.2.2010.01-1) unstable; urgency=low
 
   * Version number increased in trunk.
