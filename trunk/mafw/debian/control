@@ -1,7 +1,7 @@
 Source: libmafw
 Section: misc
 Priority: optional
-Maintainer: Juha Kellokoski <veitikka6@gmail.com>
+Maintainer: Mika Tapojarvi <mika.tapojarvi@sse.fi>
 Build-Depends: debhelper (>= 5), libglib2.0-dev (>= 2.15), libsqlite3-dev, check, gtk-doc-tools, shared-mime-info
 Standards-Version: 3.7.2
 
