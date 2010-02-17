@@ -4,18 +4,13 @@ All rights reserved.
 
 RELEASE NOTES
 Project    MAFW
-Version    2010.06-1
-Date       2010.02.10
+Version    2010.07-2
+Date       2010.02.17
 Maintainer mika.tapojarvi@sse.fi
 
-PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 7
-libmafw                0.2.2010.06-1
-mafw-shared            0.2.2010.06-1
-mafw-gst-renderer      0.2.2010.06-1
-mafw-iradio-source     0.2.2010.06-1
-mafw-test-gui          0.2.2010.06-1
-mafw-tracker-source    0.2.2010.06-1
-mafw-upnp-source       0.2.2010.06-1
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 2
+mafw-gst-renderer      0.2.2010.07-2
+mafw-upnp-source       0.2.2010.07-2
 
 Change logs: 
 
@@ -23,8 +18,6 @@ Change logs:
 
 BUGS RESOLVED IN THIS RELEASE
 
-From changelog: 4
-* Fixes: NB#155329 - Backwards compatibility problems with strict version dependency in libmafw0
-* Fixes: NB#155331 - Backwards compatibility problems with strict version dependency in libmafw-shared0
-* Fixes: NB#153390 - Shuffle all songs often plays a non-random sequence after the first song
-* Fixes: NB#150064 - NP-Video:Frames not changing while performing seek operation when the video is in paused state
+From changelog: 2
+* Fixes: NB#156757 - Volume settings can't be changed via Volume key, Media player is playing, Tklock is On.
+* Fixes: NB#150549 - Dbus wrapper crashes when container in UPnP Source is imported with 'import selected category' option
