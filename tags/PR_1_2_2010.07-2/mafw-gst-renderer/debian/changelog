@@ -2,7 +2,7 @@ mafw-gst-renderer (0.2.2010.07-2) unstable; urgency=low
 
   * Fixes: NB#156757 - Volume settings can't be changed via Volume key, Media player is playing, Tklock is On.
 
- -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Wed, 17 Feb 2010 10:09:38 +0200
+ -- Mika Tapojärvi <mika.tapojarvi@sse.fi>  Wed, 17 Feb 2010 10:09:38 +0200
 
 mafw-gst-renderer (0.2.2010.06-1) unstable; urgency=low
 
