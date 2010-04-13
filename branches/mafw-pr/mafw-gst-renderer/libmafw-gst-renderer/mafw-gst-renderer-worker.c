@@ -367,7 +367,6 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 					g_warning ("%s\n", error->message);
 					g_error_free (error);
 
-					g_object_unref(pixbuf);
 				} else {
 					SaveGraphicData *sgd;
 
@@ -376,7 +375,7 @@ static void _emit_gst_buffer_as_graphic_file(MafwGstRendererWorker *worker,
 					sgd->worker = worker;
 					sgd->metadata_key =
 						g_strdup(metadata_key);
-					sgd->pixbuf = pixbuf;
+					sgd->pixbuf = g_object_ref(pixbuf);
 
 					_emit_gst_buffer_as_graphic_file_cb(
 						NULL, sgd);
