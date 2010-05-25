@@ -357,7 +357,7 @@ static void _notify_eos(MafwGstRendererState *self, GError **error)
 
 			g_signal_emit_by_name(MAFW_EXTENSION(self->renderer), "error",
 					      MAFW_RENDERER_ERROR, MAFW_RENDERER_ERROR_STREAM_DISCONNECTED,
-					      "EOF FOR ENDLESS STREAM");
+					      "EOS FOR ENDLESS STREAM");
         }
         else
         {
