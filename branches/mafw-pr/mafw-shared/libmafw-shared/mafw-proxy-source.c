@@ -237,7 +237,7 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 					g_hash_table_remove(
 						priv->browse_requests,
 						GUINT_TO_POINTER(browse_id));
-					new_req = NULL;
+					//new_req = NULL;
 					g_clear_error(&error);
 					mafw_metadata_release(metadata);
 					break;
@@ -254,6 +254,7 @@ mafw_proxy_source_dispatch_message(DBusConnection *conn,
 			mafw_metadata_release(metadata);
 		}
 		if (new_req) {
+			g_warning("*********************** new_req->emitting = FALSE; *********************************");
 			new_req->emitting = FALSE;
 		}
 		return DBUS_HANDLER_RESULT_HANDLED;
