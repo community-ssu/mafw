@@ -1,3 +1,9 @@
+mafw-upnp-source (0.3.2010.23-1) unstable; urgency=low
+
+  * Version increased.
+
+ -- Mika Tapojärvi <ext-mika.tapojarvi@nokia.com>  Wed, 09 Jun 2010 13:26:19 +0300
+
 mafw-upnp-source (0.1.2009.42-2) unstable; urgency=low
 
   * Version increased.
