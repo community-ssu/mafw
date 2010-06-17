@@ -1,0 +1,20 @@
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    2010.24-1
+Date       2010.06.17
+Maintainer ext-pekka.1.ronkko@nokia.com
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
+mafw-gst-renderer      0.3.2010.24-1
+
+Change logs: 
+
+* This is a bug fix and rebuild tag.
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 1
+* Fixes: NB#161636 - Playbin sends EOS for endless stream 
