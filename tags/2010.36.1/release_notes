@@ -1,0 +1,21 @@
+Copyright 2004-2009 Nokia
+All rights reserved.
+
+RELEASE NOTES
+Project    MAFW
+Version    2010.36-1
+Date       2010.09.08
+Maintainer ext-pekka.1.ronkko@nokia.com
+
+PACKAGES CHANGED SINCE THE PREVIOUS RELEASE: 1
+mafw-shared      0.3.2010.36-1
+
+Change logs: 
+
+* This is a bug fix and rebuild tag.
+
+BUGS RESOLVED IN THIS RELEASE
+
+From changelog: 1
+* Fixes: NB#189290 - mediaplayer-ECD3-11-2203: Segfaults on m3u playlist with more than 32 mp3 files
+
