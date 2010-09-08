@@ -1,4 +1,4 @@
-mafw-shared (0.2.2010.09-1) unstable; urgency=low
+mafw-shared (0.3.2010.36-1) unstable; urgency=low
 
   * Fixes: NB#189290 -  mediaplayer-ECD3-11-2203: Segfaults on m3u playlist with more than 32 mp3 files
 
